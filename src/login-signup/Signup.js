@@ -33,7 +33,8 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import logo from "../Images/snplogo.png";
 import { toast } from "material-react-toastify";
 import axios from "axios";
-
+import PhoneInput from "react-phone-input-2";
+import 'react-phone-number-input/style.css'; // Optional CSS for basic styling
 const steps = ["Email Verification", "Personal Details", "Password & OTP"];
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -70,7 +71,12 @@ const ClientSignUp = (props) => {
     middleName: "",
     lastName: "",
     accountName: "",
-    phoneNumber: "",
+    // phoneNumber: "",
+   phoneNumber: {
+    phone: "",
+    country: "us",
+    countryCode: "1"
+  },
     password: "",
     cpassword: "",
     otp: "",
@@ -87,12 +93,6 @@ const ClientSignUp = (props) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [clientIdUpdate, setClientIdUpdate] = useState("");
 
-  // Header component for logo
-  const Header = () => (
-    <Box>
-      <img style={{ width: "110px", display: "block" }} src={logo} alt="Logo" />
-    </Box>
-  );
 
   const handleNext = () => {
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
@@ -123,6 +123,17 @@ const ClientSignUp = (props) => {
     setFormData((prev) => ({ ...prev, otp }));
   };
 
+const handlePhoneChange = (value, country) => {
+  setFormData(prev => ({
+    ...prev,
+    phoneNumber: {
+      ...prev.phoneNumber,
+      phone: value,
+      country: country?.countryCode.toLowerCase() || "us",
+      countryCode: country?.dialCode || "1"
+    }
+  }));
+};
   // Password visibility handlers
   const handleClickShowPassword = () => setShowPassword((show) => !show);
   const handleMouseDownPassword = (e) => e.preventDefault();
@@ -207,10 +218,14 @@ const ClientSignUp = (props) => {
       newValidation.lastName = "Last Name can't be blank";
       isValid = false;
     }
-    if (!phoneNumber || phoneNumber.length < 6) {
-      newValidation.phoneNumber = "Phone number must contain at least 6 digits";
-      isValid = false;
-    }
+    // if (!phoneNumber || phoneNumber.length < 6) {
+    //   newValidation.phoneNumber = "Phone number must contain at least 6 digits";
+    //   isValid = false;
+    // }
+  if (!phoneNumber.phone || phoneNumber.phone.replace(/\D/g, '').length < 6) {
+    newValidation.phoneNumber = "Phone number must contain at least 6 digits";
+    isValid = false;
+  }
 
     setValidation(newValidation);
     if (isValid) handleNext();
@@ -262,39 +277,58 @@ console.log("OTP Verification Response:", otpVerify);
     }
   };
 
-//   const registerClient = async () => {
-//     try {
-//       // Register client
-//       const clientResponse = await fetch(
-//         `${LOGIN_API}/admin/clientsignup/`,
-//         {
-//           method: "POST",
-//           headers: { "Content-Type": "application/json" },
-//           body: JSON.stringify({
-//             email: formData.email,
-//             firstName: formData.firstname,
-//             middleName: formData.middleName,
-//             lastName: formData.lastName,
-//             phoneNumber: formData.phoneNumber,
-//             accountName: formData.accountName,
-//             password: formData.password,
-//             cpassword: formData.cpassword,
-//           }),
-//         }
-//       );
-// console.log(clientResponse)
-//       const clientResult = await clientResponse.json();
-//       setClientIdUpdate(clientResult.client._id);
+// const registerClient = async () => {
+//   try {
 
-//       // Create user account
-//       await createUserAccount(clientResult.client._id);
-//     } catch (error) {
-//       console.error("Client registration error:", error);
-//       throw error;
+//      // Extract just the phone number digits from the phone object
+//    const phoneDigits = formData.phoneNumber.phone.replace(/\D/g, '');
+//     const clientResponse = await fetch(`${LOGIN_API}/admin/clientsignup/`, {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({
+//         email: formData.email,
+//         firstName: formData.firstname,
+//         middleName: formData.middleName,
+//         lastName: formData.lastName,
+//       phoneNumber: {
+//           phone: phoneDigits,
+//           country: formData.phoneNumber.country,
+//           countryCode: formData.phoneNumber.countryCode
+//         },
+//          phoneNumber: phoneDigits,
+//         accountName: formData.accountName,
+//         password: formData.password,
+//         cpassword: formData.cpassword,
+//       }),
+     
+//     });
+//  console.log("dgvfd",clientResponse)
+//     const clientResult = await clientResponse.json();
+
+//     console.log("Client Signup Response:", clientResult);
+
+//     if (!clientResponse.ok) {
+//       throw new Error(clientResult.message || "Client signup failed");
 //     }
-//   };
+
+//     if (!clientResult.client || !clientResult.client._id) {
+//       throw new Error("Client ID not returned in response");
+//     }
+
+//     setClientIdUpdate(clientResult.client._id);
+
+//     // Proceed to create user account
+//     await createUserAccount(clientResult.client._id);
+//   } catch (error) {
+//     console.error("Client registration error:", error);
+//     throw error;
+//   }
+// };
 const registerClient = async () => {
   try {
+    // Extract just the phone number digits from the phone object
+    const phoneDigits = formData.phoneNumber.phone.replace(/\D/g, '');
+    
     const clientResponse = await fetch(`${LOGIN_API}/admin/clientsignup/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -303,7 +337,11 @@ const registerClient = async () => {
         firstName: formData.firstname,
         middleName: formData.middleName,
         lastName: formData.lastName,
-        phoneNumber: formData.phoneNumber,
+        phoneNumber: {
+          phone: phoneDigits,
+          country: formData.phoneNumber.country.toLowerCase(), // ensure lowercase
+          countryCode: formData.phoneNumber.countryCode
+        },
         accountName: formData.accountName,
         password: formData.password,
         cpassword: formData.cpassword,
@@ -311,8 +349,6 @@ const registerClient = async () => {
     });
 
     const clientResult = await clientResponse.json();
-
-    console.log("Client Signup Response:", clientResult);
 
     if (!clientResponse.ok) {
       throw new Error(clientResult.message || "Client signup failed");
@@ -323,15 +359,12 @@ const registerClient = async () => {
     }
 
     setClientIdUpdate(clientResult.client._id);
-
-    // Proceed to create user account
     await createUserAccount(clientResult.client._id);
   } catch (error) {
     console.error("Client registration error:", error);
     throw error;
   }
 };
-
   const createUserAccount = async (clientId) => {
     try {
       // Create user
@@ -393,7 +426,8 @@ console.log("User Signup Response:", userResult);
           body: JSON.stringify({ userid: userId }),
         }
       );
-
+ // Create contact for this account
+    await createContact(accountResult.newAccount._id);
       // Create client documents folder
       await addFolderTemplate(accountResult.newAccount._id);
     } catch (error) {
@@ -401,7 +435,104 @@ console.log("User Signup Response:", userResult);
       throw error;
     }
   };
+  const createContact = async (accountId) => {
+  try {
+    const contactData = {
+      firstName: formData.firstname,
+      middleName: formData.middleName,
+      lastName: formData.lastName,
+      contactName: `${formData.firstname} ${formData.lastName}`.trim(),
+      email: formData.email,
+      login: true,
+      notify: true,
+      emailSync: true,
+      accountid: accountId,
+      phoneNumbers: [{
+        phone: formData.phoneNumber.phone.replace(/\D/g, ''),
+        country: formData.phoneNumber.country,
+        countryCode: formData.phoneNumber.countryCode
+      }]
+    };
 
+    console.log("contactdata", contactData);
+
+    // Wrap the contact in an array before sending
+    const response = await fetch(`${ACCOUNT_API}/contacts/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify([contactData]), // Notice the array wrapper
+    });
+
+    const contactResult = await response.json();
+
+    console.log("contactResult", contactResult);
+
+    if (!response.ok) {
+      throw new Error(contactResult.error || "Contact creation failed");
+    }
+
+    // Assuming the backend returns an array, take the first element
+    const createdContact = contactResult.newContacts[0];
+
+    // Update the account with the contact ID
+    await fetch(`${ACCOUNT_API}/accounts/accountdetails/${accountId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contacts: createdContact._id }),
+    });
+
+    return createdContact;
+  } catch (error) {
+    console.error("Contact creation error:", error);
+    throw error;
+  }
+};
+// const createContact = async (accountId) => {
+//   try {
+//     const contactData = {
+//       firstName: formData.firstname,
+//       middleName: formData.middleName,
+//       lastName: formData.lastName,
+//       contactName: `${formData.firstname} ${formData.lastName}`.trim(),
+//       email: formData.email,
+//       login: true,
+//       notify: true,
+//       emailSync: true,
+//       accountid: accountId,
+//       phoneNumbers: [{
+//           phone: formData.phoneNumber.phone.replace(/\D/g, ''),
+//         country: formData.phoneNumber.country,
+//         countryCode: formData.phoneNumber.countryCode
+//       }]
+//     };
+// console.log("contactdata",contactData)
+//     const response = await fetch(`${ACCOUNT_API}/contacts/`, {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify(contactData),
+//     });
+
+//     const contactResult = await response.json();
+
+
+//     console.log("contactResult",contactResult)
+//     // if (!response.ok) {
+//     //   throw new Error(contactResult.message || "Contact creation failed");
+//     // }
+
+//     // Update the account with the contact ID if needed
+//     await fetch(`${ACCOUNT_API}/accounts/accountdetails/${accountId}`, {
+//       method: "PATCH",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({ contactid: contactResult._id }),
+//     });
+
+//     return contactResult;
+//   } catch (error) {
+//     console.error("Contact creation error:", error);
+//     throw error;
+//   }
+// };
   const addFolderTemplate = async (accountId) => {
     try {
       const response = await fetch(`${CLIENT_DOCS}/clientdocs/clients`, {
@@ -551,7 +682,7 @@ console.log("User Signup Response:", userResult);
               />
             </Box>
 
-            <Box mt={2}>
+            {/* <Box mt={2}>
               <InputLabel sx={{ color: "black" }}>Phone number</InputLabel>
               <TextField
                 fullWidth
@@ -563,7 +694,52 @@ console.log("User Signup Response:", userResult);
                 error={!!validation.phoneNumber}
                 helperText={validation.phoneNumber}
               />
-            </Box>
+            </Box> */}
+            <Box mt={2}>
+        <InputLabel sx={{ color: "black" }}>Phone number</InputLabel>
+        {/* <PhoneInput
+          international
+          defaultCountry="US"
+          value={formData.phone.phone}
+          onChange={handlePhoneChange}
+          country={formData.phone.country || "us"}
+          inputStyle={{ 
+            width: "100%",
+            padding: "10px",
+            borderRadius: "4px",
+            border: validation.phoneNumber ? "1px solid red" : "1px solid #ccc"
+          }}
+          buttonStyle={{
+            borderTopLeftRadius: "8px",
+            borderBottomLeftRadius: "8px",
+          }}
+          containerStyle={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        /> */}
+     <PhoneInput
+  value={formData.phoneNumber.phone}
+  onChange={(value, country) => handlePhoneChange(value, country)}
+  country={formData.phoneNumber.country || "us"}
+  inputStyle={{ width: "100%" }}
+  buttonStyle={{
+    borderTopLeftRadius: "8px",
+    borderBottomLeftRadius: "8px",
+  }}
+  containerStyle={{
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+  }}
+/>
+        {validation.phoneNumber && (
+          <Typography color="error" variant="caption">
+            {validation.phoneNumber}
+          </Typography>
+        )}
+      </Box>
 
             <Box mt={3} display="flex" justifyContent="space-between">
               <Button onClick={handleBack} sx={{ borderRadius: "10px", p: 1 }}>
@@ -694,25 +870,7 @@ console.log("User Signup Response:", userResult);
   };
 
   return (
-    // <Container sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', py: 4 }}>
-
-    //     <Paper sx={{ padding: 4, width: '100%', maxWidth: '600px', mx: 'auto' }}>
-    //         {getStepContent(activeStep)}
-
-    //         <Box mt={4}>
-    //             <Typography>
-    //                 Already have an account?{' '}
-    //                 <span
-    //                     onClick={handleSignInClick}
-    //                     style={{ color: '#439cea', cursor: 'pointer', fontWeight: 'bold' }}
-    //                 >
-    //                     Sign in
-    //                 </span>
-    //             </Typography>
-    //         </Box>
-    //     </Paper>
-
-    // </Container>
+    
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
       <Container
