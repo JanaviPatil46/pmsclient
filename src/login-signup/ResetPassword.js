@@ -88,7 +88,7 @@ console.log("id",id)
       .then((user) => {
         const email = user.email;
         const requestBody = JSON.stringify({ email });
-        return fetch(`${LOGIN_API}/passwordupdate/`, {
+        return fetch(`${LOGIN_API}/updatepass/passwordupdate/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: requestBody,
