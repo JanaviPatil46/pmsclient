@@ -26,7 +26,7 @@ console.log("vhjs", accountId)
         throw new Error("Failed to fetch Proposals templates");
       }
       const result = await response.json();
-// console.log("result proposals", result)
+console.log("result proposals", result)
       setProposals(result.pendingProposals || []);
     } catch (error) {
       console.error("Error fetching Proposals templates:", error);

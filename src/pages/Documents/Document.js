@@ -385,6 +385,7 @@ const Document = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [combinedFolderStructure, setCombinedFolderStructure] = useState(null);
 const [accountName,setAccountName]= useState("")
+const [accountEmailSync, setAccountEmailSync]=useState("")
   const DOCS_MANAGMENTS = process.env.REACT_APP_CLIENT_DOCS_MANAGE || "http://127.0.0.1:8000";
   const ACCOUNT_API = process.env.REACT_APP_ACCOUNTS_URL;
   const fetchAccountId = async (id) => {
@@ -393,8 +394,11 @@ const [accountName,setAccountName]= useState("")
         `${ACCOUNT_API}/accounts/accountdetails/accountdetailslist/listbyuserid/${id}`
       );
       if (response.data.accounts && response.data.accounts.length > 0) {
+        // console.log("accounts resopnace",response.data.accounts)
         setAccId(response.data.accounts[0]._id);
         setAccountName(response.data.accounts[0].accountName)
+        setAccountEmailSync(response.data.accounts[0].adminUserId?.emailSyncEmail)
+// console.log("emailsyn",response.data.accounts[0].adminUserId?.emailSyncEmail)
       } else {
         setError("No account found for this user");
       }
@@ -629,6 +633,7 @@ const [accountName,setAccountName]= useState("")
        accountName={accountName}
         accountId={accId}
         fetchBothFolders={fetchBothFolders}
+        accountEmailSync={accountEmailSync}
       />
 
       </Box>

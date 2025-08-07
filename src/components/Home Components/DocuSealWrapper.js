@@ -65,7 +65,7 @@ useEffect(() => {
 
 
   if (loading) return <p></p>;
-  if (!data || !Array.isArray(data.submissions)) return <p>No data found</p>;
+  if (!data || !Array.isArray(data.submissions)) return <p></p>;
 
   return (
     <DocuSealMultiSigner

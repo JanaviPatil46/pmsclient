@@ -3,7 +3,7 @@ import axios from "axios";
 import { Button, Box, Typography, Drawer } from "@mui/material";
 import { FaTimes } from "react-icons/fa";
 
-const UploadDocument = ({ open, onClose, file ,fetchUnSealedFolders,fetchAdminPrivateFolders,accountId,fetchBothFolders,accountName}) => {
+const UploadDocument = ({ open, onClose, file ,fetchUnSealedFolders,fetchAdminPrivateFolders,accountId,fetchBothFolders,accountName,accountEmailSync}) => {
  
   const DOCS_MANAGMENTS = process.env.REACT_APP_CLIENT_DOCS_MANAGE;
 
@@ -431,6 +431,7 @@ const UploadDocument = ({ open, onClose, file ,fetchUnSealedFolders,fetchAdminPr
     data.append("destinationPath", destinationPath);
     data.append("file", file);
   data.append("accountName", accountName);
+  data.append("accountEmailSync", accountEmailSync)
     let config = {
       method: "post",
       maxBodyLength: Infinity,
