@@ -206,202 +206,40 @@ const UploadDocument = ({ open, onClose, file ,onUploadSuccess,onUploadError,acc
 };
 
   
-//   const handleSubmitfile = async (e) => {
+  const handleSubmitfile = async (e) => {
    
   
-//     let data = new FormData();
-//     data.append("destinationPath", destinationPath);
-//     data.append("file", file);
-// //   data.append("accountName", accountName);
-// //   data.append("accountEmailSync", accountEmailSync)
-//     let config = {
-//       method: "post",
-//       maxBodyLength: Infinity,
-//       url: `${DOCS_MANAGMENTS}/uploadfiledocument`,
-//       data: data,
-//     };
-  
-//     axios
-//       .request(config)
-//       .then((response) => {
-//         console.log(JSON.stringify(response.data));
-//         alert("File uploaded successfully!");
-//         onClose();
-       
-//         // fetchBothFolders()
-      
-//         setSelectedFolderId(null);
-//       })
-//       .catch((error) => {
-//         console.error(error);
-//         alert("Failed to upload the file.");
-//       });
-//   };
-
-const handleSubmitfile = async (e) => {
-  try {
-    if (!file) {
-      throw new Error("No file selected");
-    }
-
-    if (!destinationPath) {
-      throw new Error("No destination folder selected");
-    }
-
-    // 1. First upload the file to the document management system
     let data = new FormData();
     data.append("destinationPath", destinationPath);
     data.append("file", file);
-    
+//   data.append("accountName", accountName);
+//   data.append("accountEmailSync", accountEmailSync)
     let config = {
       method: "post",
       maxBodyLength: Infinity,
       url: `${DOCS_MANAGMENTS}/uploadfiledocument`,
       data: data,
     };
+  
+    axios
+      .request(config)
+      .then((response) => {
+        console.log(JSON.stringify(response.data));
+        alert("File uploaded successfully!");
+        onClose();
+       
+        // fetchBothFolders()
+      
+        setSelectedFolderId(null);
+      })
+      .catch((error) => {
+        console.error(error);
+        alert("Failed to upload the file.");
+      });
+  };
 
-    const uploadResponse = await axios.request(config);
-    console.log("File upload response:", uploadResponse.data);
-    
-    // 2. Get the uploaded file details from the response
-    const uploadedFile = uploadResponse.data;
-    
-    // 3. Update the organizer with the file information
-    const organizerUpdateResponse = await updateOrganizerWithFile(uploadedFile.fileName);
-    console.log("Organizer update response:", organizerUpdateResponse);
-    
-    // 4. Update local state
-    const key = Object.keys(uploadedFiles).find(
-      k => uploadedFiles[k] === file?.name
-    );
-    
-    if (key) {
-      setUploadedFiles(prev => ({
-        ...prev,
-        [key]: uploadedFile.fileName
-      }));
-    }
-    
-    // 5. Handle success
-    alert("File uploaded and organizer updated successfully!");
-    onClose();
-    setSelectedFolderId(null);
-    
-    // 6. Call the success callback if provided
-    if (onUploadSuccess) {
-      onUploadSuccess(uploadedFile);
-    }
-    
-  } catch (error) {
-    console.error("File upload error:", error);
-    alert(error.message || "Failed to upload the file or update organizer.");
-    
-    // Call the error callback if provided
-    if (onUploadError) {
-      onUploadError(error);
-    }
-  }
-};
 
-const updateOrganizerWithFile = async (fileName) => {
-  try {
-    const myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
-    
-    // Find which section and element this file belongs to
-    const key = Object.keys(uploadedFiles).find(
-      k => uploadedFiles[k] === file?.name
-    );
-    
-    if (!key) {
-      throw new Error("Could not find the corresponding form element for this file");
-    }
 
-    // Prepare the update data to include the file in the specific form element
-    const updateData = {
-      sections: organizer.sections.map(section => {
-        // Find the section that contains this file
-        if (key.startsWith(`${section.id}_`)) {
-          return {
-            ...section,
-            formElements: section.formElements.map(element => {
-              // Find the specific form element (File Upload type)
-              if (key.endsWith(`_${element.text}`) && element.type === "File Upload") {
-                return {
-                  ...element,
-                  textvalue: fileName, // Store the file name in textvalue
-                  fileMetadata: {    // Add file metadata
-                    fileName: fileName,
-                    filePath: destinationPath,
-                    uploadedAt: new Date().toISOString()
-                  }
-                };
-              }
-              return element;
-            })
-          };
-        }
-        return section;
-      }),
-      lastSaved: new Date().toISOString()
-    };
-
-    const requestOptions = {
-      method: "PATCH",
-      headers: myHeaders,
-      body: JSON.stringify(updateData),
-      redirect: "follow"
-    };
-
-    const url = `${ORGANIZER_TEMP_API}/workflow/orgaccwise/organizeraccountwise/${organizer._id}`;
-    const response = await fetch(url, requestOptions);
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.message || "Failed to update organizer with file info");
-    }
-
-    return result;
-  } catch (error) {
-    console.error("Error updating organizer:", error);
-    throw error;
-  }
-};
-// const updateOrganizerWithFile = async (fileName) => {
-//   try {
-//     const myHeaders = new Headers();
-//     myHeaders.append("Content-Type", "application/json");
-    
-//     // Prepare the update data
-//     const updateData = {
-//       fileMetadata: {
-//         fileName: fileName,
-//         uploadedAt: new Date().toISOString()
-//       },
-//       lastSaved: new Date().toISOString()
-//     };
-
-//     const requestOptions = {
-//       method: "PATCH",
-//       headers: myHeaders,
-//       body: JSON.stringify(updateData),
-//       redirect: "follow"
-//     };
-
-//     const url = `${ORGANIZER_TEMP_API}/workflow/orgaccwise/organizeraccountwise/${organizer._id}`;
-//     const response = await fetch(url, requestOptions);
-//     const result = await response.json();
-
-//     if (!response.ok) {
-//       throw new Error(result.message || "Failed to update organizer with file info");
-//     }
-
-//     return result;
-//   } catch (error) {
-//     console.error("Error updating organizer:", error);
-//     throw error;
-//   }
-// };
 const handleSelectFolderPath = () => {
   const getFolderPath = (folders, parentPath = "") => {
     for (let folder of folders) {

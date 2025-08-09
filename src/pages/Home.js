@@ -15,6 +15,7 @@ import ProposalsList from "../components/Home Components/ProposalsList";
 // import ESignature from "../components/Home Components/eSignature"
 import { LoginContext } from "../context/Context";
 import DocuSealWrapper from "../components/Home Components/DocuSealWrapper";
+import DocumnetApprovals from "../components/Home Components/DocumnetApprovals";
 const Home = () => {
   const ACCOUNT_API = process.env.REACT_APP_ACCOUNTS_URL;
   const { logindata } = useContext(LoginContext);
@@ -133,6 +134,7 @@ const Home = () => {
             <ChatsList accountId={accountId} />
             <ProposalsList accountId={accountId} />
            <DocuSealWrapper/>
+           <DocumnetApprovals accountId={accountId}/>
           </Paper>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>

@@ -2182,7 +2182,7 @@ const [uploadedFiles, setUploadedFiles] = useState({}); // Stores file names for
     setFile(null);
   }}
 /> */}
-{/* <UploadDrawer
+<UploadDrawer
   open={isDocumentForm}
   organizer={organizer}
   onClose={() => setIsDocumentForm(false)}
@@ -2228,52 +2228,8 @@ const [uploadedFiles, setUploadedFiles] = useState({}); // Stores file names for
     }
     setFile(null);
   }}
-/> */}
-<UploadDrawer
-  open={isDocumentForm}
-  onClose={() => setIsDocumentForm(false)}
-  file={file}
-  organizer={organizer}
-  accountId={accountId}
-   uploadedFiles={uploadedFiles}  // Pass the state down
-  setUploadedFiles={setUploadedFiles} 
-  onUploadSuccess={(fileData) => {
-    console.log("File uploaded successfully:", fileData);
-    // Update local state with the file name
-    const key = Object.keys(uploadedFiles).find(
-      k => uploadedFiles[k] === file?.name
-    );
-    
-    if (key) {
-      setUploadedFiles(prev => ({
-        ...prev,
-        [key]: fileData.fileName
-      }));
-      
-      // Trigger auto-save with the new file name
-      const data = prepareSubmitData(false);
-      debouncedAutoSave(data);
-    }
-    
-    setFile(null);
-    setIsDocumentForm(false);
-  }}
-  onUploadError={(error) => {
-    console.error("File upload failed:", error);
-    // Clear the file selection if upload fails
-    const key = Object.keys(uploadedFiles).find(
-      k => uploadedFiles[k] === file?.name
-    );
-    if (key) {
-      setUploadedFiles(prev => {
-        const newState = {...prev};
-        delete newState[key];
-        return newState;
-      });
-    }
-    setFile(null);
-  }}
 />
+
     </>
   );
 };
