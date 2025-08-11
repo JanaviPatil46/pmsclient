@@ -1142,7 +1142,7 @@ const [uploadedFiles, setUploadedFiles] = useState({}); // Stores file names for
         myHeaders.append("Content-Type", "application/json");
 
         const raw = JSON.stringify(data);
-
+console.log("autosave raw",raw)
         const requestOptions = {
           method: "PATCH",
           headers: myHeaders,
@@ -1150,7 +1150,7 @@ const [uploadedFiles, setUploadedFiles] = useState({}); // Stores file names for
           redirect: "follow",
         };
 
-        const url = `${ORGANIZER_TEMP_API}/workflow/orgaccwise/autosave/${organizer._id}`;
+        const url = `${ORGANIZER_TEMP_API}/workflow/orgaccwise/organizeraccountwise/${organizer._id}`;
         const response = await fetch(url, requestOptions);
         const result = await response.json();
 
@@ -1204,7 +1204,7 @@ const [uploadedFiles, setUploadedFiles] = useState({}); // Stores file names for
       status: finalSubmit ? "Completed" : "In Progress",
        completedby:loginuserid,
       active: true,
-      lastSaved: new Date().toISOString(),
+     
     };
   };
 
@@ -1673,7 +1673,7 @@ const [uploadedFiles, setUploadedFiles] = useState({}); // Stores file names for
                                 </Typography>
                                 <TextField
                                   disabled={isElementActive(element)}
-                                  variant="outlined"
+                                  variant="filled"
                                   size="small"
                                   multiline
                                   fullWidth
@@ -1684,7 +1684,7 @@ const [uploadedFiles, setUploadedFiles] = useState({}); // Stores file names for
                                         ? "text"
                                         : element.type.toLowerCase(),
                                   }}
-                                  maxRows={8}
+                                  // maxRows={8}
                                   style={{ display: "block" }}
                                   value={
                                     inputValues[
@@ -1699,6 +1699,28 @@ const [uploadedFiles, setUploadedFiles] = useState({}); // Stores file names for
                                     )
                                   }
                                 />
+                                {/* <textarea
+  style={{
+    width: "100%",
+    minHeight: "100px",
+    fontSize: "14px",
+    padding: "6px",
+    borderRadius: "4px",
+    border: "1px solid #ccc",
+    resize: "vertical",
+    fontFamily: "inherit",
+    lineHeight: "1.4",
+  }}
+  disabled={isElementActive(element)}
+  placeholder={`${element.type} Answer`}
+  value={inputValues[`${section.id}_${element.text}`] || ""}
+  onChange={(e) =>
+    handleInputChange(e, element.text, section.id)
+  }
+/> */}
+
+
+
                               </Box>
                             )}
 
@@ -1958,78 +1980,7 @@ const [uploadedFiles, setUploadedFiles] = useState({}); // Stores file names for
                               </Box>
                             )}
 
-                            {/* {element.type === "File Upload" && (
-                              <Box mt={2}>
-                                <Typography
-                                  variant="subtitle2"
-                                  component="p"
-                                  gutterBottom
-                                  sx={{ fontWeight: "550" }}
-                                >
-                                  {element.text}
-                                </Typography>
-                                This file upload question
-                              </Box>
-                            )} */}
-                            {/* {element.type === "File Upload" && (
-  <Box mt={2}>
-    <Typography
-      variant="subtitle2"
-      component="p"
-      gutterBottom
-      sx={{ fontWeight: "550" }}
-    >
-      {element.text}
-    </Typography>
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-      <IconButton
-        component="label"
-        htmlFor={`fileInput_${section.id}_${element.id}`}
-        sx={{ color: "#e87800" }}
-        disabled={isElementActive(element)}
-      >
-       
-      </IconButton>
-      <Typography
-        variant="body1"
-        component="label"
-        htmlFor={`fileInput_${section.id}_${element.id}`}
-        sx={{ cursor: isElementActive(element) ? 'default' : 'pointer' }}
-      >
-        Upload Document
-      </Typography>
-      <Input
-        type="file"
-        id={`fileInput_${section.id}_${element.id}`}
-        onChange={(e) => {
-          const selectedFile = e.target.files[0];
-          if (selectedFile) {
-            setFile(selectedFile);
-            setIsDocumentForm(true);
-            // Store the file name in state
-            const key = `${section.id}_${element.text}`;
-            setUploadedFiles(prev => ({
-              ...prev,
-              [key]: selectedFile.name
-            }));
-            // Mark as answered
-            setAnsweredElements(prev => ({
-              ...prev,
-              [key]: true
-            }));
-          }
-        }}
-        sx={{ display: "none" }}
-        disabled={isElementActive(element)}
-      />
-    </Box>
-    {uploadedFiles[`${section.id}_${element.text}`] && (
-      <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
-        Selected file: {uploadedFiles[`${section.id}_${element.text}`]}
-      </Typography>
-    )}
-  </Box>
-)} */}
+                           
 {element.type === "File Upload" && (
   <Box mt={2}>
     <Typography
@@ -2153,35 +2104,7 @@ const [uploadedFiles, setUploadedFiles] = useState({}); // Stores file names for
         </DialogContent>
       </Dialog>
     </LocalizationProvider>
-    {/* <UploadDrawer
-  open={isDocumentForm}
-  onClose={() => setIsDocumentForm(false)}
-  file={file}
- 
-  accountId={accountId}
- 
-
-  onUploadSuccess={(uploadedFileName) => {
-   
-    console.log("File uploaded successfully:", uploadedFileName);
-  }}
-  onUploadError={(error) => {
-    // Handle upload errors
-    console.error("File upload failed:", error);
-    // Optionally clear the file selection if upload fails
-    const key = Object.keys(uploadedFiles).find(
-      k => uploadedFiles[k] === file?.name
-    );
-    if (key) {
-      setUploadedFiles(prev => {
-        const newState = {...prev};
-        delete newState[key];
-        return newState;
-      });
-    }
-    setFile(null);
-  }}
-/> */}
+  
 <UploadDrawer
   open={isDocumentForm}
   organizer={organizer}
