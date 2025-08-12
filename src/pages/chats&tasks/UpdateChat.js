@@ -176,55 +176,7 @@ const [chatTemplate, setChatTemplate]=useState("")
     const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
     return `${day} ${month} ${formattedHours}:${formattedMinutes} ${period}`;
   };
-  // const updateChatDescription = (message = "") => {
-  //   const contentToSend = message.trim() || editorContent.trim();
-  //   if (!contentToSend) return;
 
-  //   const newDescription = {
-  //     message: contentToSend,
-  //     fromwhome: "client",
-  //   };
-
-  //   setChatDescriptions((prevDescriptions) => [
-  //     ...prevDescriptions,
-  //     { ...newDescription, time: new Date().toISOString() },
-  //   ]);
-
-  //   setEditorContent("");
-
-  //   const myHeaders = new Headers();
-  //   myHeaders.append("Content-Type", "application/json");
-
-  //   const raw = JSON.stringify({
-  //     newDescriptions: [newDescription],
-  //   });
-
-  //   const requestOptions = {
-  //     method: "PATCH",
-  //     headers: myHeaders,
-  //     body: raw,
-  //     redirect: "follow",
-  //   };
-
-  //   const url = `http://127.0.0.1/chats/chatsaccountwise/chatupdatemessage/${_id}`;
-
-  //   fetch(url, requestOptions)
-  //     .then((response) => {
-  //       if (!response.ok) {
-  //         throw new Error(`HTTP error! Status: ${response.status}`);
-  //       }
-  //       return response.json();
-  //     })
-  //     .then((result) => {
-  //       toast.success("Chat description updated successfully");
-  //     })
-  //     .catch((error) => {
-  //       console.error("Error:", error);
-  //       toast.error("Failed to update chat description. Please try again.");
-  //     });
-  // };
-
-  //  const [editorContent, setEditorContent] = useState("");
   const [replyTo, setReplyTo] = useState(null);
   const messagesEndRef = useRef(null);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -248,63 +200,8 @@ const [chatTemplate, setChatTemplate]=useState("")
     setSelectedMessage(null);
   };
 
-  const handleReply = () => {
-    setReplyTo(selectedMessage);
-    handleMenuClose();
-  };
 
-  const handleCancelReply = () => {
-    setReplyTo(null);
-  };
-
-
-
-//   const updateChatDescription = (message = "") => {
-//     const contentToSend = message.trim() || editorContent.trim();
-//     if (!contentToSend) return;
-
-//     const newDescription = {
-//       message: contentToSend,
-//       fromwhome: "client",
-//       senderid: loginUserId,
-      
-//     };
-
-//     if (replyTo) {
-//       newDescription.replyTo = replyTo._id; // ✅ Use the message ID, not custom object
-//     }
-
-//     setChatDescriptions((prev) => [
-//       ...prev,
-//       { ...newDescription, time: new Date().toISOString() },
-//     ]);
-
-//     setEditorContent("");
-//     setReplyTo(null);
-
-//     const raw = JSON.stringify({
-//       newDescriptions: [newDescription],
-//     });
-// console.log("jhgfsd",raw)
-//     fetch(`${CHAT_API}/chats/chatsaccountwise/chatupdatemessage/${_id}`, {
-//       method: "PATCH",
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//       body: raw,
-//     })
-    
-//       .then((response) => {
-//         if (!response.ok) throw new Error("Failed to update");
-//         return response.json();
-//       })
-//       .then(() => {
-//         toast.success("Message sent");
-//            securemessagechatsend(_id);
-//         getsChatDetails();
-//       })
-//       .catch(() => toast.error("Send failed"));
-//   };
+ 
 
 const updateChatDescription = (message = "") => {
   const contentToSend = message.trim() || editorContent.trim();
@@ -354,32 +251,7 @@ const updateChatDescription = (message = "") => {
     .catch(() => toast.error("Send failed"));
 };
 
-     const securemessagechatsend = (chatId) => {
-    console.log("bvhg", chatId)
-    const myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
-
-    const raw = JSON.stringify({
-      accountid: accountId,
-      chattemplateid: chatTemplate,
-      username: senderName,
-      viewchatlink: "/login",
-      chatId: chatId,
-    });
-    console.log(raw);
-    const requestOptions = {
-      method: "POST",
-      headers: myHeaders,
-      body: raw,
-      redirect: "follow",
-    };
-
-    fetch(`${CHAT_API}/chatmsg/securemessagechatsend`, requestOptions)
-      .then((response) => response.json())
-      .then((result) => console.log(result))
-      .catch((error) => console.error(error));
-  };
-
+  
   useEffect(() => {
     const style = document.createElement("style");
     style.innerHTML = `
@@ -598,36 +470,7 @@ const updateChatDescription = (message = "") => {
               alignItems: "start",
             }}
           >
-            {/* {replyTo && (
-              <Box
-                sx={{
-                  mb: 1,
-                  p: 1,
-                  backgroundColor: "#f0f0f0",
-                  borderLeft: "4px solid #1976d2",
-                  position: "relative",
-                }}
-              >
-                <Typography variant="body2" fontWeight="bold">
-                  Replying to:{" "}
-                  {replyTo.fromwhome === "client"
-                    ? "You"
-                    : replyTo.senderid?.username}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ fontStyle: "italic", whiteSpace: "pre-wrap" }}
-                  dangerouslySetInnerHTML={{ __html: replyTo.message }}
-                />
-                <IconButton
-                  size="small"
-                  onClick={() => setReplyTo(null)}
-                  sx={{ position: "absolute", top: 4, right: 4 }}
-                >
-                  <CloseIcon fontSize="small" />
-                </IconButton>
-              </Box>
-            )} */}
+            
             {replyTo && (
               <Box
                 sx={{
@@ -688,8 +531,7 @@ const updateChatDescription = (message = "") => {
               transition: 'background-color 0.2s ease'
             }}
          color="primary"
-              // variant="contained"
-              // sx={{ height: "fit-content", alignSelf: "end" }}
+              
             >
               Send
             </Button>
