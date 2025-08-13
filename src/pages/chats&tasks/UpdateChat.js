@@ -10,7 +10,7 @@ import {
   Divider,
   Stack,
   Menu,
-  MenuItem,
+  MenuItem,CircularProgress
 } from "@mui/material";
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { useParams } from "react-router-dom";
@@ -200,12 +200,14 @@ const [chatTemplate, setChatTemplate]=useState("")
     setSelectedMessage(null);
   };
 
-
+const [isSending, setIsSending] = useState(false);
  
 
 const updateChatDescription = (message = "") => {
   const contentToSend = message.trim() || editorContent.trim();
   if (!contentToSend) return;
+
+   setIsSending(true); // Show loading state
 
   const newDescription = {
     message: contentToSend,
@@ -217,11 +219,11 @@ const updateChatDescription = (message = "") => {
     newDescription.replyTo = replyTo._id;
   }
 
-  // Update UI optimistically
-  setChatDescriptions((prev) => [
-    ...prev,
-    { ...newDescription, time: new Date().toISOString() },
-  ]);
+  // // Update UI optimistically
+  // setChatDescriptions((prev) => [
+  //   ...prev,
+  //   { ...newDescription, time: new Date().toISOString() },
+  // ]);
 
   // Clear input and reply state
   setEditorContent("");
@@ -245,8 +247,17 @@ const updateChatDescription = (message = "") => {
       return response.json();
     })
     .then(() => {
-      toast.success("Message sent & email triggered");
-      getsChatDetails(); // Reload chat details
+      // toast.success("Message sent & email triggered");
+      // getsChatDetails(); // Reload chat details
+       // Only update UI after successful backend storage
+        setChatDescriptions(prev => [
+          ...prev,
+          { ...newDescription, time: new Date().toISOString() }
+        ]);
+        setEditorContent("");
+        setReplyTo(null);
+        toast.success("Message sent & email triggered");
+        getsChatDetails(); // Reload chat details to ensure sync
     })
     .catch(() => toast.error("Send failed"));
 };
@@ -520,6 +531,7 @@ const updateChatDescription = (message = "") => {
             <Editor onChange={handleEditorChange} value={editorContent} />
             <Button
               onClick={() => updateChatDescription()}
+               disabled={isSending || !editorContent.trim()}
                sx={{
               backgroundColor: 'text.menu',
               height: "fit-content", alignSelf: "end" ,
@@ -533,7 +545,8 @@ const updateChatDescription = (message = "") => {
          color="primary"
               
             >
-              Send
+              {/* Send */}
+              {isSending ? <CircularProgress size={24} color="inherit" /> : "Send"}
             </Button>
           </Box>
         </Grid>

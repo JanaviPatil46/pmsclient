@@ -178,7 +178,8 @@ const DocumentApprovals = ({ accountId }) => {
   const fetchApprovals = async () => {
     try {
       const { data } = await axios.get(
-        `${DOCS_MANAGMENTS}/approvals/client-approvals/${clientEmail}`
+        // `${DOCS_MANAGMENTS}/approvals/client-approvals/${clientEmail}`
+        `${DOCS_MANAGMENTS}/approvals/approvalList/byaccountid/${accountId}`
       );
       setApprovals(data.approvals || []);
     } catch (error) {
