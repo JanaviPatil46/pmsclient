@@ -116,6 +116,24 @@ const DocuSealMultiSigner = ({ submissions, targetEmail }) => {
   console.log("Form signed", data);
   alert("Document signed successfully!");
 
+  // 1️⃣ Update the e-sign status in backend by externalId
+        fetch(`${SIGNATURE_API}/signautrelist/update/${data.template.external_id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            status: "completed",
+            // submissionId: data.submission_id, // optional: store Docuseal submission ID
+          }),
+        })
+          .then((res) => res.json())
+          .then((updateResult) => {
+            console.log("Esign record updated", updateResult);
+          })
+          .catch((error) => {
+            console.error("Failed to update e-sign record", error);
+          });
   // Send POST request to backend to notify admin
   fetch(`${SIGNATURE_API}/notify-admin`, {
     method: "POST",
@@ -134,6 +152,8 @@ const DocuSealMultiSigner = ({ submissions, targetEmail }) => {
     .catch((error) => {
       console.error("Failed to notify admin", error);
     });
+
+
 
   handleCloseDialog();
 }}
