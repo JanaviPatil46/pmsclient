@@ -1699,25 +1699,7 @@ console.log("autosave raw",raw)
                                     )
                                   }
                                 />
-                                {/* <textarea
-  style={{
-    width: "100%",
-    minHeight: "100px",
-    fontSize: "14px",
-    padding: "6px",
-    borderRadius: "4px",
-    border: "1px solid #ccc",
-    resize: "vertical",
-    fontFamily: "inherit",
-    lineHeight: "1.4",
-  }}
-  disabled={isElementActive(element)}
-  placeholder={`${element.type} Answer`}
-  value={inputValues[`${section.id}_${element.text}`] || ""}
-  onChange={(e) =>
-    handleInputChange(e, element.text, section.id)
-  }
-/> */}
+                                
 
 
 
