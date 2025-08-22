@@ -314,7 +314,7 @@ function NewChat({ open, close, loginuserid, accId }) {
             }}
           >
             <Button
-              // variant="contained"
+              
               onClick={saveChat}
               fullWidth={isMobile}
               size={isMobile ? "large" : "medium"}
@@ -324,9 +324,7 @@ function NewChat({ open, close, loginuserid, accId }) {
     '&:hover': {
       backgroundColor: 'menu.dark', // Darker teal from your palette
       boxShadow: 1,
-      // Alternative options:
-      // backgroundColor: alpha('text.warning', 0.9), // Slightly transparent
-      // backgroundColor: 'warning.main', // Standard teal
+    
     },
     
     transition: 'background-color 0.2s ease' // Smooth color transition

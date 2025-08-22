@@ -219,15 +219,11 @@ const updateChatDescription = (message = "") => {
     newDescription.replyTo = replyTo._id;
   }
 
-  // // Update UI optimistically
-  // setChatDescriptions((prev) => [
-  //   ...prev,
-  //   { ...newDescription, time: new Date().toISOString() },
-  // ]);
+  
 
-  // Clear input and reply state
-  setEditorContent("");
-  setReplyTo(null);
+  // // Clear input and reply state
+  // setEditorContent("");
+  // setReplyTo(null);
 
   // Prepare payload
   const raw = JSON.stringify({
@@ -246,7 +242,7 @@ const updateChatDescription = (message = "") => {
       if (!response.ok) throw new Error("Failed to update");
       return response.json();
     })
-    .then(() => {
+    .then((data) => {
       // toast.success("Message sent & email triggered");
       // getsChatDetails(); // Reload chat details
        // Only update UI after successful backend storage
@@ -256,7 +252,10 @@ const updateChatDescription = (message = "") => {
         ]);
         setEditorContent("");
         setReplyTo(null);
-        toast.success("Message sent & email triggered");
+        // toast.success("Message sent & email triggered");
+         // ✅ Dynamic toast based on backend response
+      toast.success(data.message || "Message sent");
+      setIsSending(false)
         getsChatDetails(); // Reload chat details to ensure sync
     })
     .catch(() => toast.error("Send failed"));

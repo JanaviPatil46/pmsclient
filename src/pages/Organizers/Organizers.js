@@ -78,73 +78,7 @@ const Organizers = () => {
         Organizers
       </Typography>
 
-      {/* <TableContainer elevation={3}>
-        <Table sx={{ minWidth: 800 }} aria-label="proposals table">
-          <TableHead>
-            <TableRow>
-              <TableCell>
-                <strong>Organizer Name</strong>
-              </TableCell>
-              <TableCell>
-                <strong>Seal</strong>
-              </TableCell>
-              <TableCell>
-                <strong>Status</strong>
-              </TableCell>
-              <TableCell>
-                <strong>Date</strong>
-              </TableCell>
-            </TableRow>
-          </TableHead>
-
-          <TableBody>
-            {organizersList.map((row, index) => (
-              <TableRow key={row._id}>
-                <TableCell>
-                  <Tooltip>
-                    <Typography
-                      component="h2"
-                      variant="subtitle2"
-                      sx={{
-                        cursor: "pointer",
-                      }}
-                      onClick={() => handleOpenDialog(row)}
-                    >
-                      {row.organizerName || "Untitled"}
-                    </Typography>
-                  </Tooltip>
-                </TableCell>
-                <TableCell>
-                  {row.issealed === true && (
-                    <Chip
-                      label="Sealed"
-                      color="success"
-                      size="small"
-                      sx={{ border: "none" }}
-                    />
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={row.status || "Pending"}
-                    color={row.status === "Completed" ? "success" : "default"}
-                    size="small"
-                    sx={{ border: "none" }}
-                  />
-                </TableCell>
-
-                <TableCell>
-                  {new Date(row.updatedAt).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer> */}
+      
       <Box>
   <TableContainer component={Paper} sx={{ overflow: "visible" }}>
     <Table>
