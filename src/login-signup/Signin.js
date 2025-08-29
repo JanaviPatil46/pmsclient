@@ -208,7 +208,8 @@ export default function SignIn(props) {
             email, 
             password, 
             expiryTime, 
-            username:selectedUser.username
+            username:selectedUser.username,
+            userId: selectedUser._id 
           }
         : { 
             email, 
@@ -368,7 +369,10 @@ console.log("Stringified payload:", JSON.stringify(loginPayload));
                   onClick={() => handleUserSelect(user)}
                   selected={selectedUser && selectedUser._id === user._id}
                 >
-                  {user.username}  ({user.role})
+                  
+                  {user.accountName 
+    ? `${user.accountName} – ${user.username} (${user.role})`
+    : `${user.username} (${user.role})`}
                 </MenuItem>
               ))}
             </Menu>
