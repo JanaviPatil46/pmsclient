@@ -130,7 +130,7 @@ export default function SignIn(props) {
     if (!email || !email.includes("@")) return;
 
     try {
-      const checkUserUrl = `${LOGIN_API}/common/user/email/getuserbyemail/${email}`;
+      const checkUserUrl = `${LOGIN_API}/common/user/client/getuserbyemail/${email}`;
       const checkUserResponse = await fetch(checkUserUrl, {
         method: "GET",
         headers: {
@@ -174,6 +174,82 @@ export default function SignIn(props) {
       }
     }
   };
+//   const handleSubmit = async (e) => {
+//   e.preventDefault();
+//   const { email, password } = inpval;
+//   const expiryTime = 8 * 60 * 60;
+
+//   // Input validation
+//   if (!email) {
+//     toast.error("Email is required!");
+//     return;
+//   } else if (!email.includes("@")) {
+//     toast.error("Invalid email format!");
+//     return;
+//   }
+
+//   if (!password) {
+//     toast.error("Password is required!");
+//     return;
+//   } else if (password.length < 6) {
+//     toast.error("Password must be at least 6 characters long!");
+//     return;
+//   }
+
+//   if (userList.length > 1 && !selectedUser) {
+//     toast.error("Please select a user from the dropdown");
+//     return;
+//   }
+
+//   try {
+//     const loginUrl = `${LOGIN_API}/common/clientlogin/generatetokenforclient`;
+//     const loginPayload = selectedUser 
+//       ? { 
+//           email, 
+//           password, 
+//           expiryTime, 
+//           username: selectedUser.username,
+//           userId: selectedUser._id 
+//         }
+//       : { 
+//           email, 
+//           password, 
+//           expiryTime
+//         };
+
+//     const loginResponse = await fetch(loginUrl, {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify(loginPayload),
+//     });
+
+//     const loginResult = await loginResponse.json();
+
+//     if (loginResult.status === 200) {
+//       localStorage.setItem("clientdatatoken", loginResult.result.token);
+//       Cookies.set("clientuserToken", loginResult.result.token);
+      
+//       // Clear form and state
+//       setInpval({ ...inpval, email: "", password: "" });
+//       setUserList([]);
+//       setSelectedUser(null);
+      
+//       // Show success toast
+//       toast.success("Login Successful");
+      
+//       // Force navigation immediately
+//       navigate("/client/home", { replace: true });
+      
+//     } else {
+//       toast.error(loginResult.message || "Login failed");
+//     }
+//   } catch (error) {
+//     console.error("Login error:", error);
+//     toast.error("An error occurred. Please try again.");
+//   }
+// };
   const handleSubmit = async (e) => {
     e.preventDefault();
     const { email, password } = inpval;
@@ -220,21 +296,6 @@ export default function SignIn(props) {
           };
 
       // Enhanced console logging
-      console.group("Login Payload Details");
-console.log("Stringified payload:", JSON.stringify(loginPayload));
-      console.log("Email:", email);
-      console.log("Password length:", password);
-      console.log("Expiry time (seconds):", expiryTime);
-      if (selectedUser) {
-        console.log("Selected User ID:", selectedUser._id);
-        console.log("Selected User Name:", selectedUser.username);
-        console.log("Selected User Role:", selectedUser.role);
-      } else {
-        console.log("No user selected (single user account)");
-      }
-      console.groupEnd();
-
-      console.log("Sending request to:", loginUrl);
       
       const loginResponse = await fetch(loginUrl, {
         method: "POST",
@@ -253,7 +314,7 @@ console.log("Stringified payload:", JSON.stringify(loginPayload));
         console.log("Login successful, token received");
         localStorage.setItem("clientdatatoken", loginResult.result.token);
         Cookies.set("clientuserToken", loginResult.result.token);
-        navigate("/client/home");
+        navigate("/client/client/home");
         toast.success("Login Successful");
         setInpval({ ...inpval, email: "", password: "" });
         setUserList([]);

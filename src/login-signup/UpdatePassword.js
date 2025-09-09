@@ -632,10 +632,10 @@ export default function UpdatePassword() {
         localStorage.removeItem("resetpasstoken");
 
         toast.success("Password updated successfully!");
-        navigate("/");
+        navigate("/client/login");
       } else {
         toast.error("Token expired or invalid!");
-        navigate("/resetpassword");
+        navigate("/client/resetpassword");
       }
     } catch (err) {
       console.error(err);

@@ -35,7 +35,7 @@ export default function Dashboard(props) {
     fetch(url + loginsData, requestOptions)
       .then((response) => response.json())
       .then((result) => {
-        console.log("id", result);
+        console.log("selctedid", result);
         // if (result.email) {
         //     setUserData(truncateString(result.email, maxLength));
         // }
@@ -59,14 +59,14 @@ export default function Dashboard(props) {
     console.log(token);
 
     const data = await res.json();
-
+console.log("bnsvchd",data)
     if (data.message === "Invalid token") {
       navigate("/client/login");
     } else {
       setLoginData(data);
       setloginsData(data.user.id);
 
-      if (data.user.role === "Client") {
+    if (data.user.role?.toLowerCase() === "client") {
         fetchUserData(data.user.id);
         // navigate("/home");
       } else {
