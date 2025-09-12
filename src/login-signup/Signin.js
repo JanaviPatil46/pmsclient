@@ -16,6 +16,12 @@ import MuiCard from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
 import { toast } from "material-react-toastify";
 import { InputAdornment, IconButton, Fade, Menu, MenuItem } from "@mui/material";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "@mui/material";
 
 import AppTheme from "../shared-theme/AppTheme";
 import ColorModeSelect from "../shared-theme/ColorModeSelect";
@@ -77,6 +83,10 @@ export default function SignIn(props) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [userList, setUserList] = React.useState([]);
   const [selectedUser, setSelectedUser] = React.useState(null);
+const [openUserDialog, setOpenUserDialog] = useState(false);
+
+const handleOpenUserDialog = () => setOpenUserDialog(true);
+const handleCloseUserDialog = () => setOpenUserDialog(false);
 
   const [inpval, setInpval] = useState({
     email: "",
@@ -141,8 +151,11 @@ export default function SignIn(props) {
       const userData = await checkUserResponse.json();
       
       if (userData.user && userData.user.length > 1) {
+        // setUserList(userData.user);
+        // return true; // multiple users
         setUserList(userData.user);
-        return true; // multiple users
+  handleOpenUserDialog();   // <-- open modal instead of dropdown
+  return true;
       } else if (userData.user && userData.user.length === 1) {
         setSelectedUser(userData.user[0]);
         return false; // single user
@@ -415,7 +428,7 @@ export default function SignIn(props) {
               </Typography>
             )}
 
-            <Menu
+            {/* <Menu
               id="user-menu"
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
@@ -436,7 +449,7 @@ export default function SignIn(props) {
     : `${user.username} (${user.role})`}
                 </MenuItem>
               ))}
-            </Menu>
+            </Menu> */}
 
             <FormControl>
               <FormLabel htmlFor="password">Password</FormLabel>
@@ -454,7 +467,7 @@ export default function SignIn(props) {
                 fullWidth
                 variant="outlined"
                 color={inpval.passwordError ? "error" : "primary"}
-                onFocus={handlePasswordFocus}
+                // onFocus={handlePasswordFocus}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -509,9 +522,54 @@ export default function SignIn(props) {
           </Typography>
         </Card>
       </SignInContainer>
+      <Dialog
+  open={openUserDialog}
+  onClose={handleCloseUserDialog}
+  fullWidth
+  maxWidth="sm"
+>
+  <DialogTitle>Select User</DialogTitle>
+  <DialogContent dividers>
+    <Stack spacing={2}>
+      {userList.map((user) => (
+        <Button
+          key={user._id}
+          variant={selectedUser && selectedUser._id === user._id ? "contained" : "outlined"}
+          onClick={() => {
+            setSelectedUser(user);
+            handleCloseUserDialog();
+          }}
+          fullWidth
+        >
+          {/* {user.accountName
+            ? `${user.accountName} – ${user.username} (${user.role})`
+            : `${user.username} (${user.role})`} */}
+             {user.accountName
+            ? `${user.accountName} `
+            : `${user.username} (${user.role})`}
+        </Button>
+      ))}
+    </Stack>
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={handleCloseUserDialog}>Cancel</Button>
+  </DialogActions>
+</Dialog>
+
     </AppTheme>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
 // import * as React from "react";
 // import { useState, useEffect } from "react";
 // import Box from "@mui/material/Box";

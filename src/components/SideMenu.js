@@ -195,6 +195,7 @@ export default function SideMenu() {
   const { logindata, setLoginData } = useContext(LoginContext);
   const [loginuser, setLoginUser] = useState("");
   const [userData, setUserData] = useState("");
+  const [userEmail,setUserEmail]=useState("")
   const [username, setUsername] = useState("");
   const [collapsed, setCollapsed] = useState(false);
   const [profilePicture, setProfilePicture] = useState("");
@@ -210,7 +211,32 @@ export default function SideMenu() {
       fetchUserData(loginuser);
     }
   }, [loginuser]);
+   useEffect(() => {
+    if (loginuser) {
+      fetchAccountId();
+    }
+  }, [loginuser]);
+   const ACCOUNT_API = process.env.REACT_APP_ACCOUNTS_URL;
+  const fetchAccountId = async () => {
+    const requestOptions = {
+      method: "GET",
+      redirect: "follow",
+    };
 
+    try {
+      const response = await fetch(
+        `${ACCOUNT_API}/accounts/accountdetails/accountdetailslist/listbyuserid/${loginuser}`,
+        requestOptions
+      );
+      const result = await response.json();
+      console.log("result", result);
+      // if (result.accounts && result.accounts.length > 0) {
+      //   setAccountId(result.accounts[0]._id); // ✅ Setting accountId
+      // }
+    } catch (error) {
+      console.error("Error fetching account details:", error);
+    }
+  };
   const truncateString = (str, maxLength) => {
     if (str && str.length > maxLength) {
       return str.substring(0, maxLength) + "...";
@@ -233,6 +259,8 @@ export default function SideMenu() {
       console.log("users detials", result);
       if (result.email) {
         setUserData(truncateString(result.email, maxLength));
+        setUserEmail(result.email)
+
       }
       setUsername(result.username);
       // Construct proper profile picture URL
@@ -382,7 +410,7 @@ export default function SideMenu() {
               {userData}
             </Typography>
           </Box>
-          <OptionsMenu />
+          <OptionsMenu  email={userEmail}/>
         </Stack>
       ) : (
         <Box sx={{ p: 1, borderTop: "1px solid", borderColor: "divider" }}>

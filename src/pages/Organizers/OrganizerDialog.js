@@ -155,11 +155,21 @@ console.log("autosave raw",raw)
             text: question?.text || "",
             textvalue: getQuestionTextValue(question, section.id),
             questionsectionsettings: question?.questionsectionsettings , 
-             ...(question.type === "File Upload" && {
-            fileMetadata: {
-              fileName: uploadedFiles[`${section.id}_${question.text}`] || "",
-              // Add other metadata like upload date, size, etc.
-            }
+          //    ...(question.type === "File Upload" && {
+          //   fileMetadata: {
+          //     fileName: uploadedFiles[`${section.id}_${question.text}`] || "",
+          //     // Add other metadata like upload date, size, etc.
+          //   }
+          // })
+          ...(question.type === "File Upload" && {
+            fileMetadata: uploadedFiles[`${section.id}_${question.text}`]?.map(file => ({
+              fileName: file.serverData?.fileName || file.name,
+              filePath: file.serverData?.filePath || "",
+              uploadedAt: file.serverData?.uploadedAt || new Date().toISOString(),
+              fileSize: file.size,
+              fileType: file.type,
+              originalName: file.name
+            })) || []
           })
           })) || [],
       })) || [],
@@ -443,10 +453,17 @@ console.log("autosave raw",raw)
         return startDate?.toISOString() || "";
       case "Text Editor":
         return question.text || "";
-         case "File Upload":
-      return uploadedFiles[key] || ""; // Store file name in textvalue
-      default:
-        return "";
+      //    case "File Upload":
+      // return uploadedFiles[key] || ""; // Store file name in textvalue
+      // default:
+      //   return "";
+       case "File Upload":
+      // For file uploads, return a comma-separated list of file names
+      return uploadedFiles[key] 
+        ? uploadedFiles[key].map(file => file.name).join(", ") 
+        : "";
+    default:
+      return "";
     }
   };
 
@@ -958,7 +975,7 @@ console.log("autosave raw",raw)
                             )}
 
                            
-{element.type === "File Upload" && (
+{/* {element.type === "File Upload" && (
   <Box mt={2}>
     <Typography
       variant="subtitle2"
@@ -969,14 +986,7 @@ console.log("autosave raw",raw)
       {element.text}
     </Typography>
     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-      {/* <IconButton
-        component="label"
-        htmlFor={`fileInput_${section.id}_${element.id}`}
-        sx={{ color: "#e87800" }}
-        disabled={isElementActive(element)}
-      >
-        <HiDocumentArrowUp size={24} />
-      </IconButton> */}
+     
       <Typography
         variant="body1"
         component="label"
@@ -1035,6 +1045,108 @@ console.log("autosave raw",raw)
         >
           <CloseIcon fontSize="small" />
         </IconButton>
+      </Box>
+    )}
+  </Box>
+)} */}
+
+{element.type === "File Upload" && (
+  <Box mt={2}>
+    <Typography
+      variant="subtitle2"
+      component="p"
+      gutterBottom
+      sx={{ fontWeight: "550" }}
+    >
+      {element.text}
+    </Typography>
+    
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+      <Typography
+        variant="body1"
+        component="label"
+        htmlFor={`fileInput_${section.id}_${element.id}`}
+        sx={{ cursor: isElementActive(element) ? 'default' : 'pointer' }}
+      >
+        Upload Documents
+      </Typography>
+      <Input
+        type="file"
+        id={`fileInput_${section.id}_${element.id}`}
+        onChange={(e) => {
+          const selectedFiles = Array.from(e.target.files);
+          if (selectedFiles.length > 0) {
+            setFile(selectedFiles);
+            setIsDocumentForm(true);
+            
+            // Store temporary file names in state
+            const key = `${section.id}_${element.text}`;
+            const currentFiles = uploadedFiles[key] || [];
+            
+            setUploadedFiles(prev => ({
+              ...prev,
+              [key]: [...currentFiles, ...selectedFiles.map(file => ({
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                // We'll update this with server data after upload
+                serverData: null
+              }))]
+            }));
+            
+            setAnsweredElements(prev => ({
+              ...prev,
+              [key]: true
+            }));
+          }
+        }}
+        sx={{ display: "none" }}
+        disabled={isElementActive(element)}
+        multiple // Allow multiple file selection
+      />
+    </Box>
+    
+    {uploadedFiles[`${section.id}_${element.text}`]?.length > 0 && (
+      <Box sx={{ mt: 2 }}>
+        <Typography variant="body2" gutterBottom>
+          Selected files:
+        </Typography>
+        {uploadedFiles[`${section.id}_${element.text}`].map((file, index) => (
+          <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+            <Typography variant="caption">
+              {file.name} ({Math.round(file.size / 1024)} KB)
+            </Typography>
+            <IconButton
+              size="small"
+              onClick={() => {
+                const key = `${section.id}_${element.text}`;
+                setUploadedFiles(prev => {
+                  const newFiles = [...prev[key]];
+                  newFiles.splice(index, 1);
+                  return {
+                    ...prev,
+                    [key]: newFiles
+                  };
+                });
+                
+                // If no files left, mark as unanswered
+                if (uploadedFiles[key].length === 1) {
+                  setAnsweredElements(prev => ({
+                    ...prev,
+                    [key]: false
+                  }));
+                }
+                
+                // Trigger auto-save
+                const data = prepareSubmitData(false);
+                debouncedAutoSave(data);
+              }}
+              disabled={isElementActive(element)}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        ))}
       </Box>
     )}
   </Box>
@@ -1129,6 +1241,65 @@ console.log("autosave raw",raw)
     setFile(null);
   }}
 />
+{/* <UploadDrawer
+  open={isDocumentForm}
+  organizer={organizer}
+  onClose={() => setIsDocumentForm(false)}
+  files={file} // Now passing multiple files
+  accountId={accountId}
+  onUploadSuccess={(uploadedFileData) => {
+    console.log("Files uploaded successfully:", uploadedFileData);
+    
+    // Find which question these files belong to
+    const key = Object.keys(uploadedFiles).find(
+      k => uploadedFiles[k].some(f => file.some(selectedFile => selectedFile.name === f.name))
+    );
+    
+    if (key && uploadedFileData.length > 0) {
+      // Update the uploadedFiles state with server data
+      setUploadedFiles(prev => {
+        const updatedFiles = prev[key].map(localFile => {
+          const serverFile = uploadedFileData.find(
+            serverFile => serverFile.originalName === localFile.name
+          );
+          return serverFile ? { ...localFile, serverData: serverFile } : localFile;
+        });
+        
+        return {
+          ...prev,
+          [key]: updatedFiles
+        };
+      });
+      
+      // Trigger auto-save with the new file data
+      const data = prepareSubmitData(false);
+      debouncedAutoSave(data);
+    }
+    
+    setFile(null);
+    setIsDocumentForm(false);
+  }}
+  onUploadError={(error) => {
+    console.error("File upload failed:", error);
+    // Clear the file selection if upload fails
+    const key = Object.keys(uploadedFiles).find(
+      k => uploadedFiles[k].some(f => file.some(selectedFile => selectedFile.name === f.name))
+    );
+    
+    if (key) {
+      setUploadedFiles(prev => {
+        const newFiles = prev[key].filter(
+          f => !file.some(selectedFile => selectedFile.name === f.name)
+        );
+        return {
+          ...prev,
+          [key]: newFiles
+        };
+      });
+    }
+    setFile(null);
+  }}
+/> */}
 
     </>
   );
