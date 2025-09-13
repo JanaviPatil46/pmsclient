@@ -155,22 +155,13 @@ console.log("autosave raw",raw)
             text: question?.text || "",
             textvalue: getQuestionTextValue(question, section.id),
             questionsectionsettings: question?.questionsectionsettings , 
-          //    ...(question.type === "File Upload" && {
-          //   fileMetadata: {
-          //     fileName: uploadedFiles[`${section.id}_${question.text}`] || "",
-          //     // Add other metadata like upload date, size, etc.
-          //   }
-          // })
-          ...(question.type === "File Upload" && {
-            fileMetadata: uploadedFiles[`${section.id}_${question.text}`]?.map(file => ({
-              fileName: file.serverData?.fileName || file.name,
-              filePath: file.serverData?.filePath || "",
-              uploadedAt: file.serverData?.uploadedAt || new Date().toISOString(),
-              fileSize: file.size,
-              fileType: file.type,
-              originalName: file.name
-            })) || []
+             ...(question.type === "File Upload" && {
+            fileMetadata: {
+              fileName: uploadedFiles[`${section.id}_${question.text}`] || "",
+              // Add other metadata like upload date, size, etc.
+            }
           })
+         
           })) || [],
       })) || [],
       status: finalSubmit ? "Completed" : "In Progress",
@@ -453,17 +444,11 @@ console.log("autosave raw",raw)
         return startDate?.toISOString() || "";
       case "Text Editor":
         return question.text || "";
-      //    case "File Upload":
-      // return uploadedFiles[key] || ""; // Store file name in textvalue
-      // default:
-      //   return "";
-       case "File Upload":
-      // For file uploads, return a comma-separated list of file names
-      return uploadedFiles[key] 
-        ? uploadedFiles[key].map(file => file.name).join(", ") 
-        : "";
-    default:
-      return "";
+         case "File Upload":
+      return uploadedFiles[key] || ""; // Store file name in textvalue
+      default:
+        return "";
+      
     }
   };
 
@@ -975,7 +960,7 @@ console.log("autosave raw",raw)
                             )}
 
                            
-{/* {element.type === "File Upload" && (
+{element.type === "File Upload" && (
   <Box mt={2}>
     <Typography
       variant="subtitle2"
@@ -1048,109 +1033,9 @@ console.log("autosave raw",raw)
       </Box>
     )}
   </Box>
-)} */}
-
-{element.type === "File Upload" && (
-  <Box mt={2}>
-    <Typography
-      variant="subtitle2"
-      component="p"
-      gutterBottom
-      sx={{ fontWeight: "550" }}
-    >
-      {element.text}
-    </Typography>
-    
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-      <Typography
-        variant="body1"
-        component="label"
-        htmlFor={`fileInput_${section.id}_${element.id}`}
-        sx={{ cursor: isElementActive(element) ? 'default' : 'pointer' }}
-      >
-        Upload Documents
-      </Typography>
-      <Input
-        type="file"
-        id={`fileInput_${section.id}_${element.id}`}
-        onChange={(e) => {
-          const selectedFiles = Array.from(e.target.files);
-          if (selectedFiles.length > 0) {
-            setFile(selectedFiles);
-            setIsDocumentForm(true);
-            
-            // Store temporary file names in state
-            const key = `${section.id}_${element.text}`;
-            const currentFiles = uploadedFiles[key] || [];
-            
-            setUploadedFiles(prev => ({
-              ...prev,
-              [key]: [...currentFiles, ...selectedFiles.map(file => ({
-                name: file.name,
-                size: file.size,
-                type: file.type,
-                // We'll update this with server data after upload
-                serverData: null
-              }))]
-            }));
-            
-            setAnsweredElements(prev => ({
-              ...prev,
-              [key]: true
-            }));
-          }
-        }}
-        sx={{ display: "none" }}
-        disabled={isElementActive(element)}
-        multiple // Allow multiple file selection
-      />
-    </Box>
-    
-    {uploadedFiles[`${section.id}_${element.text}`]?.length > 0 && (
-      <Box sx={{ mt: 2 }}>
-        <Typography variant="body2" gutterBottom>
-          Selected files:
-        </Typography>
-        {uploadedFiles[`${section.id}_${element.text}`].map((file, index) => (
-          <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-            <Typography variant="caption">
-              {file.name} ({Math.round(file.size / 1024)} KB)
-            </Typography>
-            <IconButton
-              size="small"
-              onClick={() => {
-                const key = `${section.id}_${element.text}`;
-                setUploadedFiles(prev => {
-                  const newFiles = [...prev[key]];
-                  newFiles.splice(index, 1);
-                  return {
-                    ...prev,
-                    [key]: newFiles
-                  };
-                });
-                
-                // If no files left, mark as unanswered
-                if (uploadedFiles[key].length === 1) {
-                  setAnsweredElements(prev => ({
-                    ...prev,
-                    [key]: false
-                  }));
-                }
-                
-                // Trigger auto-save
-                const data = prepareSubmitData(false);
-                debouncedAutoSave(data);
-              }}
-              disabled={isElementActive(element)}
-            >
-              <CloseIcon fontSize="small" />
-            </IconButton>
-          </Box>
-        ))}
-      </Box>
-    )}
-  </Box>
 )}
+
+
                           </Box>
                         )
                     )}

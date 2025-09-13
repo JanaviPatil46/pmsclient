@@ -75,7 +75,7 @@ export default function OptionsMenu({ email }) {
   };
 
   // state
-
+const [canSwitch, setCanSwitch] = React.useState(false); 
   const checkEmailForUsers = async (email) => {
     console.log(" checkEmailForUsers(email); ", email);
     if (!email || !email.includes("@")) return;
@@ -109,7 +109,14 @@ export default function OptionsMenu({ email }) {
       return false;
     }
   };
-
+// ✅ run check when email changes
+React.useEffect(() => {
+  const fetchAndSet = async () => {
+    const hasUsers = await checkEmailForUsers(email);
+    setCanSwitch(hasUsers);
+  };
+  fetchAndSet();
+}, [email]);
   
   const handleSwitchAccount = async (user) => {
     try {
@@ -178,23 +185,8 @@ export default function OptionsMenu({ email }) {
       toast.error("Error switching account");
     }
   };
-  const [loginsData, setloginsData] = useState("");
-  const fetchUserData = async (id) => {
-    const myHeaders = new Headers();
 
-    const requestOptions = {
-      method: "GET",
-      headers: myHeaders,
-      redirect: "follow",
-    };
-    const url = `${LOGIN_API}/common/user/${id}`;
-    fetch(url + loginsData, requestOptions)
-      .then((response) => response.json())
-      .then((result) => {
-        console.log("selctedid", result);
-      });
-  };
-
+  
   const DashboardValid = async () => {
     let token = localStorage.getItem("clientdatatoken");
 
@@ -259,11 +251,21 @@ export default function OptionsMenu({ email }) {
         <Divider />
         {/* <MenuItem onClick={handleClose}>Add another account</MenuItem> */}
         <MenuItem
-          onClick={() => {
-            handleClose();
-            checkEmailForUsers(email); // load user list
-            setOpenSwitchDialog(true);
-          }}
+          // onClick={() => {
+          //   handleClose();
+          //   checkEmailForUsers(email); // load user list
+          //   setOpenSwitchDialog(true);
+          // }}
+          disabled={!canSwitch}
+          onClick={async () => {
+
+    handleClose();
+    const hasUsers = await checkEmailForUsers(email);
+    if (hasUsers) {
+      setOpenSwitchDialog(true); // ✅ only open if users exist
+    }
+    
+  }}
         >
           Switch Account
         </MenuItem>
