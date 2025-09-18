@@ -227,7 +227,7 @@ const ChatsTasks = () => {
                       const clean =
                         latest.message?.replace(/<[^>]+>/g, "") || "";
                       const sender =
-                        latest.fromwhome === "Admin"
+                        latest.fromwhome === "client"
                           ? "You"
                           : latest.senderid?.username || "";
 

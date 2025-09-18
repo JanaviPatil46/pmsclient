@@ -3,16 +3,14 @@ import Paper from "@mui/material/Paper";
 import Grid from "@mui/material/Grid";
 import React, { useContext, useEffect, useState } from "react";
 import { Stack, Typography } from "@mui/material";
-// import UploadFileIcon from "@mui/icons-material/UploadFile";
-// import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
-// import TelegramIcon from "@mui/icons-material/Telegram";
+
 import QuickLinks from "../components/QuickLinks";
 import OrganizersList from "../components/Home Components/OrganizersList";
 import BillingList from "../components/Home Components/BillingList";
 import DocumentsList from "../components/Home Components/DocumentsList";
 import ChatsList from "../components/Home Components/ChatsList";
 import ProposalsList from "../components/Home Components/ProposalsList";
-// import ESignature from "../components/Home Components/eSignature"
+
 import { LoginContext } from "../context/Context";
 import DocuSealWrapper from "../components/Home Components/DocuSealWrapper";
 import DocumnetApprovals from "../components/Home Components/DocumnetApprovals";
@@ -92,7 +90,7 @@ const Home = () => {
         width: "100%",
         maxWidth: { sm: "100%", md: "1700px" },
         flexGrow: 1,
-        // border:'2px solid green',
+       
         height: "90vh",
         p: 1,
       }}
@@ -100,14 +98,14 @@ const Home = () => {
       <Grid container spacing={2}>
         <Grid
           size={{ xs: 12, md: 8 }}
-          // sx={{ height: "88vh", overflowY: "auto" }}
+          
         >
           <Paper
             sx={{
               p: 2,
               borderRadius: 2,
               boxShadow: 1,
-              //  marginBottom:2,
+             
               transition: "all 0.3s",
               cursor: "pointer",
               "&:hover .sign-link": {
@@ -130,7 +128,7 @@ const Home = () => {
             </Stack>
             <OrganizersList accountId={accountId} />
             <BillingList accountId={accountId} />
-            {/* <DocumentsList /> */}
+           
             <ChatsList accountId={accountId} />
             <ProposalsList accountId={accountId} />
            <DocuSealWrapper/>

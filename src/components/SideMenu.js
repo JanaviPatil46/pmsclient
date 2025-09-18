@@ -162,6 +162,7 @@ import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { toast } from "material-react-toastify";
 import MenuButton from "./MenuButton";
+import SwitchAccountIcon from '@mui/icons-material/SwitchAccount';
 // import Logo from "../Images/snplogo.png";
 import Logo from "../Images/snplogo-removebg-preview.png";
 const drawerWidth = 240;
@@ -262,7 +263,8 @@ export default function SideMenu() {
         setUserEmail(result.email)
 
       }
-      setUsername(result.username);
+      // setUsername(result.username);
+      setUsername(truncateString(result.username, maxLength))
       // Construct proper profile picture URL
       if (result.profilePicture) {
         // Remove the 'uploads/' prefix since your static route already handles it
@@ -302,6 +304,8 @@ export default function SideMenu() {
       console.log("user logout");
       localStorage.removeItem("clientdatatoken");
       Cookies.remove("clientuserToken");
+       localStorage.removeItem("selectedUser");
+          localStorage.removeItem("pendingUserEmail");
       setLoginData(false);
 
       navigate("/client/login");
@@ -375,7 +379,13 @@ export default function SideMenu() {
       >
         <MenuContent collapsed={collapsed} />
       </Box>
-
+{collapsed && (
+  <Stack sx={{ p: 2 }}>
+    <MenuButton>
+      <SwitchAccountIcon />
+    </MenuButton>
+  </Stack>
+)}
       {collapsed && (
         <Stack sx={{ p: 2 }}>
           <MenuButton onClick={logoutuser}>
