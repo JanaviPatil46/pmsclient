@@ -365,13 +365,18 @@ import {
   IconButton,
   Input,
   Stack,
-  Grid,
+  Grid,MenuItem,Menu
 } from "@mui/material";
 import { LoginContext } from "../../context/Context";
 import { HiDocumentArrowUp } from "react-icons/hi2";
 import { useState, useContext, useEffect } from "react";
 import { FaRegFolderClosed } from "react-icons/fa6";
 import axios from "axios";
+import { toast } from "material-react-toastify";
+import EditNameDrawer from "./EditNameDrawer";
+import MoveFile from "./MoveFile";
+import FileExplorer from "./FileExplorer";
+import { BsThreeDotsVertical } from "react-icons/bs";
 import CreateFolder from "./AdminPortal/CreateFolder";
 import UploadDrawer from "./AdminPortal/uploadDocumentWorking";
 const Document = () => {
@@ -472,8 +477,229 @@ const [accountEmailSync, setAccountEmailSync]=useState("")
       fetchBothFolders();
     }
   }, [accId]);
+   const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [activeMenu, setActiveMenu] = useState(null);
+   const [loading, setLoading] = useState(false);
+const handleMenuOpen = (event, item) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedItem(item);
+    setActiveMenu(item.id);
+  };
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    // setSelectedItem(null);
+    setTimeout(() => setSelectedItem(null), 100);
+    setActiveMenu(null);
+  };
+  const handleMenuAction = (action) => {
+    if (selectedItem) {
+      handleAction(action, selectedItem); // This function must be defined by you
+      handleMenuClose();
+    }
+  };
+  const handleFileOpen = (fileItem) => {
+   
+    const baseUrl = `${DOCS_MANAGMENTS}`; // or http://localhost:8000 in dev
+    const fileUrl = `${baseUrl}/${fileItem.path}`;
 
-  const renderTree = (items) => {
+    // window.open(fileUrl, "_blank");
+    window.location.href = fileUrl;
+  };
+  const handleAction = async (action, item) => {
+    console.log(`Action: ${action} on`, item);
+    setActiveMenu(null); // Close the action menu
+
+    if (action === "seal" || action === "unseal") {
+      try {
+        setLoading(true);
+
+        // Extract folder ID from item.path
+        const pathParts = item.path.split("/");
+        const folderId = pathParts[2]; // uploads/AccountId/{id}/...
+
+        // Compute base path
+        const basePath = `uploads/AccountId/${folderId}/Client Uploaded Documents`;
+
+        // Get relative path inside unsealed/sealed
+        const currentDir = action === "seal" ? "unsealed" : "sealed";
+        const relativePath = item.path.replace(
+          `${basePath}/${currentDir}/`,
+          ""
+        );
+
+        // Call backend to move the item
+        await axios.post(
+          `${DOCS_MANAGMENTS}/admindocs/moveBetweenSealedUnsealed`,
+          {
+            id: folderId,
+            itemPath: relativePath,
+            direction: action === "seal" ? "toSealed" : "toUnsealed",
+          }
+        );
+
+        // Refresh folders
+        await fetchBothFolders();
+
+        // Notify success
+        alert(`Item ${action === "seal" ? "sealed" : "unsealed"} successfully`);
+      } catch (error) {
+        console.error("Error moving item:", error);
+        alert(
+          `Failed to ${action} item: ${error.response?.data?.error || error.message}`
+        );
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // Other actions if needed
+    }
+  };
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const handleEdit = (item) => {
+    console.log("Edit", item);
+    setSelectedItem(item);
+    setDrawerOpen(true);
+  };
+  const handleRename = async (item, newName, itemPath) => {
+    console.log("path", item);
+    try {
+      const response = await fetch(
+        `${DOCS_MANAGMENTS}/admindocs/rename-item`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            currentPath: itemPath,
+            newName,
+            // id: item.id,
+          }),
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok) {
+        console.log("Renamed:", data);
+        toast.success("Renamed successfully")
+        fetchBothFolders();
+        // fetchPrivateFolders();
+        // Refresh your data list here
+      } else {
+        alert(data.error);
+      }
+    } catch (error) {
+      console.error("Rename failed", error);
+    }
+  };
+    const [sourceFile, setSourceFile] = useState(null);
+    const handleFileMove = () => setIsMoveDocument(true);
+     const [isMoveDocument, setIsMoveDocument] = useState(false);
+ const handleMove = (item) => {
+    console.log("Move Hi jan v kujaki", item.path);
+    setSourceFile(item.path);
+
+  };
+   const handleDelete = (item) => {
+      console.log("Delete", item);
+  
+      const myHeaders = new Headers();
+      myHeaders.append("Content-Type", "application/json");
+  
+      const raw = JSON.stringify({
+        path: item.path, // dynamically from item
+        id: item.id, // dynamically from item
+      });
+  
+      const requestOptions = {
+        method: "DELETE",
+        headers: myHeaders,
+        body: raw,
+        redirect: "follow",
+      };
+  
+      fetch(`${DOCS_MANAGMENTS}/admindocs/delete-item`, requestOptions)
+        .then((response) => response.text())
+        .then((result) => {
+          console.log("Delete Result:", result);
+          toast.success("Deleted successfully");
+          fetchBothFolders();
+          // fetchPrivateFolders();
+        })
+        .catch((error) => console.error("Delete Error:", error));
+    };
+  // const renderTree = (items) => {
+  //   return items.map((item) => {
+  //     if (item.folder) {
+  //       return (
+  //         <div key={item.id} style={{ paddingLeft: "20px" }}>
+  //           <div
+  //             style={{
+  //               cursor: "pointer",
+  //               display: "flex",
+  //               alignItems: "center",
+  //               justifyContent: "space-between",
+  //               paddingRight: "8px",
+  //             }}
+  //             onClick={() => handleToggle(item.id)}
+  //           >
+  //             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+  //               <span>{item.isOpen ? "📂" : "📁"}</span>
+  //               <span>{item.folder}</span>
+  //               {item.sealed && (
+  //                 <span style={{
+  //                   backgroundColor: "#d50000",
+  //                   color: "#fff",
+  //                   padding: "2px 6px",
+  //                   borderRadius: "8px",
+  //                   fontSize: "12px",
+  //                 }}>
+  //                   Sealed
+  //                 </span>
+  //               )}
+  //             </div>
+  //           </div>
+  //           {item.isOpen && item.contents?.length > 0 && (
+  //             <div>{renderTree(item.contents)}</div>
+  //           )}
+  //         </div>
+  //       );
+  //     } else {
+  //       return (
+  //         <div
+  //           key={item.id}
+  //           style={{
+  //             paddingLeft: "40px",
+  //             display: "flex",
+  //             alignItems: "center",
+  //             justifyContent: "space-between",
+  //             paddingRight: "8px",
+  //           }}
+  //         >
+  //           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+  //             <span>📄</span>
+  //             <span style={{ cursor: "pointer" }}>
+  //               {item.file}
+  //             </span>
+  //             {item.sealed && (
+  //               <span style={{
+  //                 backgroundColor: "#d50000",
+  //                 color: "#fff",
+  //                 padding: "2px 6px",
+  //                 borderRadius: "8px",
+  //                 fontSize: "12px",
+  //               }}>
+  //                 Sealed
+  //               </span>
+  //             )}
+  //           </div>
+  //         </div>
+  //       );
+  //     }
+  //   });
+  // };
+const renderTree = (items) => {
     return items.map((item) => {
       if (item.folder) {
         return (
@@ -486,23 +712,45 @@ const [accountEmailSync, setAccountEmailSync]=useState("")
                 justifyContent: "space-between",
                 paddingRight: "8px",
               }}
-              onClick={() => handleToggle(item.id)}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                onClick={() => handleToggle(item.id)}
+              >
                 <span>{item.isOpen ? "📂" : "📁"}</span>
                 <span>{item.folder}</span>
                 {item.sealed && (
-                  <span style={{
-                    backgroundColor: "#d50000",
-                    color: "#fff",
-                    padding: "2px 6px",
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                  }}>
+                  <span
+                    style={{
+                      backgroundColor: "#d50000",
+                      color: "#fff",
+                      padding: "2px 6px",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                    }}
+                  >
                     Sealed
                   </span>
                 )}
               </div>
+              {/* <div style={{ position: "relative" }}>
+                <IconButton
+                  onClick={(e) => handleMenuOpen(e, item)}
+                  size="small"
+                >
+                  <BsThreeDotsVertical />
+                </IconButton>
+              </div> */}
+               {item.folder !== "Client Uploaded Documents" && (
+                <div style={{ position: "relative" }}>
+                  {/* <IconButton
+                    
+                    size="small"
+                  > */}
+                    <BsThreeDotsVertical onClick={(e) => handleMenuOpen(e, item)}/>
+                  {/* </IconButton> */}
+                </div>
+              )}
             </div>
             {item.isOpen && item.contents?.length > 0 && (
               <div>{renderTree(item.contents)}</div>
@@ -523,27 +771,36 @@ const [accountEmailSync, setAccountEmailSync]=useState("")
           >
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <span>📄</span>
-              <span style={{ cursor: "pointer" }}>
+              <span
+                // onClick={() => handleFileOpen(item)}
+                style={{ cursor: "pointer" }}
+              >
                 {item.file}
               </span>
               {item.sealed && (
-                <span style={{
-                  backgroundColor: "#d50000",
-                  color: "#fff",
-                  padding: "2px 6px",
-                  borderRadius: "8px",
-                  fontSize: "12px",
-                }}>
+                <span
+                  style={{
+                    backgroundColor: "#d50000",
+                    color: "#fff",
+                    padding: "2px 6px",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                  }}
+                >
                   Sealed
                 </span>
               )}
+            </div>
+            <div style={{ position: "relative" }}>
+              {/* <IconButton onClick={(e) => handleMenuOpen(e, item)} size="small"> */}
+                <BsThreeDotsVertical onClick={(e) => handleMenuOpen(e, item)} />
+              {/* </IconButton> */}
             </div>
           </div>
         );
       }
     });
   };
-
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
   if (!combinedFolderStructure) return <div>No documents found</div>;
@@ -616,6 +873,90 @@ const [accountEmailSync, setAccountEmailSync]=useState("")
           {renderTree(combinedFolderStructure)}
         </Box>
 
+<Box mt={2}>
+          
+          <FileExplorer accountId={accId}  />
+        </Box>
+  <Menu
+    anchorEl={anchorEl}
+    open={Boolean(anchorEl)}
+    onClose={handleMenuClose}
+    anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+    transformOrigin={{ vertical: "top", horizontal: "right" }}
+  >
+    {selectedItem?.folder === "Client Uploaded Documents" ? (
+      // Disable all options for the parent folder
+      <>
+        {/* <MenuItem disabled>New Folder</MenuItem> */}
+        <MenuItem disabled>Edit</MenuItem>
+        <MenuItem disabled>Move</MenuItem>
+        {/* <MenuItem disabled>Seal/Unseal</MenuItem> */}
+        <MenuItem disabled>Delete</MenuItem>
+      </>
+    ) : selectedItem?.folder ? (
+      // Folder menu options (for non-parent folders)
+      <>
+        {/* <MenuItem onClick={() => handleMenuAction("new-folder")}>
+          New Folder
+        </MenuItem> */}
+        <MenuItem onClick={() => {
+          handleEdit(selectedItem);
+          handleMenuClose();
+        }}>
+          Edit
+        </MenuItem>
+        {/* <MenuItem onClick={() => {
+          handleFileMove();
+          handleMenuClose();
+          handleMove(selectedItem);
+        }}>
+          Move
+        </MenuItem> */}
+        {/* <MenuItem onClick={() =>
+          handleMenuAction(selectedItem?.sealed ? "unseal" : "seal")
+        }>
+          {selectedItem?.sealed ? "Unseal" : "Seal"}
+        </MenuItem> */}
+        <MenuItem onClick={() => { 
+          handleDelete(selectedItem); 
+          handleMenuClose();
+        }}>
+          Delete
+        </MenuItem>
+      </>
+    ) : (
+      // File menu options
+      <>
+        <MenuItem onClick={() => {
+          handleEdit(selectedItem);
+          handleMenuClose();
+        }}>
+          Edit
+        </MenuItem>
+        <MenuItem onClick={() => { 
+          handleDelete(selectedItem); 
+          handleMenuClose();
+        }}>
+          Delete
+        </MenuItem>
+        {/* <MenuItem onClick={() =>
+          handleMenuAction(selectedItem?.sealed ? "unseal" : "seal")
+        }>
+          {selectedItem?.sealed ? "Unseal" : "Seal"}
+        </MenuItem> */}
+        {/* <MenuItem onClick={() => {
+          handleFileMove();
+          handleMenuClose();
+          handleMove(selectedItem);
+        }}>
+          Move
+        </MenuItem> */}
+        <MenuItem onClick={() => handleFileOpen(selectedItem)}>
+          Download
+        </MenuItem>
+      </>
+    )}
+  </Menu>
         <CreateFolder
         open={isFolderFormOpen}
         onClose={() => setIsFolderFormOpen(false)}
@@ -635,7 +976,23 @@ const [accountEmailSync, setAccountEmailSync]=useState("")
         fetchBothFolders={fetchBothFolders}
         accountEmailSync={accountEmailSync}
       />
-
+     <EditNameDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        item={selectedItem}
+        onRename={handleRename}
+      />
+     
+ <MoveFile
+       open={isMoveDocument}
+        onClose={() => setIsMoveDocument(false)}
+        // fetchUnSealedFolders={fetchUnSealedFolders}
+        // fetchAdminPrivateFolders={fetchPrivateFolders}
+        fetchBothFolders={fetchBothFolders}
+        accountId={accId}
+         sourceFile={sourceFile}
+         isMoveDocument={isMoveDocument}
+      />
       </Box>
     </Box>
   );
