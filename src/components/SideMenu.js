@@ -201,17 +201,53 @@ export default function SideMenu() {
   const [collapsed, setCollapsed] = useState(false);
   const [profilePicture, setProfilePicture] = useState("");
 
+  // useEffect(() => {
+  //   if (logindata?.user?.id) {
+  //     setLoginUser(logindata.user.id);
+  //   }
+  // }, [logindata]);
   useEffect(() => {
-    if (logindata?.user?.id) {
-      setLoginUser(logindata.user.id);
-    }
-  }, [logindata]);
+  // Get userId from login context
+  if (logindata?.user?.id) {
+    setLoginUser(logindata.user.id);
+  }
 
-  useEffect(() => {
-    if (loginuser) {
-      fetchUserData(loginuser);
+  // Get stored selected user from localStorage
+  const storedSelectedUser = localStorage.getItem("selectedUser");
+  if (storedSelectedUser) {
+    try {
+      const parsedUser = JSON.parse(storedSelectedUser);
+      const maxLength = 15;
+
+      if (parsedUser?.email) {
+        setUserData(truncateString(parsedUser.email, maxLength));
+        setUserEmail(parsedUser.email);
+      }
+
+      if (parsedUser?.accountName) {
+        setUsername(truncateString(parsedUser.accountName, maxLength));
+      }
+
+      // Construct proper profile picture URL if exists
+      if (parsedUser?.profilePicture) {
+        const imagePath = parsedUser.profilePicture.replace("uploads/", "");
+        const fullImageUrl = `${LOGIN_API}/profilepicture/${imagePath}`;
+        setProfilePicture(fullImageUrl);
+      } else {
+        setProfilePicture(null);
+      }
+    } catch (error) {
+      console.error("Error parsing selectedUser from localStorage:", error);
     }
-  }, [loginuser]);
+  }
+}, [logindata]);
+
+
+  // useEffect(() => {
+  //   if (loginuser) {
+  //     fetchUserData(loginuser);
+  //   }
+  // }, [loginuser]);
    useEffect(() => {
     if (loginuser) {
       fetchAccountId();

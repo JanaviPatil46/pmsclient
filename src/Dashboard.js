@@ -497,7 +497,7 @@ export default function Dashboard(props) {
         user: {
           ...loginData.user,
           id: user._id, // Use the selected user's ID
-          username: user.username,
+          username: user.accountName,
           role: user.role,
           // Add any other user properties you need
         }
@@ -549,7 +549,7 @@ export default function Dashboard(props) {
             user: {
               ...loginData.user,
               id: user._id,
-              username: user.username,
+              username: user.accountName,
               role: user.role,
             }
           };
@@ -587,7 +587,7 @@ export default function Dashboard(props) {
               user: {
                 ...loginData.user,
                 id: user._id,
-                username: user.username,
+                username: user.accountName,
                 role: user.role,
               }
             };
@@ -627,7 +627,7 @@ export default function Dashboard(props) {
             user: {
               ...data.user,
               id: user._id,
-              username: user.username,
+              username: user.accountName,
               role: user.role,
             }
           };
