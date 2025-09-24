@@ -636,11 +636,11 @@ export default function Dashboard(props) {
         } catch (error) {
           console.error("Error updating login data with selected user:", error);
           setLoginData(data);
-          setloginsData(data.user.id);
+          setloginsData(data.user._id);
         }
       } else {
         setLoginData(data);
-        setloginsData(data.user.id);
+        setloginsData(data.user._id);
       }
 
       if (data.user.role?.toLowerCase() === "client") {

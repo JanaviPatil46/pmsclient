@@ -508,7 +508,7 @@ export default function OptionsMenu({ email }) {
             user: {
               ...logindata.user,
               id: user._id,
-              username: user.username,
+              username: user.accountName,
               role: user.role,
               // Add any other user properties you need
             }

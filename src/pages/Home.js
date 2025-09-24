@@ -17,7 +17,7 @@ import DocumnetApprovals from "../components/Home Components/DocumnetApprovals";
 const Home = () => {
   const ACCOUNT_API = process.env.REACT_APP_ACCOUNTS_URL;
   const { logindata } = useContext(LoginContext);
- 
+ const { selectedUser, refreshKey } = useContext(LoginContext);
      const [userData, setUserData] = useState("");
   const [loginUserId, setLoginUserId] = useState();
   console.log("login data", logindata);
