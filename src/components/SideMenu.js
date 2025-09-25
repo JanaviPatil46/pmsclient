@@ -352,69 +352,69 @@ export default function SideMenu() {
     }
   };
 
-   // Setup beforeunload and unload event listeners
-  useEffect(() => {
-    const handleBeforeUnload = (event) => {
-      // This event fires when the user tries to close the browser/tab
-      // You can perform synchronous operations here
-      localStorage.setItem('closingBrowser', 'true');
-    };
+  //  // Setup beforeunload and unload event listeners
+  // useEffect(() => {
+  //   const handleBeforeUnload = (event) => {
+  //     // This event fires when the user tries to close the browser/tab
+  //     // You can perform synchronous operations here
+  //     localStorage.setItem('closingBrowser', 'true');
+  //   };
 
-    const handleUnload = () => {
-      // This event fires when the page is being unloaded
-      // Note: Most modern browsers restrict what you can do here
-      // For logout, it's better to use the beforeunload event or a Beacon API
-      logoutuser();
-    };
+  //   const handleUnload = () => {
+  //     // This event fires when the page is being unloaded
+  //     // Note: Most modern browsers restrict what you can do here
+  //     // For logout, it's better to use the beforeunload event or a Beacon API
+  //     logoutuser();
+  //   };
 
-    // Add event listeners
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('unload', handleUnload);
+  //   // Add event listeners
+  //   window.addEventListener('beforeunload', handleBeforeUnload);
+  //   window.addEventListener('unload', handleUnload);
 
-    // Check if the user is returning after closing the browser
-    const wasBrowserClosed = localStorage.getItem('closingBrowser');
-    if (wasBrowserClosed) {
-      // If the browser was closed, log the user out
-      logoutuser();
-      localStorage.removeItem('closingBrowser');
-    }
+  //   // Check if the user is returning after closing the browser
+  //   const wasBrowserClosed = localStorage.getItem('closingBrowser');
+  //   if (wasBrowserClosed) {
+  //     // If the browser was closed, log the user out
+  //     logoutuser();
+  //     localStorage.removeItem('closingBrowser');
+  //   }
 
-    // Cleanup function to remove event listeners
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('unload', handleUnload);
-    };
-  }, [logoutuser]); // Add logoutuser to dependencies
+  //   // Cleanup function to remove event listeners
+  //   return () => {
+  //     window.removeEventListener('beforeunload', handleBeforeUnload);
+  //     window.removeEventListener('unload', handleUnload);
+  //   };
+  // }, [logoutuser]); // Add logoutuser to dependencies
 
-  // Alternative approach using Beacon API for more reliable logout on page unload
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        // Page is being hidden (tab closed or browser minimized)
-        // Use Beacon API to send logout request
-        const token = localStorage.getItem("clientdatatoken");
-        const url = `${LOGIN_API}/common/clientlogin/logout/`;
+  // // Alternative approach using Beacon API for more reliable logout on page unload
+  // useEffect(() => {
+  //   const handleVisibilityChange = () => {
+  //     if (document.visibilityState === 'hidden') {
+  //       // Page is being hidden (tab closed or browser minimized)
+  //       // Use Beacon API to send logout request
+  //       const token = localStorage.getItem("clientdatatoken");
+  //       const url = `${LOGIN_API}/common/clientlogin/logout/`;
         
-        const data = new Blob([JSON.stringify({})], { type: 'application/json' });
+  //       const data = new Blob([JSON.stringify({})], { type: 'application/json' });
         
-        if (navigator.sendBeacon) {
-          navigator.sendBeacon(url, data);
-        }
+  //       if (navigator.sendBeacon) {
+  //         navigator.sendBeacon(url, data);
+  //       }
         
-        // Clean up local storage
-        localStorage.removeItem("clientdatatoken");
-        Cookies.remove("clientuserToken");
-        localStorage.removeItem("selectedUser");
-        localStorage.removeItem("pendingUserEmail");
-      }
-    };
+  //       // Clean up local storage
+  //       localStorage.removeItem("clientdatatoken");
+  //       Cookies.remove("clientuserToken");
+  //       localStorage.removeItem("selectedUser");
+  //       localStorage.removeItem("pendingUserEmail");
+  //     }
+  //   };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+  //   document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [LOGIN_API]);
+  //   return () => {
+  //     document.removeEventListener('visibilitychange', handleVisibilityChange);
+  //   };
+  // }, [LOGIN_API]);
 
   return (
     <Drawer

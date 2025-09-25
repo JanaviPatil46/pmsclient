@@ -368,7 +368,29 @@ export default function OptionsMenu({ email }) {
   const [accountUsers, setAccountUsers] = React.useState([]);
   const [selectedUser, setSelectedUser] = React.useState(null); // Add selectedUser state
   const navigate = useNavigate();
-  
+React.useEffect(() => {
+  const handleUnload = () => {
+    // 👇 Only clear data if NOT switching account
+    if (!sessionStorage.getItem("isSwitchingAccount")) {
+      localStorage.removeItem("clientdatatoken");
+      localStorage.removeItem("selectedUser");
+      localStorage.removeItem("pendingUserEmail");
+      Cookies.remove("clientuserToken");
+      setLoginData(false);
+    } else {
+      // Remove the flag after handling
+      sessionStorage.removeItem("isSwitchingAccount");
+    }
+  };
+
+  window.addEventListener("beforeunload", handleUnload);
+
+  return () => {
+    window.removeEventListener("beforeunload", handleUnload);
+  };
+}, [setLoginData]);
+
+
   // Check if there's a selected user in localStorage on component mount
   React.useEffect(() => {
     const storedSelectedUser = localStorage.getItem("selectedUser");
@@ -515,7 +537,8 @@ export default function OptionsMenu({ email }) {
           };
           setLoginData(updatedLoginData);
         }
-        
+         // ✅ mark session as switching
+      sessionStorage.setItem("isSwitchingAccount", "true");
         setOpenSwitchDialog(false);
         toast.success(`Switched to ${user.accountName || user.username}`);
         
