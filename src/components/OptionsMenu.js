@@ -368,18 +368,41 @@ export default function OptionsMenu({ email }) {
   const [accountUsers, setAccountUsers] = React.useState([]);
   const [selectedUser, setSelectedUser] = React.useState(null); // Add selectedUser state
   const navigate = useNavigate();
+// React.useEffect(() => {
+//   const handleUnload = () => {
+//     // 👇 Only clear data if NOT switching account
+//     if (!sessionStorage.getItem("isSwitchingAccount")) {
+//       localStorage.removeItem("clientdatatoken");
+//       localStorage.removeItem("selectedUser");
+//       localStorage.removeItem("pendingUserEmail");
+//       Cookies.remove("clientuserToken");
+//       setLoginData(false);
+//     } else {
+//       // Remove the flag after handling
+//       sessionStorage.removeItem("isSwitchingAccount");
+//     }
+//   };
+
+//   window.addEventListener("beforeunload", handleUnload);
+
+//   return () => {
+//     window.removeEventListener("beforeunload", handleUnload);
+//   };
+// }, [setLoginData]);
+
 React.useEffect(() => {
-  const handleUnload = () => {
-    // 👇 Only clear data if NOT switching account
-    if (!sessionStorage.getItem("isSwitchingAccount")) {
+  const handleUnload = (e) => {
+    // Only logout if not switching account and not logging out manually
+    if (!sessionStorage.getItem("isSwitchingAccount") && !sessionStorage.getItem("isManualLogout")) {
       localStorage.removeItem("clientdatatoken");
       localStorage.removeItem("selectedUser");
       localStorage.removeItem("pendingUserEmail");
       Cookies.remove("clientuserToken");
       setLoginData(false);
     } else {
-      // Remove the flag after handling
+      // Remove the flags after handling
       sessionStorage.removeItem("isSwitchingAccount");
+      sessionStorage.removeItem("isManualLogout");
     }
   };
 
@@ -389,7 +412,6 @@ React.useEffect(() => {
     window.removeEventListener("beforeunload", handleUnload);
   };
 }, [setLoginData]);
-
 
   // Check if there's a selected user in localStorage on component mount
   React.useEffect(() => {
@@ -406,6 +428,7 @@ React.useEffect(() => {
   }, []);
 
   const logoutuser = async () => {
+    sessionStorage.setItem("isManualLogout", "true");
     let token = localStorage.getItem("clientdatatoken");
     const url = `${LOGIN_API}/common/clientlogin/logout/`;
 
