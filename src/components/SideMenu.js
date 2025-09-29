@@ -213,7 +213,7 @@ export default function SideMenu() {
   }
 
   // Get stored selected user from localStorage
-  const storedSelectedUser = localStorage.getItem("selectedUser");
+  const storedSelectedUser = sessionStorage.getItem("selectedUser");
   if (storedSelectedUser) {
     try {
       const parsedUser = JSON.parse(storedSelectedUser);
@@ -321,7 +321,7 @@ export default function SideMenu() {
   };
   const navigate = useNavigate();
   const logoutuser = async () => {
-    let token = localStorage.getItem("clientdatatoken");
+    let token = sessionStorage.getItem("clientdatatoken");
     const url = `${LOGIN_API}/common/clientlogin/logout/`;
 
     const requestOptions = {
@@ -338,10 +338,10 @@ export default function SideMenu() {
 
     if (data.status === 200) {
       console.log("user logout");
-      localStorage.removeItem("clientdatatoken");
+      sessionStorage.removeItem("clientdatatoken");
       Cookies.remove("clientuserToken");
-       localStorage.removeItem("selectedUser");
-          localStorage.removeItem("pendingUserEmail");
+       sessionStorage.removeItem("selectedUser");
+          sessionStorage.removeItem("pendingUserEmail");
       setLoginData(false);
 
       navigate("/client/login");

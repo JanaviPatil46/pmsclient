@@ -482,10 +482,10 @@ export default function Dashboard(props) {
     handleCloseUserDialog();
     
     // Store the selected user in localStorage
-    localStorage.setItem("selectedUser", JSON.stringify(user));
+    sessionStorage.setItem("selectedUser", JSON.stringify(user));
     
     // Remove the pending selection flag
-    localStorage.removeItem("pendingUserEmail");
+    sessionStorage.removeItem("pendingUserEmail");
     
     // Update state to reflect the selected user
     setIsUserSelectionPending(false);
@@ -533,10 +533,10 @@ export default function Dashboard(props) {
   };
 
   const DashboardValid = async () => {
-    let token = localStorage.getItem("clientdatatoken");
+    let token = sessionStorage.getItem("clientdatatoken");
 
-    // Check if we have a selected user in localStorage
-    const storedSelectedUser = localStorage.getItem("selectedUser");
+    // Check if we have a selected user in sessionStorage
+    const storedSelectedUser = sessionStorage.getItem("selectedUser");
     if (storedSelectedUser) {
       try {
         const user = JSON.parse(storedSelectedUser);
@@ -558,12 +558,12 @@ export default function Dashboard(props) {
         }
       } catch (error) {
         console.error("Error parsing selected user:", error);
-        localStorage.removeItem("selectedUser");
+        sessionStorage.removeItem("selectedUser");
       }
     }
 
     // Check if we have a pending user selection first
-    const pendingEmail = localStorage.getItem("pendingUserEmail");
+    const pendingEmail = sessionStorage.getItem("pendingUserEmail");
     if (pendingEmail && !storedSelectedUser) {
       try {
         // Fetch users by email
@@ -577,8 +577,8 @@ export default function Dashboard(props) {
         } else if (userData && userData.user && userData.user.length === 1) {
           // Auto-select if only one user
           const user = userData.user[0];
-          localStorage.setItem("selectedUser", JSON.stringify(user));
-          localStorage.removeItem("pendingUserEmail");
+          sessionStorage.setItem("selectedUser", JSON.stringify(user));
+          sessionStorage.removeItem("pendingUserEmail");
           
           // Update login context with the selected user
           if (loginData && loginData.user) {
@@ -596,11 +596,11 @@ export default function Dashboard(props) {
           }
         } else {
           // No users found or error
-          localStorage.removeItem("pendingUserEmail");
+          sessionStorage.removeItem("pendingUserEmail");
         }
       } catch (error) {
         console.error("Error processing pending user selection:", error);
-        localStorage.removeItem("pendingUserEmail");
+        sessionStorage.removeItem("pendingUserEmail");
       }
     }
 

@@ -189,11 +189,11 @@ export default function SignIn(props) {
 
       if (loginResult.status === 200) {
         console.log("Login successful, token received");
-        localStorage.setItem("clientdatatoken", loginResult.result.token);
+        sessionStorage.setItem("clientdatatoken", loginResult.result.token);
         Cookies.set("clientuserToken", loginResult.result.token);
 
          // Store only the email for potential user selection in dashboard
-        localStorage.setItem("pendingUserEmail", email);
+        sessionStorage.setItem("pendingUserEmail", email);
         navigate("/client/client/home");
         toast.success("Login Successful");
         setInpval({ ...inpval, email: "", password: "" });
