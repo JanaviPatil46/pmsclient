@@ -47,7 +47,7 @@ import React, { useEffect, useState } from "react";
 // import React, { useState } from "react";
 import { IconButton, Menu, MenuItem } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-
+const DOCS_API = process.env.REACT_APP_CLIENT_DOCS_MANAGE
 const Folder = ({ name, content, onSelectPath, currentPath = "" }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -86,9 +86,10 @@ const Folder = ({ name, content, onSelectPath, currentPath = "" }) => {
 
 //   handleMenuClose();
 // };
+
 const handleAction = (action) => {
-  const viewUrl = `http://127.0.0.1/${content.filePath}/${content.filename}`;
-  const downloadUrl = `http://127.0.0.1/firmDocs/download/${content.accountId}/${content.filename}`;
+  const viewUrl = `${DOCS_API}/${content.filePath}/${content.filename}`;
+  const downloadUrl = `${DOCS_API}/firmDocs/download/${content.accountId}/${content.filename}`;
 
   if (action === "view") {
    window.location.href = viewUrl; // Open in new tab for view
@@ -212,7 +213,7 @@ const FileExplorer = ({ onPathSelect,accountId }) => {
   const fetchFiles = async () => {
     try {
       const res = await fetch(
-       `http://127.0.0.1/firmDocs/files/${accountId}`
+       `${DOCS_API}/firmDocs/files/${accountId}`
       );
       const data = await res.json();
       setFiles(data.files || []);

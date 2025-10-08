@@ -399,11 +399,11 @@ const [accountEmailSync, setAccountEmailSync]=useState("")
         `${ACCOUNT_API}/accounts/accountdetails/accountdetailslist/listbyuserid/${id}`
       );
       if (response.data.accounts && response.data.accounts.length > 0) {
-        // console.log("accounts resopnace",response.data.accounts)
+        console.log("accounts resopnace",response.data.accounts)
         setAccId(response.data.accounts[0]._id);
         setAccountName(response.data.accounts[0].accountName)
         setAccountEmailSync(response.data.accounts[0].adminUserId?.emailSyncEmail)
-// console.log("emailsyn",response.data.accounts[0].adminUserId?.emailSyncEmail)
+console.log("emailsyn",response.data.accounts[0].adminUserId?.emailSyncEmail)
       } else {
         setError("No account found for this user");
       }

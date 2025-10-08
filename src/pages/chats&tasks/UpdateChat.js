@@ -116,7 +116,8 @@ const [chatTemplate, setChatTemplate]=useState("")
       taskUpdates: updatedTasks.map((task) => ({
         id: task.id,
         text: task.text,
-        checked: task.checked.toString(), // Ensure boolean is sent as string "true"/"false"
+         checked: task.checked === "true" || task.checked === true,
+        // checked: task.checked.toString(), // Ensure boolean is sent as string "true"/"false"
       })),
     });
 
@@ -569,7 +570,7 @@ const updateChatDescription = (message = "") => {
                 tasks.map((task, index) => (
                   <Box key={index} display="flex" alignItems="center" gap={1}>
                     <Checkbox
-                      checked={task.checked === "true"}
+                      checked={task.checked}
                       onChange={() => handleCheckboxChange(index)}
                     />
                     <Box
@@ -577,7 +578,7 @@ const updateChatDescription = (message = "") => {
                         p: 1,
                         width: "100%",
                         textDecoration:
-                          task.checked === "true" ? "line-through" : "none",
+                          task.checked === task.checked ? "line-through" : "none",
                       }}
                     >
                       <Typography variant="body1">{task.text}</Typography>

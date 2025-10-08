@@ -211,7 +211,7 @@ function NewChat({ open, close, loginuserid, accId }) {
       redirect: "follow",
     };
 
-    fetch(`${CHAT_API}/chats/chatsaccountwise`, requestOptions)
+    fetch(`${CHAT_API}/chats/chatsaccountwise/admin`, requestOptions)
       .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
