@@ -62,7 +62,7 @@ const Home = () => {
     }
   };
   const [accountId, setAccountId] = useState();
-  
+  const [adminUserId,setAdminUserId]= useState()
   const fetchAccountId = async () => {
     const requestOptions = {
       method: "GET",
@@ -78,6 +78,7 @@ const Home = () => {
       console.log("result", result);
       if (result.accounts && result.accounts.length > 0) {
         setAccountId(result.accounts[0]._id); // ✅ Setting accountId
+        setAdminUserId(result.accounts[0].adminUserId.email)
       }
     } catch (error) {
       console.error("Error fetching account details:", error);
@@ -132,7 +133,7 @@ const Home = () => {
             <ChatsList accountId={accountId} />
             <ProposalsList accountId={accountId} />
            <DocuSealWrapper/>
-           <DocumnetApprovals accountId={accountId}/>
+           <DocumnetApprovals accountId={accountId} adminUserId={adminUserId}/>
           </Paper>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
