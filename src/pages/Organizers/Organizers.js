@@ -178,7 +178,7 @@ const Organizers = () => {
             </TableCell>
 
             <TableCell>
-              {new Date(row.updatedAt).toLocaleDateString("en-US", {
+              {new Date(row.createdAt).toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",
                 year: "numeric",
