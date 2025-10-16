@@ -219,34 +219,131 @@ const DocumentApprovals = ({ accountId,adminUserId }) => {
   };
  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
-  // const handleAction = async (id, action) => {
+  
+
+  // const handleAction = async (id, action, reason = "") => {
   //   try {
   //     await axios.patch(`${DOCS_MANAGMENTS}/approvals/client-approvals/${id}`, {
   //       action,
+  //       description: reason,
+  //       accountId,
+  //       adminUserId,
   //     });
+  //      console.log("✅ Approval response:", res.data);
   //     setOpenViewer(false);
+  //     setCancelDialogOpen(false);
+  //     setCancelReason("");
   //     fetchApprovals();
   //   } catch (error) {
   //     console.error(`Error ${action} approval:`, error);
   //   }
   // };
- // existing handleAction updated 👇
+
+    // 🔹 Frontend: Update any status (read, sign, approval)
+    const updateStatus = async (item, statusType, newValue) => {
+      try {
+        if (!item?.path) return alert("Invalid item selected");
+  
+        const body = {
+          targetPath: item.path,
+          status: {
+            [statusType]: newValue, // dynamic key
+          },
+        };
+  
+        const res = await fetch(
+          "https://www.snptaxes.com/api/accountsdoc/updateStatus",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          }
+        );
+  
+        const data = await res.json();
+  
+        if (res.ok) {
+          alert(data.message || "Status updated successfully");
+          // fetchFolderTree(accountId); // refresh folder tree to reflect change
+        } else {
+          alert(data.error || "Failed to update status");
+        }
+      } catch (err) {
+        console.error("Error updating status:", err);
+        alert("Error updating status");
+      }
+    };
   const handleAction = async (id, action, reason = "") => {
-    try {
-      await axios.patch(`${DOCS_MANAGMENTS}/approvals/client-approvals/${id}`, {
+  try {
+    console.log("Sending approval request:", {
+      id,
+      action,
+      description: reason,
+      accountId,
+      adminUserId,
+    });
+
+    const res = await axios.patch(
+      `${DOCS_MANAGMENTS}/approvals/client-approvals/${id}`,
+      {
         action,
         description: reason,
         accountId,
         adminUserId,
-      });
-      setOpenViewer(false);
-      setCancelDialogOpen(false);
-      setCancelReason("");
-      fetchApprovals();
-    } catch (error) {
-      console.error(`Error ${action} approval:`, error);
+      }
+    );
+
+    console.log("✅ Approval response:", res.data);
+
+    // // Optionally alert or show a toast
+    // if (res.data?.message) {
+    //   console.log("Server Message:", res.data.message);
+    // }
+
+    // // 🔹 Update status on document after approval/cancel
+    // if (selectedDoc?.path) {
+    //   const newStatus = action === "approve" ? "approvalCompleted" : "cancledApproval";
+    //   console.log("🟡 Updating document status:", newStatus);
+
+    //   await updateStatus(selectedDoc, "authStatus", newStatus);
+    // } else {
+    //   console.warn("⚠️ No path found for selectedDoc, skipping updateStatus");
+    // }
+ // ✅ Extract parent folder path from fileUrl
+    if (selectedDoc?.fileUrl) {
+      // Remove base URL and '/uploads/accounts/'
+      let relativePath = selectedDoc.fileUrl.split("/uploads/accounts/")[1];
+
+      if (relativePath) {
+        // Remove filename from the end
+        const parts = relativePath.split("/");
+        parts.pop(); // remove the file name (Invoice_14.pdf)
+        const parentPath = parts.join("/");
+
+        console.log("📁 Extracted parentPath:", parentPath);
+
+        // Determine new status
+        const newStatus = action === "approve" ? "approvalCompleted" : "cancledApproval";
+
+        // Call updateStatus
+        await updateStatus({ path: parentPath }, "authStatus", newStatus);
+      } else {
+        console.warn("⚠️ Could not extract parentPath from fileUrl:", selectedDoc.fileUrl);
+      }
     }
-  };
+    // Cleanup UI
+    setOpenViewer(false);
+    setCancelDialogOpen(false);
+    setCancelReason("");
+
+    fetchApprovals(); // refresh list
+
+  } catch (error) {
+    console.error(`❌ Error performing ${action} approval:`, error);
+    if (error.response) console.error("Response data:", error.response.data);
+  }
+};
+
 
   const handleCancelClick = () => {
     setCancelDialogOpen(true);
@@ -256,6 +353,7 @@ const DocumentApprovals = ({ accountId,adminUserId }) => {
     handleAction(selectedDoc._id, "cancel", cancelReason);
   };
   const handleOpenViewer = (doc) => {
+    console.log("selected document",doc)
     setSelectedDoc(doc);
     setOpenViewer(true);
   };
@@ -334,43 +432,7 @@ const DocumentApprovals = ({ accountId,adminUserId }) => {
         </Box>
       )}
 
-      {/* 🔹 Document Viewer Dialog */}
-      {/* <Dialog open={openViewer} onClose={handleCloseViewer} fullWidth maxWidth="md">
-        <DialogTitle>Document Preview</DialogTitle>
-        <DialogContent dividers sx={{ height: "80vh" }}>
-          {selectedDoc ? (
-            <iframe
-              src={selectedDoc.fileUrl}
-              title={selectedDoc.filename}
-              width="100%"
-              height="100%"
-              style={{ border: "none" }}
-            />
-          ) : (
-            <Typography variant="body2" color="text.secondary">
-              No document selected
-            </Typography>
-          )}
-        </DialogContent>
-        {selectedDoc && (
-          <DialogActions sx={{ justifyContent: "center", p: 2 }}>
-            <Button
-              variant="contained"
-              color="success"
-              onClick={() => handleAction(selectedDoc._id, "approve")}
-            >
-              Approve
-            </Button>
-            <Button
-              variant="outlined"
-              color="error"
-              onClick={() => handleAction(selectedDoc._id, "cancel")}
-            >
-              Cancel
-            </Button>
-          </DialogActions>
-        )}
-      </Dialog> */}
+   
         <Dialog open={openViewer} onClose={handleCloseViewer} fullWidth maxWidth="md">
         <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1, justifyContent:"space-between"}}>
           <Box sx={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:2}}> <DescriptionIcon fontSize="small" sx={{ color: "#f0c000" }} />
@@ -450,8 +512,7 @@ const DocumentApprovals = ({ accountId,adminUserId }) => {
             autoFocus
             fullWidth
             multiline
-            // minRows={3}
-            // label="Reason for cancellation"
+           
             value={cancelReason}
             onChange={(e) => setCancelReason(e.target.value)}
           />
