@@ -15,6 +15,7 @@ import Settings from "./pages/Settings";
 import ForgotPassword from "./login-signup/ForgotPassword"
 import ResetPassword from "./login-signup/ResetPassword";
 import UpdatePassword from "./login-signup/UpdatePassword";
+import DocsFolderTree from "./docs-management/DocsFolderTree";
 const App = () => {
   return (
     <>
@@ -33,7 +34,7 @@ const App = () => {
           />
           <Route path="/" element={<Dashboard />}>
             <Route path="/client/home" element={<Home />} />
-            <Route path="/client/document" element={<Document />} />
+            <Route path="/client/document" element={<DocsFolderTree />} />
             <Route path="/client/chatstasks" element={<ChatsTasks />} />
             <Route path="/client/updatechat/:_id" element={<UpdateChat />} />
 
