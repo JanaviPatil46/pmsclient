@@ -257,7 +257,7 @@ const CreateFolderDrawer = ({
   onClose,
   folderTree,
   fetchFolderTree,
-  selectedFolderForMenu,
+  selectedFolderForMenu,accountId
 }) => {
   const [folderName, setFolderName] = useState("");
   const [selectedFolder, setSelectedFolder] = useState("");
@@ -288,6 +288,7 @@ console.log("selected path", selectedFolder)
         {
           name: folderName,
           parentPath: selectedFolder || "",
+          accountId,
         }
       );
 console.log("res",res)

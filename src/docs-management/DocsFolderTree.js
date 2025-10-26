@@ -509,8 +509,9 @@ const handleRequestApproval = async () => {
                       justifyContent: "space-between",
                       borderRadius: 2,
                       cursor: "pointer",
-                      backgroundColor: "#fff",
-                      "&:hover": { backgroundColor: "#f5f5f5" },
+                      
+                      // backgroundColor: "#fff",
+                      "&:hover": { backgroundColor: "#f5f5f5",color:'black', },
                       transition: "background-color 0.2s ease-in-out",
                     }}
                     onClick={() => toggleFolder(fullPath, meta.readOnly)}
@@ -724,6 +725,7 @@ const handleRequestApproval = async () => {
             onClose={() => {
               setNewFolderDrawerOpen(false);
             }}
+            accountId={accId}
             folderTree={folderTree}
             fetchFolderTree={() => fetchFolderTree(accId)}
             selectedFolderForMenu={selectedFolderForMenu}
@@ -976,7 +978,7 @@ const handleRequestApproval = async () => {
           { icon: <DeleteIcon />, label: "Delete", action: () => deleteItem(item) },
           { icon: <UploadFileIcon />, label: "New File", action: () => setFileUploadDrawerOpen(true) },
           { icon: <DriveFolderUploadIcon />, label: "Upload Folder", action: () => setFolderUploaDrawerOpen(true) },
-          { icon: <LockIcon />, label: isLocked ? "Unlock" : "Lock", action: () => toggleReadOnly(item) }
+          // { icon: <LockIcon />, label: isLocked ? "Unlock" : "Lock", action: () => toggleReadOnly(item) }
         );
       } else if (docType === "firm") {
         menuItems.push(
@@ -1006,7 +1008,7 @@ const handleRequestApproval = async () => {
         menuItems.push(
           { icon: <DriveFileMoveIcon />, label: "Edit", action: () => SetRenameDrawer(true) },
           { icon: <DriveFileMoveIcon />, label: "Move", action: () => setMoveDrawerOpen(true) },
-          { icon: <LockIcon />, label: isLocked ? "Unlock" : "Lock", action: () => toggleReadOnly(item) },
+          // { icon: <LockIcon />, label: isLocked ? "Unlock" : "Lock", action: () => toggleReadOnly(item) },
           { icon: <DeleteIcon />, label: "Delete", action: () => deleteItem(item) }
         );
       } else if (docType === "firm") {

@@ -27,6 +27,7 @@ import AddIcon from '@mui/icons-material/Add';
 import UploadDrawer from "./UploadDrawer";
 import { LoginContext } from "../../context/Context";
 import SelectableButton from "./SelectableButton";
+import FileUploadDrawer from "./FileUploadDrawer";
 // const OrganizerDialog = ({ open, handleClose, organizer }) => {
 //   console.log("organizer", organizer);
 //   const LOGIN_API = process.env.REACT_APP_USER_LOGIN;
@@ -2471,6 +2472,27 @@ const OrganizerDialog = ({ open, handleClose, organizer }) => {
         setAccountId(result.accounts[0]._id);
       });
   };
+ const [folderTree, setFolderTree] = useState([]);
+  const [error, setError] = useState("");
+      useEffect(() => {
+         fetchFolderTree(accountId);
+      }, [accountId]);
+    
+     // API call to fetch folder tree for a given template ID
+      const fetchFolderTree = async (accountId) => {
+        try {
+          const res = await fetch(`https://www.snptaxes.com/api/accountsdoc/files/list?folderPath=${accountId}`);
+          const data = await res.json();
+          console.log("janavi patil",data)
+          if (res.ok) {
+            setFolderTree(data.contents);
+          } else {
+            setError('Failed to fetch folder tree');
+          }
+        } catch (err) {
+          setError('Error fetching folder tree');
+        }
+      };
   const ORGANIZER_TEMP_API = process.env.REACT_APP_ORGANIZER_TEMP_URL;
  
   const sections = organizer?.sections;
@@ -2714,6 +2736,19 @@ const OrganizerDialog = ({ open, handleClose, organizer }) => {
       ...prevAnswered,
       [key]: true,
     }));
+     // Clear validation error for this field
+    if (validationErrors[numericSectionId]?.[elementText]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        if (newErrors[numericSectionId]) {
+          delete newErrors[numericSectionId][elementText];
+          if (Object.keys(newErrors[numericSectionId]).length === 0) {
+            delete newErrors[numericSectionId];
+          }
+        }
+        return newErrors;
+      });
+    }
   };
 
   const handleCheckboxChange = (value, elementText, sectionId) => {
@@ -2730,6 +2765,20 @@ const OrganizerDialog = ({ open, handleClose, organizer }) => {
       ...prevAnswered,
       [key]: true,
     }));
+
+    // Clear validation error for this field
+    if (validationErrors[numericSectionId]?.[elementText]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        if (newErrors[numericSectionId]) {
+          delete newErrors[numericSectionId][elementText];
+          if (Object.keys(newErrors[numericSectionId]).length === 0) {
+            delete newErrors[numericSectionId];
+          }
+        }
+        return newErrors;
+      });
+    }
   };
 
   const handleYesNoChange = (value, elementText, sectionId) => {
@@ -2743,6 +2792,19 @@ const OrganizerDialog = ({ open, handleClose, organizer }) => {
       ...prevAnswered,
       [key]: true,
     }));
+    // Clear validation error for this field
+    if (validationErrors[numericSectionId]?.[elementText]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        if (newErrors[numericSectionId]) {
+          delete newErrors[numericSectionId][elementText];
+          if (Object.keys(newErrors[numericSectionId]).length === 0) {
+            delete newErrors[numericSectionId];
+          }
+        }
+        return newErrors;
+      });
+    }
   };
 
   const handleInputChange = (event, elementText, sectionId) => {
@@ -2757,6 +2819,21 @@ const OrganizerDialog = ({ open, handleClose, organizer }) => {
       ...prevAnswered,
       [key]: true,
     }));
+
+    // Clear validation error for this field
+    if (validationErrors[numericSectionId]?.[elementText]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        if (newErrors[numericSectionId]) {
+          delete newErrors[numericSectionId][elementText];
+          // Remove section if no more errors
+          if (Object.keys(newErrors[numericSectionId]).length === 0) {
+            delete newErrors[numericSectionId];
+          }
+        }
+        return newErrors;
+      });
+    }
   };
 
   const handleDropdownValueChange = (event, elementText, sectionId) => {
@@ -2770,6 +2847,19 @@ const OrganizerDialog = ({ open, handleClose, organizer }) => {
       ...prevAnswered,
       [key]: true,
     }));
+    // Clear validation error for this field
+    if (validationErrors[numericSectionId]?.[elementText]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        if (newErrors[numericSectionId]) {
+          delete newErrors[numericSectionId][elementText];
+          if (Object.keys(newErrors[numericSectionId]).length === 0) {
+            delete newErrors[numericSectionId];
+          }
+        }
+        return newErrors;
+      });
+    }
   };
 const shouldShowSection = (section) => {
   if (!section.sectionsettings?.conditional) return true;
@@ -3145,8 +3235,41 @@ const shouldShowElement = (element, sectionId) => {
     const selectedIndex = event.target.value;
     setActiveStep(selectedIndex);
   };
-
+ const [validationErrors, setValidationErrors] = useState({});
   const handleSubmit = async () => {
+
+     const errors = {};
+    
+    visibleSections.forEach((section) => {
+      section.formElements.forEach((element) => {
+        if (shouldShowElement(element, section.id) && element.questionsectionsettings?.required) {
+          const key = `${section.id}_${element.text}`;
+          const hasAnswer = answeredElements[key];
+          
+          if (!hasAnswer) {
+            if (!errors[section.id]) {
+              errors[section.id] = {};
+            }
+            errors[section.id][element.text] = `This question is required`;
+          }
+        }
+      });
+    });
+
+    setValidationErrors(errors);
+
+    // If there are errors, don't submit and scroll to first error
+    if (Object.keys(errors).length > 0) {
+      // Find the first section with errors
+      const firstErrorSectionId = Object.keys(errors)[0];
+      const sectionIndex = visibleSections.findIndex(section => section.id === firstErrorSectionId);
+      if (sectionIndex !== -1) {
+        setActiveStep(sectionIndex);
+      }
+      
+      toast.error("Please complete all required questions before submitting");
+      return;
+    }
     try {
       const myHeaders = new Headers();
       myHeaders.append("Content-Type", "application/json");
@@ -3316,7 +3439,15 @@ const shouldShowElement = (element, sectionId) => {
     if (organizer?.issealed) return true;
     return element.active === true;
   };
+// Helper function to check if a field has validation error
+  const hasError = (sectionId, elementText) => {
+    return !!validationErrors[sectionId]?.[elementText];
+  };
 
+  // Helper function to get error message
+  const getErrorMessage = (sectionId, elementText) => {
+    return validationErrors[sectionId]?.[elementText] || '';
+  };
   // Function to render a section (used for both base and repeated sections)
   const renderSection = (section, isRepeated = false, originalSectionId = null) => {
     const sectionId = section.id;
@@ -3366,6 +3497,9 @@ const shouldShowElement = (element, sectionId) => {
                       sx={{ fontWeight: "550" }}
                     >
                       {element.text}
+                       {element.questionsectionsettings?.required && (
+                        <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
+                      )}
                     </Typography>
                     <TextField
                       disabled={isElementActive(element)}
@@ -3393,7 +3527,17 @@ const shouldShowElement = (element, sectionId) => {
                           sectionId
                         )
                       }
+                        error={hasError(sectionId, element.text)}
                     />
+                     {hasError(sectionId, element.text) && (
+                      <Typography 
+                        variant="caption" 
+                        color="error" 
+                        sx={{ display: 'block', mt: 0.5, ml: 1 }}
+                      >
+                        {getErrorMessage(sectionId, element.text)}
+                      </Typography>
+                    )}
                   </Box>
                 )}
 
@@ -3406,6 +3550,9 @@ const shouldShowElement = (element, sectionId) => {
                       sx={{ fontWeight: "550" }}
                     >
                       {element.text}
+                      {element.questionsectionsettings?.required && (
+                        <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
+                      )}
                     </Typography>
                     <TextField
                       disabled={isElementActive(element)}
@@ -3438,7 +3585,17 @@ const shouldShowElement = (element, sectionId) => {
                           sectionId
                         );
                       }}
+                       error={hasError(sectionId, element.text)}
                     />
+                    {hasError(sectionId, element.text) && (
+                      <Typography 
+                        variant="caption" 
+                        color="error" 
+                        sx={{ display: 'block', mt: 0.5, ml: 1 }}
+                      >
+                        {getErrorMessage(sectionId, element.text)}
+                      </Typography>
+                    )}
                   </Box>
                 )}
 
@@ -3451,6 +3608,9 @@ const shouldShowElement = (element, sectionId) => {
                       sx={{ fontWeight: "550" }}
                     >
                       {element.text}
+                       {element.questionsectionsettings?.required && (
+                        <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
+                      )}
                     </Typography>
                     <Box
                       sx={{
@@ -3480,6 +3640,15 @@ const shouldShowElement = (element, sectionId) => {
                         </SelectableButton>
                       ))}
                     </Box>
+                    {hasError(sectionId, element.text) && (
+                      <Typography 
+                        variant="caption" 
+                        color="error" 
+                        sx={{ display: 'block', mt: 0.5, ml: 1 }}
+                      >
+                        {getErrorMessage(sectionId, element.text)}
+                      </Typography>
+                    )}
                   </Box>
                 )}
 
@@ -3492,6 +3661,9 @@ const shouldShowElement = (element, sectionId) => {
                       sx={{ fontWeight: "550" }}
                     >
                       {element.text}
+                      {element.questionsectionsettings?.required && (
+                        <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
+                      )}
                     </Typography>
                     <Box
                       sx={{
@@ -3521,6 +3693,15 @@ const shouldShowElement = (element, sectionId) => {
                         </SelectableButton>
                       ))}
                     </Box>
+                    {hasError(sectionId, element.text) && (
+                      <Typography 
+                        variant="caption" 
+                        color="error" 
+                        sx={{ display: 'block', mt: 0.5, ml: 1 }}
+                      >
+                        {getErrorMessage(sectionId, element.text)}
+                      </Typography>
+                    )}
                   </Box>
                 )}
 
@@ -3533,6 +3714,9 @@ const shouldShowElement = (element, sectionId) => {
                       sx={{ fontWeight: "550" }}
                     >
                       {element.text}
+                      {element.questionsectionsettings?.required && (
+                        <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
+                      )}
                     </Typography>
                     <Box sx={{ display: "flex", gap: 1 }}>
                       {element.options.map((option) => (
@@ -3556,6 +3740,15 @@ const shouldShowElement = (element, sectionId) => {
                         </SelectableButton>
                       ))}
                     </Box>
+                    {hasError(sectionId, element.text) && (
+                      <Typography 
+                        variant="caption" 
+                        color="error" 
+                        sx={{ display: 'block', mt: 0.5, ml: 1 }}
+                      >
+                        {getErrorMessage(sectionId, element.text)}
+                      </Typography>
+                    )}
                   </Box>
                 )}
 
@@ -3568,6 +3761,9 @@ const shouldShowElement = (element, sectionId) => {
                       sx={{ fontWeight: "550" }}
                     >
                       {element.text}
+                      {element.questionsectionsettings?.required && (
+                        <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
+                      )}
                     </Typography>
                     <FormControl fullWidth>
                       <Select
@@ -3596,6 +3792,15 @@ const shouldShowElement = (element, sectionId) => {
                         ))}
                       </Select>
                     </FormControl>
+                    {hasError(sectionId, element.text) && (
+                      <Typography 
+                        variant="caption" 
+                        color="error" 
+                        sx={{ display: 'block', mt: 0.5, ml: 1 }}
+                      >
+                        {getErrorMessage(sectionId, element.text)}
+                      </Typography>
+                    )}
                   </Box>
                 )}
 
@@ -3608,6 +3813,9 @@ const shouldShowElement = (element, sectionId) => {
                       sx={{ fontWeight: "550" }}
                     >
                       {element.text}
+                      {element.questionsectionsettings?.required && (
+                        <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
+                      )}
                     </Typography>
                     <DatePicker
                       format="DD/MM/YYYY"
@@ -3624,12 +3832,34 @@ const shouldShowElement = (element, sectionId) => {
                             ...prev,
                             [`${sectionId}_${element.text}`]: true,
                           }));
+                        // Clear validation error for date field
+                          if (validationErrors[sectionId]?.[element.text]) {
+                            setValidationErrors(prev => {
+                              const newErrors = { ...prev };
+                              if (newErrors[sectionId]) {
+                                delete newErrors[sectionId][element.text];
+                                if (Object.keys(newErrors[sectionId]).length === 0) {
+                                  delete newErrors[sectionId];
+                                }
+                              }
+                              return newErrors;
+                            });
+                          }
                         }
                       }}
                       renderInput={(params) => (
                         <TextField {...params} size="small" />
                       )}
                     />
+                    {hasError(sectionId, element.text) && (
+                      <Typography 
+                        variant="caption" 
+                        color="error" 
+                        sx={{ display: 'block', mt: 0.5, ml: 1 }}
+                      >
+                        {getErrorMessage(sectionId, element.text)}
+                      </Typography>
+                    )}
                   </Box>
                 )}
 
@@ -3642,6 +3872,9 @@ const shouldShowElement = (element, sectionId) => {
                       sx={{ fontWeight: "550" }}
                     >
                       {element.text}
+                       {element.questionsectionsettings?.required && (
+                        <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
+                      )}
                     </Typography>
                     <Box
                       sx={{
@@ -3685,6 +3918,15 @@ const shouldShowElement = (element, sectionId) => {
                         disabled={isElementActive(element)}
                       />
                     </Box>
+                    {hasError(sectionId, element.text) && (
+                      <Typography 
+                        variant="caption" 
+                        color="error" 
+                        sx={{ display: 'block', mt: 0.5, ml: 1 }}
+                      >
+                        {getErrorMessage(sectionId, element.text)}
+                      </Typography>
+                    )}
                     {uploadedFiles[
                       `${sectionId}_${element.text}`
                     ] && (
@@ -3861,12 +4103,13 @@ const shouldShowElement = (element, sectionId) => {
         </Dialog>
       </LocalizationProvider>
 
-      <UploadDrawer
-        open={isDocumentForm}
+      <FileUploadDrawer
+        isOpen={isDocumentForm}
         organizer={organizer}
         onClose={() => setIsDocumentForm(false)}
         file={file}
         accountId={accountId}
+        folderTree={folderTree}
         onUploadSuccess={(fileData) => {
           console.log("File uploaded successfully:", fileData);
           const fileName = fileData.fileName;
@@ -3885,7 +4128,8 @@ const shouldShowElement = (element, sectionId) => {
             debouncedAutoSave(data);
           }
 
-          setFile(null);
+          // setFile(null);
+         
           setIsDocumentForm(false);
         }}
         onUploadError={(error) => {

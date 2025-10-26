@@ -242,15 +242,15 @@ import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import axios from "axios";
-
+import { toast } from "material-react-toastify";
 const FileUploadDrawer = ({
   isOpen,
   onClose,
   folderTree,
   fetchFolderTree,
-  selectedFolderForMenu,
+  selectedFolderForMenu,file
 }) => {
-  const [file, setFile] = useState(null);
+  // const [file, setFile] = useState(null);
   const [selectedFolder, setSelectedFolder] = useState("");
   const [message, setMessage] = useState("");
 
@@ -259,12 +259,12 @@ const FileUploadDrawer = ({
       setSelectedFolder(selectedFolderForMenu.path);
     } else if (!isOpen) {
       setSelectedFolder("");
-      setFile(null);
+      // setFile(null);
       setMessage("");
     }
   }, [isOpen, selectedFolderForMenu]);
 
-  const handleFileChange = (e) => setFile(e.target.files[0]);
+  // const handleFileChange = (e) => setFile(e.target.files[0]);
   const handleFolderSelect = (path) => setSelectedFolder(path);
 
   const handleUpload = async () => {
@@ -286,8 +286,8 @@ const FileUploadDrawer = ({
       );
 
       setMessage(`✅ File uploaded: ${res.data.fileMeta.name}`);
-      //  toast.success("file uploaded successfully")
-      setFile(null);
+      toast.success(`✅ File uploaded: ${res.data.fileMeta.name}`)
+      // setFile(null);
       onClose();
       // fetchFolderTree();
     } catch (err) {
@@ -318,7 +318,7 @@ const FileUploadDrawer = ({
           margin="dense"
         /> */}
 
-        <Button
+        {/* <Button
           variant="outlined"
           component="label"
           fullWidth
@@ -326,7 +326,7 @@ const FileUploadDrawer = ({
         >
           {file ? file.name : "Select File"}
           <input type="file" hidden onChange={handleFileChange} />
-        </Button>
+        </Button> */}
 
         <Button
           variant="contained"
