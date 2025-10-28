@@ -282,6 +282,7 @@ import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
+import { toast } from "material-react-toastify";
 
 const FolderUploadDrawer = ({
   isOpen,
@@ -309,15 +310,43 @@ const FolderUploadDrawer = ({
 
   const handleFolderSelect = (path) => setSelectedFolder(path);
 
+  // const handleUploadFolderSelect = (e) => {
+  //   const selectedFiles = Array.from(e.target.files);
+  //   setFiles(selectedFiles);
+
+  //   if (selectedFiles.length > 0) {
+  //     const firstPath = selectedFiles[0].webkitRelativePath;
+  //     const topLevelFolder = firstPath.split("/")[0];
+  //     setFolderName(topLevelFolder);
+  //   }
+  // };
   const handleUploadFolderSelect = (e) => {
     const selectedFiles = Array.from(e.target.files);
+    if (selectedFiles.length === 0) return;
+
+    // ✅ Calculate total folder size
+    const totalSize = selectedFiles.reduce((sum, file) => sum + file.size, 0);
+    const maxFolderSize = 100 * 1024 * 1024; // 100 MB
+
+    // 🚫 Restrict folder if total exceeds limit
+    if (totalSize > maxFolderSize) {
+      alert(
+        `❌ Folder size exceeds 100 MB limit.\nSelected folder size: ${(
+          totalSize /
+          (1024 * 1024)
+        ).toFixed(2)} MB`
+      );
+      e.target.value = null; // reset input
+      setFiles([]); // clear files state
+      return;
+    }
+
+    // ✅ Normal processing (unchanged)
     setFiles(selectedFiles);
 
-    if (selectedFiles.length > 0) {
-      const firstPath = selectedFiles[0].webkitRelativePath;
-      const topLevelFolder = firstPath.split("/")[0];
-      setFolderName(topLevelFolder);
-    }
+    const firstPath = selectedFiles[0].webkitRelativePath;
+    const topLevelFolder = firstPath.split("/")[0];
+    setFolderName(topLevelFolder);
   };
 
   const handleUpload = async () => {
@@ -347,6 +376,7 @@ const FolderUploadDrawer = ({
       const data = await res.json();
       if (res.ok) {
         setMessage(`✅ Folder uploaded successfully: ${data.files.length} files`);
+         toast.success(`Folder uploaded successfully: ${data.files.length} files`)
         fetchFolderTree();
         onClose()
         setFiles([]);
@@ -361,7 +391,7 @@ const FolderUploadDrawer = ({
 
   return (
     <Drawer anchor="right" open={isOpen} onClose={onClose}>
-      <Box sx={{ width: 400, p: 3, bgcolor: "#f0f8ff", height: "100%" }}>
+      <Box sx={{ width: 400, p: 3,  height: "100%" }}>
         <Typography variant="h6" gutterBottom>
           📁 Upload Folder
         </Typography>
@@ -457,7 +487,7 @@ const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
                 bgcolor: isSelected ? "#b2d8ff" : "transparent",
                 borderRadius: 1,
                 mb: 0.5,
-                "&:hover": { bgcolor: "#dbefff" },
+                "&:hover": { bgcolor: "#dbefff",color:'black', },
                 cursor: item.meta?.readOnly ? "not-allowed" : "pointer",
               }}
               onClick={() => {

@@ -35,6 +35,9 @@ import {
 } from "lucide-react";
 import { LoginContext } from '../context/Context';
 import DownloadIcon from '@mui/icons-material/Download';
+import ParentFolderMenu from "./ParentFolderMenu";
+import FolderMenu from "./FolderMenu";
+import FileMenu from "./FileMenu";
 const DOCS_MANAGMENTS = process.env.REACT_APP_CLIENT_DOCS_MANAGE;
 const DocsFolderTree = () => {
    const { logindata } = useContext(LoginContext)
@@ -95,40 +98,7 @@ console.log("acount id for the documentation",accId)
     fetchTemplates();
   }, []);
 
-  //   const applyTemplateToAccount = () => {
-  //       console.log("ghjh")
-  //   const myHeaders = new Headers();
-  //   myHeaders.append("Content-Type", "application/json");
-
-  //   const raw = JSON.stringify({
-  //     accountId: accId,
-  //     templateId: selectedTemplate,
-  //   });
-
-  //   const requestOptions = {
-  //     method: "POST",
-  //     headers: myHeaders,
-  //     body: raw,
-  //     redirect: "follow",
-  //   };
-  //   console.log(raw);
-  //   fetch(`https://www.snptaxes.com/api/docManagement/apply-template`, requestOptions)
-  //     .then((response) => response.json())
-  //     .then((result) => {
-  //       console.log(result);
-       
-  //       alert("Folder Template Assign Successfully");
-        
-  //     })
-  //     .catch((error) => {
-  //       console.error(error);
-  //       alert("Failed to Assign Folder Template");
-  //     });
-  // };
-
-  // const handleApplyTemplate = async () => {
-  //   await applyTemplateToAccount();
-  // };
+ 
 
 
 
@@ -179,7 +149,7 @@ console.log("acount id for the documentation",accId)
    // API call to fetch folder tree for a given template ID
     const fetchFolderTree = async (accountId) => {
       try {
-        const res = await fetch(`https://www.snptaxes.com/api/accountsdoc/files/list?folderPath=${accountId}`);
+        const res = await fetch(`https://www.snptaxes.com/api/accountsdoc/files/list/clientView?folderPath=${accountId}`);
         const data = await res.json();
         console.log("janavi patil",data)
         if (res.ok) {
@@ -473,9 +443,41 @@ const handleRequestApproval = async () => {
       alert(`Move folder: ${folder.path}`); // implement backend
       handleMenuClose();
     };
-    
+    const handleFileClick = (fullPath, fileName, meta = {}) => {
+    try {
+      // 🔒 Prevent opening locked files
+      if (meta.readOnly) {
+        alert("This file is locked and cannot be opened.");
+        return;
+      }
+
+      // ✅ Construct full file URL
+      const fileUrl = `https://www.snptaxes.com/uploads/accounts/${accId}/${fullPath}`;
+
+      // ✅ Detect file extension (case-insensitive)
+      const fileExt = fileName.split(".").pop().toLowerCase();
+
+      // ✅ Extensions that can open in browser
+      const viewableExtensions = ["pdf", "jpg", "jpeg", "png", "gif", "txt"];
+
+      if (viewableExtensions.includes(fileExt)) {
+        // Open supported file types in a new tab
+        window.open(fileUrl, "_blank", "noopener,noreferrer");
+      } else {
+        // Force download for unsupported types (e.g., docx, xlsx, zip, etc.)
+        const link = document.createElement("a");
+        link.href = fileUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (error) {
+      console.error("Error opening/downloading file:", error);
+    }
+  };
   
-   const renderTree = (items, level = 0, parentPath = "") => {
+   const renderTree = (items, level = 0, parentPath = "", isInsideFirmDocs = false) => {
       return (
         <>
         <Box component="ul" sx={{ listStyle: "none", pl: level * 2, mb: 1 }}>
@@ -484,6 +486,22 @@ const handleRequestApproval = async () => {
               ? `${parentPath}/${item.name}`
               : item.name;
             const meta = item.meta || {};
+
+            
+          // ✅ Folder/file type checks
+          const isParent = level === 0 && item.type === "folder";
+          const isChild = level > 0 && item.type === "folder";
+          const isFile = item.type === "file";
+
+          // ✅ Check if parent is "firm docs"
+          const isFirmDocsParent =
+            isParent && item.name.toLowerCase() === "firm docs shared with client";
+
+          // ✅ Track if we’re inside firm docs (for children)
+          const insideFirmDocs = isInsideFirmDocs || isFirmDocsParent;
+
+          // ✅ Hide menu for everything inside firm docs
+          const hideMenu = insideFirmDocs;
   
             // 🎯 Define colors for statuses
             const getColor = (status) => (status ? "#1976d2" : "#9e9e9e");
@@ -496,7 +514,14 @@ const handleRequestApproval = async () => {
                 <Lock size={16} color={meta.readOnly ? "#e53935" : "#9e9e9e"} />
               </Box>
             );
-  
+       // ✅ File click handler with lock check
+          const handleSafeFileClick = () => {
+            if (meta.readOnly) {
+              alert("This file is locked and cannot be opened.");
+              return;
+            }
+            handleFileClick(fullPath, item.name);
+          };
             return (
               <li key={fullPath} style={{ marginBottom: 8 }}>
                 {item.type === "folder" ? (
@@ -509,7 +534,7 @@ const handleRequestApproval = async () => {
                       justifyContent: "space-between",
                       borderRadius: 2,
                       cursor: "pointer",
-                      
+                       backgroundColor: isParent ? "#f0f7ff" : "#fff",
                       // backgroundColor: "#fff",
                       "&:hover": { backgroundColor: "#f5f5f5",color:'black', },
                       transition: "background-color 0.2s ease-in-out",
@@ -535,14 +560,28 @@ const handleRequestApproval = async () => {
                       </Typography>
                       <StatusIcons />
                     </Box>
-  
-                    {/* Optional: Folder menu */}
+  {!hideMenu && (
                     <IconButton
+                      size="small"
+                      onClick={(e) =>
+                        handleMenuOpen(e, {
+                          ...item,
+                          fullPath,
+                          isParent,
+                          isChild,
+                        })
+                      }
+                    >
+                      <MoreVertIcon size={16} />
+                    </IconButton>
+                  )}
+                    {/* Optional: Folder menu */}
+                    {/* <IconButton
                       size="small"
                       onClick={(e) => handleMenuOpen(e, { ...item, fullPath })}
                     >
                       <MoreVertIcon size={16} />
-                    </IconButton>
+                    </IconButton> */}
                   </Box>
                 ) : (
                   // 📄 File with single dot icon
@@ -563,14 +602,21 @@ const handleRequestApproval = async () => {
                     />
                     <Typography
                       variant="body2"
-                      sx={{ flex: 1, wordBreak: "break-word" }}
+                    sx={{
+                      flex: 1,
+                      wordBreak: "break-word",
+                      color: meta.readOnly ? "#999" : "#1976d2",
+                      textDecoration: meta.readOnly ? "none" : "underline",
+                      cursor: meta.readOnly ? "not-allowed" : "pointer",
+                    }}
+                       onClick={handleSafeFileClick}
                     >
                       {item.name}
                     </Typography>
                     <StatusIcons />
   
                     {/* 🔵 Single blue dot icon for file menu */}
-                    <Box
+                    {/* <Box
                       className="file-menu-icon"
                       sx={{
                         width: 8,
@@ -584,7 +630,26 @@ const handleRequestApproval = async () => {
                         ml: 1,
                       }}
                       onClick={(e) => handleMenuOpen(e, { ...item, fullPath })}
+                    /> */}
+                     {!hideMenu && (
+                    <Box
+                      className="file-menu-icon"
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        backgroundColor: "#1976d2",
+                        opacity: 0,
+                        transition: "opacity 0.2s",
+                        cursor: "pointer",
+                        mr: 1,
+                        ml: 1,
+                      }}
+                      onClick={(e) =>
+                        handleMenuOpen(e, { ...item, fullPath, isFile: true })
+                      }
                     />
+                  )}
                   </Box>
                 )}
   
@@ -600,64 +665,14 @@ const handleRequestApproval = async () => {
                         pl: 2,
                       }}
                     >
-                      {renderTree(item.children, level + 1, fullPath)}
+                      {renderTree(item.children, level + 1, fullPath,insideFirmDocs)}
                     </Box>
                   )}
               </li>
             );
           })}
         </Box>
-        {/* <Dialog
-  open={openDialog} // must match exactly
-  onClose={() => setOpenDialog(false)}
-  fullWidth
-  maxWidth="lg"
->
-  <DialogTitle>
-    {items.name}
-    <IconButton
-      aria-label="close"
-      onClick={() => setOpenDialog(false)}
-      style={{ position: "absolute", right: 8, top: 8 }}
-    >
-      <CloseIcon />
-    </IconButton>
-  </DialogTitle>
-
-  <DialogContent dividers>
-    {token && showBuilderFor && ( <DocusealBuilder token={token} customCss={customCss} />)}
-  </DialogContent>
-</Dialog>
-
-<Dialog
-  open={openApprovalDialog}
-  onClose={handleCloseDialog}
-  fullWidth
-  maxWidth="sm"
->
-  <DialogTitle>Request Approval</DialogTitle>
-  <DialogContent>
-    <TextField
-      multiline
-      rows={4}
-      fullWidth
-      value={description}
-      onChange={(e) => setDescription(e.target.value)}
-      placeholder="Type a short description or note for this approval..."
-    />
-  </DialogContent>
-  <DialogActions>
-    <Button onClick={handleCloseDialog}>Cancel</Button>
-    <Button
-      variant="contained"
-      color="primary"
-      onClick={handleRequestApproval}
-      disabled={!description.trim()}
-    >
-      Send
-    </Button>
-  </DialogActions>
-</Dialog> */}
+        
 
         </>
       );
@@ -773,178 +788,8 @@ const handleRequestApproval = async () => {
         </Paper>
   
         {/* Context Menu */}
+
         {/* <Menu
-          anchorEl={menuAnchorEl}
-          open={Boolean(menuAnchorEl)}
-          onClose={handleMenuClose}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-          transformOrigin={{ vertical: "top", horizontal: "right" }}
-        >
-          {(() => {
-            const isLocked = selectedFolderForMenu?.meta?.readOnly === true;
-            const isRead = selectedFolderForMenu?.meta?.readStatus === true;
-            const currentStatus =
-              selectedFolderForMenu?.meta?.signStatus || "sendForSignature";
-            const isApproved = selectedFolderForMenu?.meta?.authStatus === true;
-  
-            return (
-              <>
-                <MenuItem
-                  disabled={isLocked}
-                  onClick={() => {
-                    setMoveDrawerOpen(true);
-                    handleMenuClose();
-                  }}
-                  sx={{ fontSize: "0.8rem", py: 0.5 }}
-                >
-                  <DriveFileMoveIcon sx={{ mr: 0.5, fontSize: 16 }} />
-                  Move
-                </MenuItem>
-  
-                <MenuItem
-                  disabled={isLocked}
-                  onClick={() => {
-                    deleteItem(selectedFolderForMenu);
-                    handleMenuClose();
-                  }}
-                  sx={{ fontSize: "0.8rem", py: 0.5 }}
-                >
-                  <DeleteIcon sx={{ mr: 0.5, fontSize: 16 }} />
-                  Delete
-                </MenuItem>
-  
-                <MenuItem
-                  disabled={isLocked}
-                  onClick={() => {
-                    setNewFolderDrawerOpen(true);
-                    handleMenuClose();
-                  }}
-                  sx={{ fontSize: "0.8rem", py: 0.5 }}
-                >
-                  <FolderIcon sx={{ mr: 0.5, fontSize: 16 }} />
-                  New Folder
-                </MenuItem>
-  
-                <MenuItem
-                  disabled={isLocked}
-                  onClick={() => {
-                    setFileUploadDrawerOpen(true);
-                    handleMenuClose();
-                  }}
-                  sx={{ fontSize: "0.8rem", py: 0.5 }}
-                >
-                  <UploadFileIcon sx={{ mr: 0.5, fontSize: 16 }} />
-                  New File
-                </MenuItem>
-  
-                <MenuItem
-                  disabled={isLocked}
-                  onClick={() => {
-                    setFolderUploaDrawerOpen(true);
-                    handleMenuClose();
-                  }}
-                  sx={{ fontSize: "0.8rem", py: 0.5 }}
-                >
-                  <DriveFolderUploadIcon sx={{ mr: 0.5, fontSize: 16 }} />
-                  Upload Folder
-                </MenuItem>
-  
-                <MenuItem
-                  disabled={isLocked}
-                  onClick={() => {
-                    SetRenameDrawer(true);
-                    handleMenuClose();
-                  }}
-                  sx={{ fontSize: "0.8rem", py: 0.5 }}
-                >
-                  <DriveFileMoveIcon sx={{ mr: 0.5, fontSize: 16 }} />
-                  Edit
-                </MenuItem>
-  
-                <MenuItem
-                  disabled={isLocked}
-                  onClick={() => {
-                    toggleSignStatus(selectedFolderForMenu);
-                    handleMenuClose();
-                  }}
-                  sx={{ fontSize: "0.8rem", py: 0.5 }}
-                >
-                  <PenTool
-                    size={16}
-                    color={
-                      currentStatus === "signatureCompleted"
-                        ? "#1976d2"
-                        : "#807878ff"
-                    }
-                    style={{ marginRight: 6 }}
-                  />
-                  {statusTextMap[currentStatus]}
-                </MenuItem>
-  
-                <MenuItem
-                  disabled={isLocked}
-                  onClick={() => {
-                    toggleReadStatus(selectedFolderForMenu);
-                    handleMenuClose();
-                  }}
-                  sx={{ fontSize: "0.8rem", py: 0.5 }}
-                >
-                  <Eye
-                    size={16}
-                    color={
-                      isLocked
-                        ? "#f5ecec"
-                        : isRead
-                        ? "#1976d2"
-                        : "#807878ff"
-                    }
-                    style={{ marginRight: 6 }}
-                  />
-                  {isRead ? "Mark Unread" : "Mark Read"}
-                </MenuItem>
-  
-                <MenuItem
-                  disabled={isLocked}
-                  onClick={() => {
-                    toggleApprovalStatus(selectedFolderForMenu);
-                    handleMenuClose();
-                  }}
-                  sx={{ fontSize: "0.8rem", py: 0.5 }}
-                >
-                  <Stamp
-                    size={16}
-                    color={
-                      isApproved ? "#1976d2" : "#807878ff"
-                    }
-                    style={{ marginRight: 6 }}
-                  />
-                  {
-                    approvalStatusTextMap[
-                      selectedFolderForMenu?.meta?.authStatus ||
-                        "sendForApproval"
-                    ]
-                  }
-                </MenuItem>
-  
-                <MenuItem
-                  onClick={() => {
-                    toggleReadOnly(selectedFolderForMenu);
-                    handleMenuClose();
-                  }}
-                  sx={{ fontSize: "0.8rem", py: 0.5 }}
-                >
-                  {isLocked ? (
-                    <LockOpenIcon sx={{ mr: 0.5, fontSize: 16 }} />
-                  ) : (
-                    <LockIcon sx={{ mr: 0.5, fontSize: 16 }} />
-                  )}
-                  {isLocked ? "Unlock" : "Lock"}
-                </MenuItem>
-              </>
-            );
-          })()}
-        </Menu> */}
-        <Menu
   anchorEl={menuAnchorEl}
   open={Boolean(menuAnchorEl)}
   onClose={handleMenuClose}
@@ -1060,116 +905,52 @@ const handleRequestApproval = async () => {
       </MenuItem>
     ));
   })()}
-</Menu>
-
-        {/* Context Menu */}
-{/* <Menu
-  anchorEl={menuAnchorEl}
-  open={Boolean(menuAnchorEl)}
-  onClose={handleMenuClose}
-  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-  transformOrigin={{ vertical: "top", horizontal: "right" }}
->
-  {(() => {
-    if (!selectedFolderForMenu) return null;
-
-    const item = selectedFolderForMenu;
-    const isFolder = item.type === "folder";
-    const isLocked = item?.meta?.readOnly === true;
-    const currentSignStatus = item?.meta?.signStatus || "sendForSignature";
-    const isApproved = item?.meta?.authStatus === true;
-    const isRead = item?.meta?.readStatus === true;
-
-    // Determine doc category: firm / client / private
-    // (You can adjust this logic based on your actual folder structure)
-    const path = item.path.toLowerCase();
-    let docType = "client"; // default
-    if (path.includes("firm")) docType = "firm";
-    if (path.includes("private")) docType = "private";
-
-    const menuItems = [];
-
-    // -------------------------------
-    // 📁 FOLDER TYPE
-    // -------------------------------
-    if (isFolder) {
-      if (docType === "client") {
-        // Client Uploaded Docs (Folder)
-        menuItems.push(
-          { icon: <FolderIcon />, label: "New Folder", action: () => setNewFolderDrawerOpen(true) },
-          { icon: <DriveFileMoveIcon />, label: "Edit", action: () => SetRenameDrawer(true) },
-          { icon: <DriveFileMoveIcon />, label: "Move", action: () => setMoveDrawerOpen(true) },
-          { icon: <DeleteIcon />, label: "Delete", action: () => deleteItem(item) },
-          { icon: <UploadFileIcon />, label: "New File", action: () => setFileUploadDrawerOpen(true) },
-          { icon: <DriveFolderUploadIcon />, label: "Upload Folder", action: () => setFolderUploaDrawerOpen(true) },
-          { icon: <PenTool size={16} />, label: "Seal", action: () => toggleSignStatus(item) }
-        );
-      } else if (docType === "firm") {
-        // Firm Docs (Folder)
-        menuItems.push(
-          { icon: <FolderIcon />, label: "New Folder", action: () => setNewFolderDrawerOpen(true) },
-          { icon: <DriveFileMoveIcon />, label: "Edit", action: () => SetRenameDrawer(true) },
-          { icon: <DriveFileMoveIcon />, label: "Move", action: () => setMoveDrawerOpen(true) },
-          { icon: <DeleteIcon />, label: "Delete", action: () => deleteItem(item) }
-        );
-      } else if (docType === "private") {
-        // Private Folder (Folder)
-        menuItems.push(
-          { icon: <FolderIcon />, label: "New Folder", action: () => setNewFolderDrawerOpen(true) },
-          { icon: <UploadFileIcon />, label: "New File", action: () => setFileUploadDrawerOpen(true) },
-          { icon: <DriveFileMoveIcon />, label: "Move", action: () => setMoveDrawerOpen(true) },
-          { icon: <DriveFileMoveIcon />, label: "Edit", action: () => SetRenameDrawer(true) },
-          { icon: <DeleteIcon />, label: "Delete", action: () => deleteItem(item) }
-        );
-      }
-    }
-
-    // -------------------------------
-    // 📄 FILE TYPE
-    // -------------------------------
-    else {
-      if (docType === "client") {
-        // Client Uploaded Docs (File)
-        menuItems.push(
-          { icon: <DriveFileMoveIcon />, label: "Edit", action: () => SetRenameDrawer(true) },
-          { icon: <DriveFileMoveIcon />, label: "Move", action: () => setMoveDrawerOpen(true) },
-          { icon: <PenTool size={16} />, label: "Seal", action: () => toggleSignStatus(item) },
-          { icon: <DeleteIcon />, label: "Delete", action: () => deleteItem(item) }
-        );
-      } else if (docType === "firm") {
-        // Firm Docs (File)
-        menuItems.push(
-          { icon: <DriveFileMoveIcon />, label: "Edit", action: () => SetRenameDrawer(true) },
-          { icon: <DriveFileMoveIcon />, label: "Move", action: () => setMoveDrawerOpen(true) },
-          { icon: <PenTool size={16} />, label: "Request Sign", action: () => toggleSignStatus(item) },
-          { icon: <Stamp size={16} />, label: "Send Approval", action: () => toggleApprovalStatus(item) },
-          { icon: <DownloadIcon />, label: "Download", action: () => window.open(item.url, "_blank") },
-          { icon: <DeleteIcon />, label: "Delete", action: () => deleteItem(item) }
-        );
-      } else if (docType === "private") {
-        // Private Folder (File)
-        menuItems.push(
-          { icon: <DriveFileMoveIcon />, label: "Edit", action: () => SetRenameDrawer(true) },
-          { icon: <DeleteIcon />, label: "Delete", action: () => deleteItem(item) }
-        );
-      }
-    }
-
-    return menuItems.map(({ icon, label, action }) => (
-      <MenuItem
-        key={label}
-        onClick={() => {
-          action();
-          handleMenuClose();
-        }}
-        sx={{ fontSize: "0.8rem", py: 0.5 }}
-      >
-        {React.cloneElement(icon, { sx: { mr: 0.5, fontSize: 16 } })}
-        {label}
-      </MenuItem>
-    ));
-  })()}
 </Menu> */}
+
+ {selectedFolderForMenu ? (
+          selectedFolderForMenu.isParent ? (
+            // 📁 Parent Folder Menu
+            <ParentFolderMenu
+              anchorEl={menuAnchorEl}
+              open={Boolean(menuAnchorEl)}
+              onClose={handleMenuClose}
+              onCreateFolder={() => setNewFolderDrawerOpen(true)}
+            />
+          ) : selectedFolderForMenu.isFile ? (
+            // 📄 File Menu
+            <FileMenu
+              anchorEl={menuAnchorEl}
+              open={Boolean(menuAnchorEl)}
+              onClose={handleMenuClose}
+              selectedItem={selectedFolderForMenu}
+              onRename={() => SetRenameDrawer(true)}
+              onMove={() => setMoveDrawerOpen(true)}
+              accId={accId}
+              onToggleReadStatus={toggleReadStatus}
+              onToggleReadOnly={toggleReadOnly}
+              onDelete={deleteItem}
+              onDownload={handleFileClick}
+            />
+          ) : (
+            // 📂 Child Folder Menu
+            <FolderMenu
+              anchorEl={menuAnchorEl}
+              open={Boolean(menuAnchorEl)}
+              onClose={handleMenuClose}
+              selectedItem={selectedFolderForMenu}
+              onCreateFolder={() => setNewFolderDrawerOpen(true)}
+              onUploadFile={() => setFileUploadDrawerOpen(true)}
+              onUploadFolder={() => setFolderUploaDrawerOpen(true)}
+              onRename={() => SetRenameDrawer(true)}
+              onMove={() => setMoveDrawerOpen(true)}
+              onToggleReadStatus={toggleReadStatus}
+              onToggleReadOnly={toggleReadOnly}
+              onDelete={deleteItem}
+            />
+          )
+        ) : null}
+
+       
 
       </Box>
     );
@@ -1177,38 +958,7 @@ const handleRequestApproval = async () => {
   return (
   
     <Box sx={{ p: 3 }}>
-      {/* <Typography variant="h5" gutterBottom>
-        Apply Template to Account
-      </Typography>
-
-      <FormControl fullWidth sx={{ mb: 2 }}>
-        <InputLabel id="template-label">Select Template</InputLabel>
-        <Select
-          labelId="template-label"
-          value={selectedTemplate}
-          label="Select Template"
-          onChange={(e) => setSelectedTemplate(e.target.value)}
-        >
-          <MenuItem value="">
-            <em>Choose a template</em>
-          </MenuItem>
-          {templates.map((template) => (
-            <MenuItem key={template._id} value={template._id}>
-              {template.templatename}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl> */}
-
-      {/* <Button
-        variant="contained"
-        color="primary"
-        disabled={loading || !selectedTemplate}
-        onClick={applyTemplateToAccount}
-        sx={{ textTransform: "none" }}
-      >
-        {loading ? <CircularProgress size={24} color="inherit" /> : "Apply Template"}
-      </Button> */}
+   
 
       
 

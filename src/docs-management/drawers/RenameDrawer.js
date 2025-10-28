@@ -153,6 +153,7 @@
 import React, { useState, useEffect } from "react";
 import { Drawer, Box, Typography, TextField, Button } from "@mui/material";
 import axios from "axios";
+import { toast } from "material-react-toastify";
 
 const RenameDrawer = ({
   isOpen,
@@ -194,6 +195,7 @@ const RenameDrawer = ({
       );
 
       setMessage(`✅ ${res.data.message}`);
+      toast.success(`${res.data.message}`)
          onClose();
       fetchFolderTree(); // refresh folder structure
      
@@ -205,7 +207,7 @@ const RenameDrawer = ({
 
   return (
     <Drawer anchor="right" open={isOpen} onClose={onClose}>
-      <Box sx={{ width: 400, p: 3, bgcolor: "#f0f8ff", height: "100%" }}>
+      <Box sx={{ width: 400, p: 3, height: "100%" }}>
         <Typography variant="h6" gutterBottom>
           ✏️ Rename Item
         </Typography>

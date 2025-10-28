@@ -242,6 +242,7 @@ import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import axios from "axios";
+import { toast } from "material-react-toastify";
 
 const FileUploadDrawer = ({
   isOpen,
@@ -287,9 +288,10 @@ const FileUploadDrawer = ({
 
       setMessage(`✅ File uploaded: ${res.data.fileMeta.name}`);
       //  toast.success("file uploaded successfully")
+       toast.success(`File uploaded: ${res.data.fileMeta.name}`)
       setFile(null);
       onClose();
-      // fetchFolderTree();
+      fetchFolderTree();
     } catch (err) {
       console.error(err);
       setMessage("❌ Error uploading file");
@@ -304,7 +306,7 @@ const FileUploadDrawer = ({
           zIndex: (theme) => theme.zIndex.modal + 1, // ensure above dialog
           width: 600,
         }}>
-      <Box sx={{ width: 400, p: 3, bgcolor: "#f0f8ff", height: "100%" }}>
+      <Box sx={{ width: 400, p: 3,  height: "100%" }}>
         <Typography variant="h6" gutterBottom>
           📄 Upload File
         </Typography>
@@ -384,7 +386,7 @@ const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
                 bgcolor: isSelected ? "#b2d8ff" : "transparent",
                 borderRadius: 1,
                 mb: 0.5,
-                "&:hover": { bgcolor: "#dbefff" },
+                "&:hover": { bgcolor: "#dbefff" ,color:'black',},
                 cursor: item.meta?.readOnly ? "not-allowed" : "pointer",
               }}
               onClick={() => {

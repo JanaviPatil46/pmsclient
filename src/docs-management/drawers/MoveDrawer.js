@@ -249,6 +249,7 @@ import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import axios from "axios";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
+import { toast } from "material-react-toastify";
 const MoveDrawer = ({
   isOpen,
   onClose,
@@ -285,6 +286,8 @@ const MoveDrawer = ({
       );
 
       setMessage(res.data.message);
+      toast.success('Moved Successfully')
+      onClose()
       fetchFolderTree?.();
     } catch (err) {
       if (err.response) setMessage(err.response.data.error || "Move failed");
@@ -294,26 +297,26 @@ const MoveDrawer = ({
 
   return (
     <Drawer anchor="right" open={isOpen} onClose={onClose}>
-      <Box sx={{ width: 360, p: 3, bgcolor: "#f8fff0", height: "100%" }}>
+      <Box sx={{ width: 360, p: 3, height: "100%" }}>
         <Typography variant="h6" gutterBottom>
           📁 Move Folder / File
         </Typography>
 
-        <TextField
+        {/* <TextField
           label="Source Path"
           value={sourcePath}
           fullWidth
           margin="dense"
           InputProps={{ readOnly: true }}
-        />
+        /> */}
 
-        <TextField
+        {/* <TextField
           label="Destination Path"
           value={destinationPath}
           onChange={(e) => setDestinationPath(e.target.value)}
           fullWidth
           margin="dense"
-        />
+        /> */}
 
         <Button
           variant="contained"
@@ -387,7 +390,7 @@ const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
                 bgcolor: isSelected ? "#b2d8ff" : "transparent",
                 borderRadius: 1,
                 mb: 0.5,
-                "&:hover": { bgcolor: "#dbefff" },
+                "&:hover": { bgcolor: "#dbefff",color:'black', },
                 cursor: item.meta?.readOnly ? "not-allowed" : "pointer",
               }}
               onClick={() => {
