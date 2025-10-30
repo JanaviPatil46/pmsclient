@@ -254,7 +254,7 @@ const FileUploadDrawer = ({
   const [file, setFile] = useState(null);
   const [selectedFolder, setSelectedFolder] = useState("");
   const [message, setMessage] = useState("");
-
+   const [files, setFiles] = useState([]);
   useEffect(() => {
     if (isOpen && selectedFolderForMenu) {
       setSelectedFolder(selectedFolderForMenu.path);
@@ -265,39 +265,85 @@ const FileUploadDrawer = ({
     }
   }, [isOpen, selectedFolderForMenu]);
 
-  const handleFileChange = (e) => setFile(e.target.files[0]);
+  // const handleFileChange = (e) => setFile(e.target.files[0]);
+    const handleFileChange = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    const maxSize = 50 * 1024 * 1024; // 50 MB
+    const forbiddenTypes = ["video/", "audio/"];
+
+    const validFiles = selectedFiles.filter((file) => {
+      if (file.size > maxSize) {
+        alert(`❌ ${file.name} exceeds 50 MB limit.`);
+        return false;
+      }
+      if (forbiddenTypes.some((type) => file.type.startsWith(type))) {
+        alert(`❌ ${file.name} is an audio or video file — not allowed.`);
+        return false;
+      }
+      return true;
+    });
+
+    setFiles(validFiles);
+  };
   const handleFolderSelect = (path) => setSelectedFolder(path);
 
+  // const handleUpload = async () => {
+  //   if (!file || !selectedFolder) {
+  //     setMessage("Please select a file and folder.");
+  //     return;
+  //   }
+
+  //   try {
+  //     const formData = new FormData();
+  //     formData.append("file", file);
+
+  //     const res = await axios.post(
+  //       `https://www.snptaxes.com/api/accountsdoc/file/upload?folderPath=${encodeURIComponent(
+  //         selectedFolder
+  //       )}`,
+  //       formData,
+  //       { headers: { "Content-Type": "multipart/form-data" } }
+  //     );
+
+  //     setMessage(`✅ File uploaded: ${res.data.fileMeta.name}`);
+  //     //  toast.success("file uploaded successfully")
+  //      toast.success(`File uploaded: ${res.data.fileMeta.name}`)
+  //     setFile(null);
+  //     onClose();
+  //     fetchFolderTree();
+  //   } catch (err) {
+  //     console.error(err);
+  //     setMessage("❌ Error uploading file");
+  //   }
+  // };
   const handleUpload = async () => {
-    if (!file || !selectedFolder) {
-      setMessage("Please select a file and folder.");
+    if (files.length === 0 || !selectedFolder) {
+      setMessage("Please select files and a folder.");
       return;
     }
 
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      files.forEach((file) => formData.append("files", file));
 
       const res = await axios.post(
-        `https://www.snptaxes.com/api/accountsdoc/file/upload?folderPath=${encodeURIComponent(
+              `https://www.snptaxes.com/api/accountsdoc/file/upload?folderPath=${encodeURIComponent(
           selectedFolder
         )}`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
 
-      setMessage(`✅ File uploaded: ${res.data.fileMeta.name}`);
-      //  toast.success("file uploaded successfully")
-       toast.success(`File uploaded: ${res.data.fileMeta.name}`)
-      setFile(null);
+      setMessage(`✅ ${res.data.message || "Files uploaded successfully"}`);
+      toast.success(`✅ ${res.data.message || "Files uploaded successfully"}`)
+      setFiles([]);
       onClose();
-      fetchFolderTree();
+     fetchFolderTree();
     } catch (err) {
       console.error(err);
-      setMessage("❌ Error uploading file");
+      setMessage("❌ Error uploading files");
     }
   };
-
   return (
     <Drawer anchor="right" open={isOpen} onClose={onClose}  ModalProps={{
           keepMounted: true // Improves performance on mobile
@@ -320,7 +366,7 @@ const FileUploadDrawer = ({
           margin="dense"
         /> */}
 
-        <Button
+        {/* <Button
           variant="outlined"
           component="label"
           fullWidth
@@ -328,8 +374,18 @@ const FileUploadDrawer = ({
         >
           {file ? file.name : "Select File"}
           <input type="file" hidden onChange={handleFileChange} />
-        </Button>
-
+        </Button> */}
+<Button
+                  variant="outlined"
+                  component="label"
+                  fullWidth
+                  sx={{ mt: 1, mb: 2 }}
+                >
+                  {files.length > 0
+                    ? `${files.length} file(s) selected`
+                    : "Select Files"}
+                  <input type="file" hidden multiple onChange={handleFileChange} />
+                </Button>
         <Button
           variant="contained"
           color="primary"
