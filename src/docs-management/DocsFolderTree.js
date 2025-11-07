@@ -536,6 +536,7 @@ const handleRequestApproval = async () => {
                       cursor: "pointer",
                        backgroundColor: isParent ? "#f0f7ff" : "#fff",
                       // backgroundColor: "#fff",
+                      color:'black',
                       "&:hover": { backgroundColor: "#f5f5f5",color:'black', },
                       transition: "background-color 0.2s ease-in-out",
                     }}

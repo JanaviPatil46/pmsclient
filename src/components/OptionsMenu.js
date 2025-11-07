@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { useContext, useState } from "react";
+import { useContext, useState,useEffect } from "react";
 import { styled } from "@mui/material/styles";
 import Divider, { dividerClasses } from "@mui/material/Divider";
 import Menu from "@mui/material/Menu";
@@ -40,50 +40,50 @@ export default function OptionsMenu({ email }) {
 
 
 
-  // Check if there's a selected user in localStorage on component mount
-  React.useEffect(() => {
-    const storedSelectedUser = sessionStorage.getItem("selectedUser");
-    if (storedSelectedUser) {
-      try {
-        const user = JSON.parse(storedSelectedUser);
-        setSelectedUser(user);
-      } catch (error) {
-        console.error("Error parsing selected user:", error);
-        sessionStorage.removeItem("selectedUser");
-      }
-    }
-  }, []);
+  // // Check if there's a selected user in localStorage on component mount
+  // React.useEffect(() => {
+  //   const storedSelectedUser = sessionStorage.getItem("selectedUser");
+  //   if (storedSelectedUser) {
+  //     try {
+  //       const user = JSON.parse(storedSelectedUser);
+  //       setSelectedUser(user);
+  //     } catch (error) {
+  //       console.error("Error parsing selected user:", error);
+  //       sessionStorage.removeItem("selectedUser");
+  //     }
+  //   }
+  // }, []);
 
-  const logoutuser = async () => {
+  // const logoutuser = async () => {
   
-    let token = sessionStorage.getItem("clientdatatoken");
-    const url = `${LOGIN_API}/common/clientlogin/logout/`;
+  //   let token = sessionStorage.getItem("clientdatatoken");
+  //   const url = `${LOGIN_API}/common/clientlogin/logout/`;
 
-    const requestOptions = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: token,
-      },
-    };
+  //   const requestOptions = {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       Authorization: token,
+  //     },
+  //   };
 
-    const res = await fetch(url, requestOptions);
-    const data = await res.json();
+  //   const res = await fetch(url, requestOptions);
+  //   const data = await res.json();
 
-    if (data.status === 200) {
-      console.log("user logout");
-      sessionStorage.removeItem("clientdatatoken");
-      Cookies.remove("clientuserToken");
-      sessionStorage.removeItem("selectedUser");
-      sessionStorage.removeItem("pendingUserEmail");
-      setLoginData(false);
+  //   if (data.status === 200) {
+  //     console.log("user logout");
+  //     sessionStorage.removeItem("clientdatatoken");
+  //     Cookies.remove("clientuserToken");
+  //     sessionStorage.removeItem("selectedUser");
+  //     sessionStorage.removeItem("pendingUserEmail");
+  //     setLoginData(false);
 
-      navigate("/client/login");
-      toast.success("Logout Successfully");
-    } else {
-      console.log("error");
-    }
-  };
+  //     navigate("/client/login");
+  //     toast.success("Logout Successfully");
+  //   } else {
+  //     console.log("error");
+  //   }
+  // };
 
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
@@ -96,165 +96,203 @@ export default function OptionsMenu({ email }) {
 
   const [canSwitch, setCanSwitch] = React.useState(false); 
 
-  const checkEmailForUsers = async (email) => {
-    console.log(" checkEmailForUsers(email); ", email);
-    if (!email || !email.includes("@")) return;
+  // const checkEmailForUsers = async (email) => {
+  //   console.log(" checkEmailForUsers(email); ", email);
+  //   if (!email || !email.includes("@")) return;
 
-    try {
-      const checkUserUrl = `${LOGIN_API}/common/user/client/getuserbyemail/${email}`;
-      const checkUserResponse = await fetch(checkUserUrl, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
+  //   try {
+  //     const checkUserUrl = `${LOGIN_API}/common/user/client/getuserbyemail/${email}`;
+  //     const checkUserResponse = await fetch(checkUserUrl, {
+  //       method: "GET",
+  //       headers: { "Content-Type": "application/json" },
+  //     });
 
-      const userData = await checkUserResponse.json();
-      console.log("userlist", userData);
+  //     const userData = await checkUserResponse.json();
+  //     console.log("userlist", userData);
 
-      if (userData.user && userData.user.length > 1) {
-        setAccountUsers(userData.user);
-        return true;
-      } else if (userData.user && userData.user.length === 1) {
-        setAccountUsers(userData.user);
-        return false;
-      } else {
-        toast.error("User not found");
-        setAccountUsers([]);
-        return false;
-      }
-    } catch (error) {
-      console.error("Error checking users:", error);
-      setAccountUsers([]);
-      return false;
-    }
-  };
+  //     if (userData.user && userData.user.length > 1) {
+  //       setAccountUsers(userData.user);
+  //       return true;
+  //     } else if (userData.user && userData.user.length === 1) {
+  //       setAccountUsers(userData.user);
+  //       return false;
+  //     } else {
+  //       toast.error("User not found");
+  //       setAccountUsers([]);
+  //       return false;
+  //     }
+  //   } catch (error) {
+  //     console.error("Error checking users:", error);
+  //     setAccountUsers([]);
+  //     return false;
+  //   }
+  // };
 
-  React.useEffect(() => {
-    const fetchAndSet = async () => {
-      const hasUsers = await checkEmailForUsers(email);
-      setCanSwitch(hasUsers);
-    };
-    fetchAndSet();
-  }, [email]);
+  // React.useEffect(() => {
+  //   const fetchAndSet = async () => {
+  //     const hasUsers = await checkEmailForUsers(email);
+  //     setCanSwitch(hasUsers);
+  //   };
+  //   fetchAndSet();
+  // }, [email]);
   
-  const handleSwitchAccount = async (user) => {
-    try {
-      const expiryTime = 8 * 60 * 60;
-      const switchUrl = `${LOGIN_API}/common/clientlogin/generatetokenforclient`;
+  // const handleSwitchAccount = async (user) => {
+  //   try {
+  //     const expiryTime = 8 * 60 * 60;
+  //     const switchUrl = `${LOGIN_API}/common/clientlogin/generatetokenforclient`;
 
-      const switchPayload = {
-        email: user.email,
-        password: "",
-        expiryTime,
-        username: user.username,
-        userId: user._id,
-      };
+  //     const switchPayload = {
+  //       email: user.email,
+  //       password: "",
+  //       expiryTime,
+  //       username: user.username,
+  //       userId: user._id,
+  //     };
 
-      console.log("Switch payload:", switchPayload);
+  //     console.log("Switch payload:", switchPayload);
 
-      const switchResponse = await fetch(switchUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(switchPayload),
-      });
+  //     const switchResponse = await fetch(switchUrl, {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify(switchPayload),
+  //     });
 
-      console.log("Switch response status:", switchResponse.status);
+  //     console.log("Switch response status:", switchResponse.status);
 
-      const switchResult = await switchResponse.json();
-      console.log("Full switch response:", switchResult);
+  //     const switchResult = await switchResponse.json();
+  //     console.log("Full switch response:", switchResult);
 
-      if (switchResult.status === 200) {
-        console.log("Switch successful, token received");
-        sessionStorage.setItem("clientdatatoken", switchResult.result.token);
-        Cookies.set("clientuserToken", switchResult.result.token);
+  //     if (switchResult.status === 200) {
+  //       console.log("Switch successful, token received");
+  //       sessionStorage.setItem("clientdatatoken", switchResult.result.token);
+  //       Cookies.set("clientuserToken", switchResult.result.token);
         
-        // Store the selected user in sessionStorage like in Dashboard
-        sessionStorage.setItem("selectedUser", JSON.stringify(user));
+  //       // Store the selected user in sessionStorage like in Dashboard
+  //       sessionStorage.setItem("selectedUser", JSON.stringify(user));
         
-        // Set the selected user in state
-        setSelectedUser(user);
+  //       // Set the selected user in state
+  //       setSelectedUser(user);
         
-        // Update context with the new user data
-        if (logindata && logindata.user) {
-          const updatedLoginData = {
-            ...logindata,
-            user: {
-              ...logindata.user,
-              id: user._id,
-              username: user.accountName,
-              role: user.role,
-              // Add any other user properties you need
-            }
-          };
-          setLoginData(updatedLoginData);
-        }
+  //       // Update context with the new user data
+  //       if (logindata && logindata.user) {
+  //         const updatedLoginData = {
+  //           ...logindata,
+  //           user: {
+  //             ...logindata.user,
+  //             id: user._id,
+  //             username: user.accountName,
+  //             role: user.role,
+  //             // Add any other user properties you need
+  //           }
+  //         };
+  //         setLoginData(updatedLoginData);
+  //       }
     
-        setOpenSwitchDialog(false);
-        toast.success(`Switched to ${user.accountName || user.username}`);
+  //       setOpenSwitchDialog(false);
+  //       toast.success(`Switched to ${user.accountName || user.username}`);
         
-        // Reload the page to reflect the changes
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-      } else {
-        console.error("Switch failed:", switchResult.message);
-        toast.error(switchResult.message || "Switch failed");
-      }
-    } catch (err) {
-      console.group("Switch Error");
-      console.error("Error object:", err);
-      console.error("Error message:", err.message);
-      console.error("Stack trace:", err.stack);
-      console.groupEnd();
-      toast.error("Error switching account");
-    }
-  };
+  //       // Reload the page to reflect the changes
+  //       setTimeout(() => {
+  //         window.location.reload();
+  //       }, 1000);
+  //     } else {
+  //       console.error("Switch failed:", switchResult.message);
+  //       toast.error(switchResult.message || "Switch failed");
+  //     }
+  //   } catch (err) {
+  //     console.group("Switch Error");
+  //     console.error("Error object:", err);
+  //     console.error("Error message:", err.message);
+  //     console.error("Stack trace:", err.stack);
+  //     console.groupEnd();
+  //     toast.error("Error switching account");
+  //   }
+  // };
 
   // Rest of your component remains the same...
-  const [loginsData, setloginsData] = useState("");
+  // const [loginsData, setloginsData] = useState("");
   
-  const fetchUserData = async (id) => {
-    const myHeaders = new Headers();
-    const requestOptions = {
-      method: "GET",
-      headers: myHeaders,
-      redirect: "follow",
-    };
-    const url = `${LOGIN_API}/common/user/${id}`;
-    fetch(url + loginsData, requestOptions)
-      .then((response) => response.json())
-      .then((result) => {
-        console.log("selctedid", result);
-      });
-  };
+  // const fetchUserData = async (id) => {
+  //   const myHeaders = new Headers();
+  //   const requestOptions = {
+  //     method: "GET",
+  //     headers: myHeaders,
+  //     redirect: "follow",
+  //   };
+  //   const url = `${LOGIN_API}/common/user/${id}`;
+  //   fetch(url + loginsData, requestOptions)
+  //     .then((response) => response.json())
+  //     .then((result) => {
+  //       console.log("selctedid", result);
+  //     });
+  // };
   
-  const DashboardValid = async () => {
-    let token = sessionStorage.getItem("clientdatatoken");
-    const url = `${LOGIN_API}/common/clientlogin/verifytokenforclient`;
-    const res = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: token,
-      },
-    });
+  // const DashboardValid = async () => {
+  //   let token = sessionStorage.getItem("clientdatatoken");
+  //   const url = `${LOGIN_API}/common/clientlogin/verifytokenforclient`;
+  //   const res = await fetch(url, {
+  //     method: "GET",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       Authorization: token,
+  //     },
+  //   });
 
-    console.log(token);
-    const data = await res.json();
-    console.log("bnsvchd", data);
-    if (data.message === "Invalid token") {
-      // navigate("/client/login");
-    } else {
-      setLoginData(data);
-      setloginsData(data.user.id);
+  //   console.log(token);
+  //   const data = await res.json();
+  //   console.log("bnsvchd", data);
+  //   if (data.message === "Invalid token") {
+  //     // navigate("/client/login");
+  //   } else {
+  //     setLoginData(data);
+  //     setloginsData(data.user.id);
 
-      if (data.user.role?.toLowerCase() === "client") {
-        fetchUserData(data.user.id);
-      } else {
-        navigate("/client/login");
-      }
+  //     if (data.user.role?.toLowerCase() === "client") {
+  //       fetchUserData(data.user.id);
+  //     } else {
+  //       navigate("/client/login");
+  //     }
+  //   }
+  // };
+const [accounts, setAccounts] = useState([]);
+  const [selectedAccount, setSelectedAccount] = useState(sessionStorage.getItem('accountId'));
+  // const [openSwitchDialog, setOpenSwitchDialog] = useState(false);
+
+  useEffect(() => {
+    const savedAcc = sessionStorage.getItem('accounts');
+    if (savedAcc) {
+      setAccounts(JSON.parse(savedAcc));
     }
+  }, []);
+
+  const handleSwitchAccount = (accountId) => {
+    sessionStorage.setItem("accountId", accountId);
+    setSelectedAccount(accountId);
+
+    // Update UI or context if needed
+    if (setLoginData) {
+      setLoginData(prev => ({
+        ...prev,
+        selectedAccount: accountId
+      }));
+    }
+
+    toast.success("Switched Successfully");
+    setOpenSwitchDialog(false);
+
+    // reload page to fetch new account info like dashboard
+    setTimeout(() => window.location.reload(), 600);
   };
 
+  const logoutuser = () => {
+    sessionStorage.removeItem('jwtToken');
+    sessionStorage.removeItem('accountId');
+    sessionStorage.removeItem('email');
+    sessionStorage.removeItem('accounts');
+      navigate("/client/login");
+  toast.success("Logout Successfully");
+
+  };
   return (
     <React.Fragment>
       {/* Your JSX remains the same... */}
@@ -288,19 +326,13 @@ export default function OptionsMenu({ email }) {
         <MenuItem onClick={handleClose}>Profile</MenuItem>
         <MenuItem onClick={handleClose}>My account</MenuItem>
         <Divider />
-        <MenuItem
-          disabled={!canSwitch}
-          onClick={async () => {
-            handleClose();
-            const hasUsers = await checkEmailForUsers(email);
-            if (hasUsers) {
-              setOpenSwitchDialog(true);
-            }
-          }}
-        >
-          Switch Account
-        </MenuItem>
-
+     
+<MenuItem
+        disabled={accounts.length <= 1}
+        onClick={() => setOpenSwitchDialog(true)}
+      >
+        Switch Account
+      </MenuItem>
         <MenuItem onClick={handleClose}>Settings</MenuItem>
         <Divider />
         <MenuItem
@@ -319,7 +351,7 @@ export default function OptionsMenu({ email }) {
         </MenuItem>
       </Menu>
 
-      <Dialog
+      {/* <Dialog
         open={openSwitchDialog}
         onClose={() => setOpenSwitchDialog(false)}
         fullWidth
@@ -351,7 +383,41 @@ export default function OptionsMenu({ email }) {
         <DialogActions>
           <Button onClick={() => setOpenSwitchDialog(false)}>Cancel</Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
+     <Dialog open={openSwitchDialog} onClose={() => setOpenSwitchDialog(false)}>
+  <DialogTitle>Switch Account</DialogTitle>
+  <DialogContent dividers>
+    {accounts.length > 1 ? (
+      accounts.map(acc => {
+        const isCurrent = selectedAccount === acc._id;
+        return (
+          <Button
+            key={acc._id}
+            fullWidth
+            sx={{ mb: 1, justifyContent: "space-between" }}
+            variant={isCurrent ? "contained" : "outlined"}
+            // disabled={isCurrent} // prevent switching on same account
+            onClick={() => !isCurrent && handleSwitchAccount(acc._id)}
+          >
+            {acc.accountName}
+            {isCurrent && (
+              <span style={{ fontSize: "12px", opacity: 0.8 }}>
+                (Current)
+              </span>
+            )}
+          </Button>
+        );
+      })
+    ) : (
+      <p>No other accounts available</p>
+    )}
+  </DialogContent>
+
+  <DialogActions>
+    <Button onClick={() => setOpenSwitchDialog(false)}>Close</Button>
+  </DialogActions>
+</Dialog>
+
     </React.Fragment>
   );
 }

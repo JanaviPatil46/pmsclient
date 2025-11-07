@@ -1,143 +1,3 @@
-// import * as React from 'react';
-// import { useEffect,useContext,useState } from "react";
-// import { styled } from '@mui/material/styles';
-// import Avatar from '@mui/material/Avatar';
-// import MuiDrawer, { drawerClasses } from '@mui/material/Drawer';
-// import Box from '@mui/material/Box';
-// import Divider from '@mui/material/Divider';
-// import Stack from '@mui/material/Stack';
-// import Typography from '@mui/material/Typography';
-// import SelectContent from './SelectContent';
-// import MenuContent from './MenuContent';
-// import CardAlert from './CardAlert';
-// import OptionsMenu from './OptionsMenu';
-// import { LoginContext } from "../context/Context";
-
-// const drawerWidth = 240;
-
-// const Drawer = styled(MuiDrawer)({
-//   width: drawerWidth,
-//   flexShrink: 0,
-//   boxSizing: 'border-box',
-//   mt: 10,
-//   [`& .${drawerClasses.paper}`]: {
-//     width: drawerWidth,
-//     boxSizing: 'border-box',
-//   },
-// });
-
-// export default function SideMenu() {
-//   const { logindata, setLoginData } = useContext(LoginContext);
-//   const [loginuser, setLoginUser] = useState("");
-//   const [userData, setUserData] = useState("");
-//   const [username, setUsername] = useState("");
-
-//   useEffect(() => {
-//     if (logindata?.user?.id) {
-//       setLoginUser(logindata.user.id);
-//     }
-//   }, [logindata]);
-
-//   useEffect(() => {
-//     if (loginuser) {
-//       fetchUserData(loginuser);
-//     }
-//   }, [loginuser]);
-
-//   const truncateString = (str, maxLength) => {
-//     if (str && str.length > maxLength) {
-//       return str.substring(0, maxLength) + "...";
-//     }
-//     return str;
-//   };
-
-//   const fetchUserData = async (id) => {
-//     const maxLength = 15;
-//     const myHeaders = new Headers();
-
-//     const requestOptions = {
-//       method: "GET",
-//       headers: myHeaders,
-//       redirect: "follow",
-//     };
-
-//     const url = `http://127.0.0.1/common/user/${id}`;
-
-//     try {
-//       const response = await fetch(url, requestOptions);
-//       const result = await response.json();
-//       console.log("id", result);
-
-//       if (result.email) {
-//         setUserData(truncateString(result.email, maxLength));
-//       }
-//       setUsername(result.username);
-//     } catch (error) {
-//       console.error("Error fetching user data:", error);
-//     }
-//   };
-
-//   return (
-//     <Drawer
-//       variant="permanent"
-// sx={{
-//   display: { xs: 'none', md: 'block' },
-//   [`& .${drawerClasses.paper}`]: {
-//     backgroundColor: 'background.paper',
-//   },
-// }}
-//     >
-//       <Box
-//         sx={{
-//           display: 'flex',
-//           mt: 'calc(var(--template-frame-height, 0px) + 4px)',
-//           p: 1.5,
-//         }}
-//       >
-//         <SelectContent />
-//       </Box>
-//       <Divider />
-//       <Box
-//         sx={{
-//           overflow: 'auto',
-//           height: '100%',
-//           display: 'flex',
-//           flexDirection: 'column',
-//         }}
-//       >
-//         <MenuContent />
-//         {/* <CardAlert /> */}
-//       </Box>
-//       <Stack
-//         direction="row"
-//         sx={{
-//           p: 2,
-//           gap: 1,
-//           alignItems: 'center',
-//           borderTop: '1px solid',
-//           borderColor: 'divider',
-//         }}
-//       >
-//         <Avatar
-//           sizes="small"
-//           alt="Riley Carter"
-//           // src="/static/images/avatar/7.jpg"
-//           sx={{ width: 36, height: 36 }}
-//         />
-//         <Box sx={{ mr: 'auto' }}>
-//           <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: '16px' }}>
-//             {username}
-//           </Typography>
-//           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-//             {userData}
-//           </Typography>
-//         </Box>
-//         <OptionsMenu />
-//       </Stack>
-//     </Drawer>
-//   );
-// }
-
 import * as React from "react";
 import { useEffect, useContext, useState } from "react";
 import { styled } from "@mui/material/styles";
@@ -155,6 +15,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import Tooltip from "@mui/material/Tooltip";
 import { drawerClasses } from "@mui/material/Drawer";
 import SelectContent from "./SelectContent";
+import axios from "axios";
 import MenuContent from "./MenuContent";
 import OptionsMenu from "./OptionsMenu";
 import { LoginContext } from "../context/Context";
@@ -162,7 +23,7 @@ import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { toast } from "material-react-toastify";
 import MenuButton from "./MenuButton";
-import SwitchAccountIcon from '@mui/icons-material/SwitchAccount';
+import SwitchAccountIcon from "@mui/icons-material/SwitchAccount";
 // import Logo from "../Images/snplogo.png";
 import Logo from "../Images/snplogo-removebg-preview.png";
 const drawerWidth = 240;
@@ -192,229 +53,73 @@ const Drawer = styled(MuiDrawer, {
 }));
 
 export default function SideMenu() {
-   const LOGIN_API = process.env.REACT_APP_USER_LOGIN
-  const { logindata, setLoginData } = useContext(LoginContext);
-  const [loginuser, setLoginUser] = useState("");
-  const [userData, setUserData] = useState("");
-  const [userEmail,setUserEmail]=useState("")
-  const [username, setUsername] = useState("");
   const [collapsed, setCollapsed] = useState(false);
-  const [profilePicture, setProfilePicture] = useState("");
-
-  // useEffect(() => {
-  //   if (logindata?.user?.id) {
-  //     setLoginUser(logindata.user.id);
-  //   }
-  // }, [logindata]);
-  useEffect(() => {
-  // Get userId from login context
-  if (logindata?.user?.id) {
-    setLoginUser(logindata.user.id);
-  }
-
-  // Get stored selected user from localStorage
-  const storedSelectedUser = sessionStorage.getItem("selectedUser");
-  if (storedSelectedUser) {
-    try {
-      const parsedUser = JSON.parse(storedSelectedUser);
-      const maxLength = 15;
-
-      if (parsedUser?.email) {
-        setUserData(truncateString(parsedUser.email, maxLength));
-        setUserEmail(parsedUser.email);
-      }
-
-      if (parsedUser?.accountName) {
-        setUsername(truncateString(parsedUser.accountName, maxLength));
-      }
-
-      // Construct proper profile picture URL if exists
-      if (parsedUser?.profilePicture) {
-        const imagePath = parsedUser.profilePicture.replace("uploads/", "");
-        const fullImageUrl = `${LOGIN_API}/profilepicture/${imagePath}`;
-        setProfilePicture(fullImageUrl);
-      } else {
-        setProfilePicture(null);
-      }
-    } catch (error) {
-      console.error("Error parsing selectedUser from localStorage:", error);
-    }
-  }
-}, [logindata]);
-
-
-  // useEffect(() => {
-  //   if (loginuser) {
-  //     fetchUserData(loginuser);
-  //   }
-  // }, [loginuser]);
-   useEffect(() => {
-    if (loginuser) {
-      fetchAccountId();
-    }
-  }, [loginuser]);
-   const ACCOUNT_API = process.env.REACT_APP_ACCOUNTS_URL;
-  const fetchAccountId = async () => {
-    const requestOptions = {
-      method: "GET",
-      redirect: "follow",
-    };
-
-    try {
-      const response = await fetch(
-        `${ACCOUNT_API}/accounts/accountdetails/accountdetailslist/listbyuserid/${loginuser}`,
-        requestOptions
-      );
-      const result = await response.json();
-      console.log("result", result);
-      // if (result.accounts && result.accounts.length > 0) {
-      //   setAccountId(result.accounts[0]._id); // ✅ Setting accountId
-      // }
-    } catch (error) {
-      console.error("Error fetching account details:", error);
-    }
-  };
-  const truncateString = (str, maxLength) => {
-    if (str && str.length > maxLength) {
-      return str.substring(0, maxLength) + "...";
-    }
-    return str;
-  };
-
-  const fetchUserData = async (id) => {
-    const maxLength = 15;
-    const requestOptions = {
-      method: "GET",
-      redirect: "follow",
-    };
-
-    const url = `${LOGIN_API}/common/user/${id}`;
-
-    try {
-      const response = await fetch(url, requestOptions);
-      const result = await response.json();
-      console.log("users detials", result);
-      if (result.email) {
-        setUserData(truncateString(result.email, maxLength));
-        setUserEmail(result.email)
-
-      }
-      // setUsername(result.username);
-      setUsername(truncateString(result.username, maxLength))
-      // Construct proper profile picture URL
-      if (result.profilePicture) {
-        // Remove the 'uploads/' prefix since your static route already handles it
-        const imagePath = result.profilePicture.replace("uploads/", "");
-        const fullImageUrl = `${LOGIN_API}/profilepicture/${imagePath}`;
-        setProfilePicture(fullImageUrl);
-        console.log("image url", fullImageUrl);
-      } else {
-        setProfilePicture(null);
-      }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    }
-  };
 
   const toggleCollapse = () => {
     setCollapsed(!collapsed);
   };
   const navigate = useNavigate();
-  const logoutuser = async () => {
-    let token = sessionStorage.getItem("clientdatatoken");
-    const url = `${LOGIN_API}/common/clientlogin/logout/`;
 
-    const requestOptions = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: token,
-      },
-    };
+  const [accounts, setAccounts] = useState(() => {
+    const savedAccounts = sessionStorage.getItem("accounts");
+    return savedAccounts ? JSON.parse(savedAccounts) : [];
+  });
+  const [selectedAccount, setSelectedAccount] = useState(
+    sessionStorage.getItem("accountId")
+  );
+  const [accountInfo, setAccountInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const email = sessionStorage.getItem("email");
+  // const [email, setEmail] = useState(() => localStorage.getItem("email") || "");
+  const fetchAccountInfo = async (accountIdToFetch) => {
+    setLoading(true);
+    const token = sessionStorage.getItem("jwtToken");
 
-    const res = await fetch(url, requestOptions);
-
-    const data = await res.json();
-
-    if (data.status === 200) {
-      console.log("user logout");
-      sessionStorage.removeItem("clientdatatoken");
-      Cookies.remove("clientuserToken");
-       sessionStorage.removeItem("selectedUser");
-          sessionStorage.removeItem("pendingUserEmail");
-      setLoginData(false);
-
-      navigate("/client/login");
-
-      toast.success("Logout Successfully");
-    } else {
-      console.log("error");
+    if (!token || !accountIdToFetch) {
+      setError("No authentication or account selected");
+      setLoading(false);
+      return;
+    }
+    try {
+      const response = await axios.get(
+        `https://www.snptaxes.com/api/accounts/${accountIdToFetch}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setAccountInfo(response.data);
+      console.log("account responce", response.data);
+      setError(null);
+    } catch (err) {
+      setError("Failed to fetch account information");
+    } finally {
+      setLoading(false);
     }
   };
 
-  //  // Setup beforeunload and unload event listeners
-  // useEffect(() => {
-  //   const handleBeforeUnload = (event) => {
-  //     // This event fires when the user tries to close the browser/tab
-  //     // You can perform synchronous operations here
-  //     localStorage.setItem('closingBrowser', 'true');
-  //   };
+  useEffect(() => {
+    if (selectedAccount) {
+      fetchAccountInfo(selectedAccount);
+    }
+  }, [selectedAccount]);
+  const logoutuser = () => {
+    sessionStorage.removeItem("jwtToken");
+    sessionStorage.removeItem("accountId");
+    sessionStorage.removeItem("email");
+    sessionStorage.removeItem("accounts");
+    // Optionally call logout API if backend session invalidation is needed
+      navigate("/client/login");
 
-  //   const handleUnload = () => {
-  //     // This event fires when the page is being unloaded
-  //     // Note: Most modern browsers restrict what you can do here
-  //     // For logout, it's better to use the beforeunload event or a Beacon API
-  //     logoutuser();
-  //   };
+  };
+  const maxLength = 15;
 
-  //   // Add event listeners
-  //   window.addEventListener('beforeunload', handleBeforeUnload);
-  //   window.addEventListener('unload', handleUnload);
-
-  //   // Check if the user is returning after closing the browser
-  //   const wasBrowserClosed = localStorage.getItem('closingBrowser');
-  //   if (wasBrowserClosed) {
-  //     // If the browser was closed, log the user out
-  //     logoutuser();
-  //     localStorage.removeItem('closingBrowser');
-  //   }
-
-  //   // Cleanup function to remove event listeners
-  //   return () => {
-  //     window.removeEventListener('beforeunload', handleBeforeUnload);
-  //     window.removeEventListener('unload', handleUnload);
-  //   };
-  // }, [logoutuser]); // Add logoutuser to dependencies
-
-  // // Alternative approach using Beacon API for more reliable logout on page unload
-  // useEffect(() => {
-  //   const handleVisibilityChange = () => {
-  //     if (document.visibilityState === 'hidden') {
-  //       // Page is being hidden (tab closed or browser minimized)
-  //       // Use Beacon API to send logout request
-  //       const token = localStorage.getItem("clientdatatoken");
-  //       const url = `${LOGIN_API}/common/clientlogin/logout/`;
-        
-  //       const data = new Blob([JSON.stringify({})], { type: 'application/json' });
-        
-  //       if (navigator.sendBeacon) {
-  //         navigator.sendBeacon(url, data);
-  //       }
-        
-  //       // Clean up local storage
-  //       localStorage.removeItem("clientdatatoken");
-  //       Cookies.remove("clientuserToken");
-  //       localStorage.removeItem("selectedUser");
-  //       localStorage.removeItem("pendingUserEmail");
-  //     }
-  //   };
-
-  //   document.addEventListener('visibilitychange', handleVisibilityChange);
-
-  //   return () => {
-  //     document.removeEventListener('visibilitychange', handleVisibilityChange);
-  //   };
-  // }, [LOGIN_API]);
+  const truncate = (text) => {
+    if (!text) return "";
+    return text.length > maxLength
+      ? text.substring(0, maxLength) + "..."
+      : text;
+  };
 
   return (
     <Drawer
@@ -427,7 +132,6 @@ export default function SideMenu() {
         },
       }}
     >
-   
       <Box
         sx={{
           display: "flex",
@@ -480,13 +184,13 @@ export default function SideMenu() {
       >
         <MenuContent collapsed={collapsed} />
       </Box>
-{collapsed && (
-  <Stack sx={{ p: 2 }}>
-    <MenuButton>
-      <SwitchAccountIcon />
-    </MenuButton>
-  </Stack>
-)}
+      {collapsed && (
+        <Stack sx={{ p: 2 }}>
+          <MenuButton>
+            <SwitchAccountIcon />
+          </MenuButton>
+        </Stack>
+      )}
       {collapsed && (
         <Stack sx={{ p: 2 }}>
           <MenuButton onClick={logoutuser}>
@@ -494,6 +198,7 @@ export default function SideMenu() {
           </MenuButton>
         </Stack>
       )}
+
       {!collapsed ? (
         <Stack
           direction="row"
@@ -507,35 +212,54 @@ export default function SideMenu() {
         >
           <Avatar
             sx={{ width: 36, height: 36 }}
-            alt={username || "User"}
-            src={profilePicture}
+            alt={accountInfo?.accountName || "Account"}
+            // src={profilePicture}
           />
+
           <Box sx={{ mr: "auto" }}>
-            <Typography
-              variant="body2"
-              sx={{ fontWeight: 500, lineHeight: "16px" }}
-            >
-              {username}
-            </Typography>
-            <Typography variant="caption" sx={{ color: "text.secondary" }}>
-              {userData}
-            </Typography>
+            {/* ✅ Account Info Section */}
+            {accountInfo ? (
+              <>
+            
+                <Typography
+                  variant="body2"
+                  sx={{ fontWeight: 600, lineHeight: "16px" }}
+                >
+                  {truncate(accountInfo?.accountName)}
+                </Typography>
+
+                <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                  {truncate(email)}
+                </Typography>
+              </>
+            ) : (
+              <Typography
+                variant="caption"
+                sx={{ color: "text.secondary" }}
+              ></Typography>
+            )}
           </Box>
-          <OptionsMenu  email={userEmail}/>
+
+          <OptionsMenu email={email} />
         </Stack>
       ) : (
         <Box sx={{ p: 1, borderTop: "1px solid", borderColor: "divider" }}>
-          <Tooltip title={username} placement="right">
+          <Tooltip
+            title={
+              accountInfo
+                ? `${accountInfo.accountName} • ${accountInfo.clientType}`
+                : "No account info"
+            }
+            placement="right"
+          >
             <Avatar
               sx={{ width: 36, height: 36, mx: "auto" }}
-              alt={username || "User"}
-              src={profilePicture}
+              alt={accountInfo?.accountName || "Account"}
+              // src={profilePicture}
             />
           </Tooltip>
         </Box>
       )}
-
-      
     </Drawer>
   );
 }
