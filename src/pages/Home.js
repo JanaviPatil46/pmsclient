@@ -10,81 +10,102 @@ import BillingList from "../components/Home Components/BillingList";
 import DocumentsList from "../components/Home Components/DocumentsList";
 import ChatsList from "../components/Home Components/ChatsList";
 import ProposalsList from "../components/Home Components/ProposalsList";
-
+import axios from "axios";
 import { LoginContext } from "../context/Context";
 import DocuSealWrapper from "../components/Home Components/DocuSealWrapper";
 import DocumnetApprovals from "../components/Home Components/DocumnetApprovals";
 const Home = () => {
   const ACCOUNT_API = process.env.REACT_APP_ACCOUNTS_URL;
-  const { logindata } = useContext(LoginContext);
- const { selectedUser, refreshKey } = useContext(LoginContext);
-     const [userData, setUserData] = useState("");
-  const [loginUserId, setLoginUserId] = useState();
-  console.log("login data", logindata);
-     const LOGIN_API = process.env.REACT_APP_USER_LOGIN
-  useEffect(() => {
-    if (logindata?.user?.id) {
-      setLoginUserId(logindata.user.id);
-    }
-  }, [logindata]);
+  // const { logindata } = useContext(LoginContext);
+//  const { selectedUser, refreshKey } = useContext(LoginContext);
+//      const [userData, setUserData] = useState("");
+//   const [loginUserId, setLoginUserId] = useState();
+//   console.log("login data", logindata);
+//      const LOGIN_API = process.env.REACT_APP_USER_LOGIN
+//   useEffect(() => {
+//     if (logindata?.user?.id) {
+//       setLoginUserId(logindata.user.id);
+//     }
+//   }, [logindata]);
 
-  useEffect(() => {
-    if (loginUserId) {
-      fetchAccountId();
-    }
-  }, [loginUserId]);
+  // useEffect(() => {
+  //   if (loginUserId) {
+  //     fetchAccountId();
+  //   }
+  // }, [loginUserId]);
 
-   useEffect(() => {
-      if (loginUserId) {
-        fetchUserData(loginUserId);
-      }
-    }, [loginUserId]);
-    const fetchUserData = async (id) => {
+  //  useEffect(() => {
+  //     if (loginUserId) {
+  //       fetchUserData(loginUserId);
+  //     }
+  //   }, [loginUserId]);
+  //   const fetchUserData = async (id) => {
 
-    const requestOptions = {
-      method: "GET",
-      redirect: "follow",
-    };
+  //   const requestOptions = {
+  //     method: "GET",
+  //     redirect: "follow",
+  //   };
 
-    const url = `${LOGIN_API}/common/user/${id}`;
+  //   const url = `${LOGIN_API}/common/user/${id}`;
 
-    try {
-      const response = await fetch(url, requestOptions);
-      const result = await response.json();
-      console.log("users detials", result);
-      if (result.email) {
-        setUserData(result.email);
-      }
+  //   try {
+  //     const response = await fetch(url, requestOptions);
+  //     const result = await response.json();
+  //     console.log("users detials", result);
+  //     if (result.email) {
+  //       setUserData(result.email);
+  //     }
       
      
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    }
-  };
-  const [accountId, setAccountId] = useState();
-  const [adminUserId,setAdminUserId]= useState()
-  const fetchAccountId = async () => {
-    const requestOptions = {
-      method: "GET",
-      redirect: "follow",
-    };
+  //   } catch (error) {
+  //     console.error("Error fetching user data:", error);
+  //   }
+  // };
+  // const [accountId, setAccountId] = useState();
+  // const [adminUserId,setAdminUserId]= useState()
+  // const fetchAccountId = async () => {
+  //   const requestOptions = {
+  //     method: "GET",
+  //     redirect: "follow",
+  //   };
 
+  //   try {
+  //     const response = await fetch(
+  //       `${ACCOUNT_API}/accounts/accountdetails/accountdetailslist/listbyuserid/${loginUserId}`,
+  //       requestOptions
+  //     );
+  //     const result = await response.json();
+  //     console.log("result", result);
+  //     if (result.accounts && result.accounts.length > 0) {
+  //       setAccountId(result.accounts[0]._id); // ✅ Setting accountId
+  //       setAdminUserId(result.accounts[0].adminUserId.email)
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching account details:", error);
+  //   }
+  // };
+  // console.log("accountid", accountId);
+
+   
+     const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
+  const [adminUserId,setAdminUserId]= useState()
+   const fetchAccountDetails = async () => {
     try {
-      const response = await fetch(
-        `${ACCOUNT_API}/accounts/accountdetails/accountdetailslist/listbyuserid/${loginUserId}`,
-        requestOptions
+      const res = await axios.get(
+        `https://www.snptaxes.com/api/accounts/${accountId}`
       );
-      const result = await response.json();
-      console.log("result", result);
-      if (result.accounts && result.accounts.length > 0) {
-        setAccountId(result.accounts[0]._id); // ✅ Setting accountId
-        setAdminUserId(result.accounts[0].adminUserId.email)
-      }
+      // setAccount(res.data);
+      console.log("result", res.data);
     } catch (error) {
       console.error("Error fetching account details:", error);
     }
   };
-  console.log("accountid", accountId);
+
+    useEffect(() => {
+    // if (loginUserId) {
+      fetchAccountDetails();
+    // }
+  }, [accountId]);
   return (
     <Box
       sx={{
@@ -137,7 +158,7 @@ const Home = () => {
           </Paper>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <QuickLinks accountId={accountId} loginUserId={loginUserId} />
+          <QuickLinks accountId={accountId}  />
         </Grid>
       </Grid>
     </Box>

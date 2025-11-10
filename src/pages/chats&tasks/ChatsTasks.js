@@ -24,53 +24,32 @@ const ChatsTasks = () => {
   const { logindata } = useContext(LoginContext);
   const [loginuserid, setLoginUserId] = useState("");
   const [accId, setAccId] = useState("");
-  
-  const fetchAccountId = useCallback((id) => {
-    let config = {
-      method: "get",
-      maxBodyLength: Infinity,
-      url: `${ACCOUNT_API}/accounts/accountdetails/accountdetailslist/listbyuserid/${id}`,
-      headers: {},
-    };
-
-    axios
-      .request(config)
-      .then((response) => {
-        setAccId(response.data.accounts[0]._id)
-        accountwiseChatlist(response.data.accounts[0]._id, true);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  }, []);
-
-  useEffect(() => {
-    if (logindata?.user?.id) {
-      const id = logindata.user.id;
-      setLoginUserId(id);
-      fetchAccountId(id);
-    }
-  }, [logindata, fetchAccountId]);
-
+   const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
+ 
   const [chatList, setChatList] = useState([]);
-
-  const accountwiseChatlist = (accId, ActiveTrue) => {
+console.log("accountid",accountId)
+  const accountwiseChatlist = (accountId) => {
     const requestOptions = {
       method: "GET",
       redirect: "follow",
     };
-    const url = `${CHAT_API}/chats/chatsaccountwise/isactivechat/${accId}/${ActiveTrue}`;
+    const url = `${CHAT_API}/chats/chatsaccountwise/isactivechat/${accountId}/true`;
 
     fetch(url, requestOptions)
       .then((response) => response.json())
       .then((result) => {
+        console.log("chats result",result)
         if (result.chataccountwise && result.chataccountwise.length > 0) {
           setChatList(result.chataccountwise);
         }
       })
       .catch((error) => console.error(error));
   };
-
+ useEffect(() => {
+    // if (loginUserId) {
+      accountwiseChatlist(accountId);
+    // }
+  }, [accountId]);
   // Function to count unread admin messages
   const countUnreadAdminMessages = (chat) => {
     if (!chat.description || !Array.isArray(chat.description)) return 0;
@@ -90,8 +69,8 @@ const ChatsTasks = () => {
   const handleShowChat = async (chatId) => {
     try {
       // Mark as read
-      await axios.patch(`${CHAT_API}/chats/mark-all-read/${chatId}/accounts/${accId}/Admin`);
-      
+      await axios.patch(`${CHAT_API}/chats/mark-all-read/${chatId}/accounts/${accountId}/Admin`);
+      console.log("selected chat",chatId)
       // Navigate to the chat
       navigate(`/client/updatechat/${chatId}`);
     } catch (error) {
@@ -103,7 +82,7 @@ const ChatsTasks = () => {
   const handleOpen = () => setOpen(true);
   const handleClose = () => { 
     setOpen(false);
-    accountwiseChatlist(accId, true);
+    accountwiseChatlist(accountId, true);
   };
 
   return (
@@ -229,7 +208,7 @@ const ChatsTasks = () => {
                       const sender =
                         latest.fromwhome === "client"
                           ? "You"
-                          : latest.senderid?.username || "";
+                          : latest.senderid || "";
 
                       return `${sender}: ${
                         clean.length > 35 ? clean.slice(0, 35) + "..." : clean

@@ -10,7 +10,7 @@ import TelegramIcon from "@mui/icons-material/Telegram";
 import NewChat from "../pages/chats&tasks/NewChat";
 import PhoneAndroidIcon from "@mui/icons-material/PhoneAndroid";
 import LocationPinIcon from "@mui/icons-material/LocationPin";
-const QuickLinks = ({ accountId, loginUserId }) => {
+const QuickLinks = ({ accountId,  }) => {
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -200,7 +200,7 @@ const QuickLinks = ({ accountId, loginUserId }) => {
         open={open}
         close={handleClose}
         accId={accountId}
-        loginuserid={loginUserId}
+        // loginuserid={loginUserId}
       />
     </>
   );

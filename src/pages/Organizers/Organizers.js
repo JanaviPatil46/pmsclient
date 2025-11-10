@@ -26,22 +26,24 @@ const Organizers = () => {
     if (logindata?.user?.id) {
       const id = logindata.user.id;
       setLoginUserId(id);
-      fetchAccountId(id);
+      // fetchAccountId(id);
     }
   }, [logindata]);
-  const fetchAccountId = (id) => {
-    axios
-      .get(
-        `${ACCOUNT_API}/accounts/accountdetails/accountdetailslist/listbyuserid/${id}`
-      )
-      .then((response) => {
-        const accountId = response.data.accounts[0]._id;
-        fetchOrganizers(accountId);
-      })
-      .catch((error) => console.log(error));
-  };
+  // const fetchAccountId = (id) => {
+  //   axios
+  //     .get(
+  //       `${ACCOUNT_API}/accounts/accountdetails/accountdetailslist/listbyuserid/${id}`
+  //     )
+  //     .then((response) => {
+  //       const accountId = response.data.accounts[0]._id;
+  //       fetchOrganizers(accountId);
+  //     })
+  //     .catch((error) => console.log(error));
+  // };
   // const [organizersData, setOrganizersData] = useState([]);
   const [isActiveTrue, setIsActiveTrue] = useState(true);
+     const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
+
   const fetchOrganizers = async (accountId) => {
     try {
       const url = `${ORGANIZER_API}/workflow/orgaccwise/organizeraccountwise/organizerbyaccount/${accountId}/${isActiveTrue}`;
@@ -58,9 +60,11 @@ const Organizers = () => {
       console.error("Error fetching organizerTemplatesData:", error);
     }
   };
-  // useEffect(() => {
-  //     fetchOrganizerTemplates(accountId);
-  // }, [accountId]);
+   useEffect(() => {
+    // if (loginUserId) {
+      fetchOrganizers(accountId);
+    // }
+  }, [accountId]);
 
   const handleOpenDialog = (organizer) => {
     setSelectedOrganizer(organizer);

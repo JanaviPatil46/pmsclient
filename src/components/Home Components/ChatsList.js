@@ -140,7 +140,7 @@ const ChatsList = ({ accountId }) => {
               // Get the most recent message (last in the array since they're sorted)
               const mostRecentMessage = chat.messages[chat.messages.length - 1];
               const sender =
-                mostRecentMessage.sender.username || "Unknown Sender";
+                mostRecentMessage.sender || "Unknown Sender";
               const message = mostRecentMessage.message || "";
 
               return (

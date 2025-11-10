@@ -44,34 +44,36 @@ const DocsFolderTree = () => {
     const [loginuserid, setLoginUserId] = useState("");
   const ACCOUNT_API = process.env.REACT_APP_ACCOUNTS_URL;
     const [accId, setAccId] = useState("");
+       const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
+
     const [accountName,setAccountName]= useState("")
     const [accountEmailSync, setAccountEmailSync]=useState("")
-  const fetchAccountId = async (id) => {
-    try {
-      const response = await axios.get(
-        `${ACCOUNT_API}/accounts/accountdetails/accountdetailslist/listbyuserid/${id}`
-      );
-      if (response.data.accounts && response.data.accounts.length > 0) {
-        console.log("accounts resopnace",response.data.accounts)
-        setAccId(response.data.accounts[0]._id);
-        console.log("account id",response.data.accounts[0]._id)
-        setAccountName(response.data.accounts[0].accountName)
-        setAccountEmailSync(response.data.accounts[0].adminUserId?.emailSyncEmail)
-console.log("emailsyn",response.data.accounts[0].adminUserId?.emailSyncEmail)
-      } else {
-        setError("No account found for this user");
-      }
-    } catch (error) {
-      setError("Failed to fetch account details");
-    }
-  };
-   useEffect(() => {
-      if (logindata?.user?.id) {
-        const id = logindata.user.id;
-        setLoginUserId(id);
-        fetchAccountId(id);
-      }
-    }, [logindata]);
+//   const fetchAccountId = async (id) => {
+//     try {
+//       const response = await axios.get(
+//         `${ACCOUNT_API}/accounts/accountdetails/accountdetailslist/listbyuserid/${id}`
+//       );
+//       if (response.data.accounts && response.data.accounts.length > 0) {
+//         console.log("accounts resopnace",response.data.accounts)
+//         setAccId(response.data.accounts[0]._id);
+//         console.log("account id",response.data.accounts[0]._id)
+//         setAccountName(response.data.accounts[0].accountName)
+//         setAccountEmailSync(response.data.accounts[0].adminUserId?.emailSyncEmail)
+// console.log("emailsyn",response.data.accounts[0].adminUserId?.emailSyncEmail)
+//       } else {
+//         setError("No account found for this user");
+//       }
+//     } catch (error) {
+//       setError("Failed to fetch account details");
+//     }
+//   };
+//    useEffect(() => {
+//       if (logindata?.user?.id) {
+//         const id = logindata.user.id;
+//         setLoginUserId(id);
+//         fetchAccountId(id);
+//       }
+//     }, [logindata]);
 // const { data } = useParams();
 console.log("acount id for the documentation",accId)
     const [templates, setTemplates] = useState([]);
@@ -964,7 +966,7 @@ const handleRequestApproval = async () => {
       
 
 
-      <FolderTreeView accountId={accId} />
+      <FolderTreeView accountId={accountId} />
     </Box>
   )
 }

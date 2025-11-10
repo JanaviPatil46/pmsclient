@@ -23,6 +23,8 @@ const Invoices = () => {
   const [BillingInvoice, setBillingInvoice] = useState([]);
   const [selected, setSelected] = useState([]);
   const [accountName, setAccountName]=useState("")
+     const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
+
   const handleSelect = (_id) => {
     const currentIndex = selected.indexOf(_id);
     const newSelected =
@@ -33,25 +35,25 @@ const Invoices = () => {
     // Log all selected row IDs
     console.log("Selected IDs:", newSelected); // Log all selected IDs
   };
-  useEffect(() => {
-    if (logindata?.user?.id) {
-      const id = logindata.user.id;
-      setLoginUserId(id);
-      fetchAccountId(id);
-    }
-  }, [logindata]);
-  const fetchAccountId = (id) => {
-    axios
-      .get(
-        `${ACCOUNT_API}/accounts/accountdetails/accountdetailslist/listbyuserid/${id}`
-      )
-      .then((response) => {
-        const accountId = response.data.accounts[0]._id;
-        setAccountName(response.data.accounts[0].accountName)
-        fetchidwiseData(accountId);
-      })
-      .catch((error) => console.log(error));
-  };
+  // useEffect(() => {
+  //   if (logindata?.user?.id) {
+  //     const id = logindata.user.id;
+  //     setLoginUserId(id);
+  //     fetchAccountId(id);
+  //   }
+  // }, [logindata]);
+  // const fetchAccountId = (id) => {
+  //   axios
+  //     .get(
+  //       `${ACCOUNT_API}/accounts/accountdetails/accountdetailslist/listbyuserid/${id}`
+  //     )
+  //     .then((response) => {
+  //       const accountId = response.data.accounts[0]._id;
+  //       setAccountName(response.data.accounts[0].accountName)
+  //       fetchidwiseData(accountId);
+  //     })
+  //     .catch((error) => console.log(error));
+  // };
   const fetchidwiseData = async (accountId) => {
     try {
       const url = `${INVOICE_API}/workflow/invoices/invoice/invoicelistby/accountid/${accountId}`;
@@ -68,6 +70,11 @@ const Invoices = () => {
       console.error("Error fetching task templates:", error);
     }
   };
+   useEffect(() => {
+    // if (loginUserId) {
+      fetchidwiseData(accountId);
+    // }
+  }, [accountId]);
  const handlePayInvoice = () => {
   navigate("/client/payinvoice", {
     state: {

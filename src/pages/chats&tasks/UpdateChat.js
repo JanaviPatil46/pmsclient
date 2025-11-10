@@ -25,8 +25,27 @@ const UpdateChat = () => {
   const { logindata } = useContext(LoginContext);
   console.log("login data", logindata);
   const [loginUserId, setLoginUserId] = useState();
+const{accId} = useState(sessionStorage.getItem("accountId"))
+     const fetchAccountDetails = async () => {
+    try {
+      const res = await axios.get(
+        `https://www.snptaxes.com/api/accounts/${accId}`
+      );
+      // setAccount(res.data);
+      setAccountName(res.data.accounts.accountName)
+      console.log("result", res.data);
+    } catch (error) {
+      console.error("Error fetching account details:", error);
+    }
+  };
 
-  useEffect(() => {
+
+ useEffect(() => {
+    // if (loginUserId) {
+      fetchAccountDetails();
+    // }
+  }, [accId]);
+useEffect(() => {
     if (logindata?.user?.id) {
       const id = logindata.user.id;
       setLoginUserId(id);
@@ -61,6 +80,7 @@ setSenderName(result.username)
   const [highlightedId, setHighlightedId] = useState(null);
 
   const { _id } = useParams();
+  console.log("chatid",_id)
   const [chatDetails, setChatDetails] = useState("");
   const [time, setTime] = useState();
   const [chatsubject, setChatSubject] = useState("");
@@ -213,7 +233,7 @@ const updateChatDescription = (message = "") => {
   const newDescription = {
     message: contentToSend,
     fromwhome: "client",
-    senderid: loginUserId,
+    senderid: accountName,
   };
 
   if (replyTo) {
@@ -315,8 +335,8 @@ const updateChatDescription = (message = "") => {
                 let senderDisplayName = "";
                 if (isClient) {
                   senderDisplayName = "You";
-                } else if (isAdmin && desc.senderid?.username) {
-                  senderDisplayName = desc.senderid.username;
+                } else if (isAdmin && desc.senderid) {
+                  senderDisplayName = desc.senderid;
                 }
 
                 return (

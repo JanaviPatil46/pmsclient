@@ -189,23 +189,24 @@ import axios from "axios";
 import CloseIcon from '@mui/icons-material/Close';
 
 const DocumentApprovals = ({ accountId,adminUserId }) => {
-  const [clientEmail, setClientEmail] = useState("");
+  const [clientEmail, setClientEmail] = useState(sessionStorage.getItem("email"));
   const [approvals, setApprovals] = useState([]);
   const [openViewer, setOpenViewer] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState(null);
+  //  const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
 
   const ACCOUNT_API = process.env.REACT_APP_ACCOUNTS_URL;
   const DOCS_MANAGMENTS = process.env.REACT_APP_CLIENT_DOCS_MANAGE;
 
-  const fetchAccountDetails = async () => {
-    try {
-      const res = await fetch(`${ACCOUNT_API}/accounts/accountdetails/${accountId}`);
-      const data = await res.json();
-      setClientEmail(data.account?.contacts?.[0]?.email || "");
-    } catch (err) {
-      console.error("Failed to fetch account details", err);
-    }
-  };
+  // const fetchAccountDetails = async () => {
+  //   try {
+  //     const res = await fetch(`${ACCOUNT_API}/accounts/accountdetails/${accountId}`);
+  //     const data = await res.json();
+  //     setClientEmail(data.account?.contacts?.[0]?.email || "");
+  //   } catch (err) {
+  //     console.error("Failed to fetch account details", err);
+  //   }
+  // };
 
   const fetchApprovals = async () => {
     try {
@@ -363,9 +364,9 @@ const DocumentApprovals = ({ accountId,adminUserId }) => {
     setSelectedDoc(null);
   };
 
-  useEffect(() => {
-    if (accountId) fetchAccountDetails();
-  }, [accountId]);
+  // useEffect(() => {
+  //   if (accountId) fetchAccountDetails();
+  // }, [accountId]);
 
   useEffect(() => {
     if (clientEmail) fetchApprovals();
