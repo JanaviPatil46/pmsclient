@@ -40,66 +40,17 @@ import FolderMenu from "./FolderMenu";
 import FileMenu from "./FileMenu";
 const DOCS_MANAGMENTS = process.env.REACT_APP_CLIENT_DOCS_MANAGE;
 const DocsFolderTree = () => {
-   const { logindata } = useContext(LoginContext)
-    const [loginuserid, setLoginUserId] = useState("");
-  const ACCOUNT_API = process.env.REACT_APP_ACCOUNTS_URL;
-    const [accId, setAccId] = useState("");
+   
+  
        const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
 
-    const [accountName,setAccountName]= useState("")
-    const [accountEmailSync, setAccountEmailSync]=useState("")
-//   const fetchAccountId = async (id) => {
-//     try {
-//       const response = await axios.get(
-//         `${ACCOUNT_API}/accounts/accountdetails/accountdetailslist/listbyuserid/${id}`
-//       );
-//       if (response.data.accounts && response.data.accounts.length > 0) {
-//         console.log("accounts resopnace",response.data.accounts)
-//         setAccId(response.data.accounts[0]._id);
-//         console.log("account id",response.data.accounts[0]._id)
-//         setAccountName(response.data.accounts[0].accountName)
-//         setAccountEmailSync(response.data.accounts[0].adminUserId?.emailSyncEmail)
-// console.log("emailsyn",response.data.accounts[0].adminUserId?.emailSyncEmail)
-//       } else {
-//         setError("No account found for this user");
-//       }
-//     } catch (error) {
-//       setError("Failed to fetch account details");
-//     }
-//   };
-//    useEffect(() => {
-//       if (logindata?.user?.id) {
-//         const id = logindata.user.id;
-//         setLoginUserId(id);
-//         fetchAccountId(id);
-//       }
-//     }, [logindata]);
-// const { data } = useParams();
-console.log("acount id for the documentation",accId)
-    const [templates, setTemplates] = useState([]);
-  
-  const [selectedTemplate, setSelectedTemplate] = useState("");
+   
 
-  const [loading, setLoading] = useState(false);
+console.log("acount id for the documentation",accountId)
+ 
   const [error, setError] = useState("");
 
-  // Fetch templates list
-  useEffect(() => {
-    const fetchTemplates = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get("https://www.snptaxes.com/api/foldertemp/templatelist");
-        setTemplates(response.data.folderTemplates);
-      } catch (err) {
-        console.error("Error fetching templates:", err);
-        setError("Failed to load templates");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTemplates();
-  }, []);
-
+ 
  
 
 
@@ -107,27 +58,10 @@ console.log("acount id for the documentation",accId)
 
   const FolderTreeView = ({accountId}) => {
  
-  const [clientEmail, setClientEmail] = useState(""); // store client email
+  const [clientEmail, setClientEmail] = useState(sessionStorage.getItem("email")); // store client email
     // const [approvedFiles, setApprovedFiles] = useState(new Set());
-    const ACCOUNT_API = process.env.REACT_APP_ACCOUNTS_URL;
-    const fetchAccountDetails = async () => {
-      try {
-        const res = await fetch(
-          `${ACCOUNT_API}/accounts/accountdetails/${accountId}`
-        );
-        const data = await res.json();
-        setClientEmail(data.account.contacts[0].email);
-        console.log(data.account.contacts[0].email); // adjust key if it's different
-      } catch (err) {
-        console.error("Failed to fetch account details", err);
-      }
-    };
-      useEffect(() => {
-        if (accountId) {
-       
-          fetchAccountDetails();
-        }
-      }, [accountId]);
+  
+  
     console.log("folder structure of account is",accountId)
    const [expandedFolders, setExpandedFolders] = useState({});
     const [menuAnchorEl, setMenuAnchorEl] = useState(null);
@@ -141,19 +75,14 @@ console.log("acount id for the documentation",accId)
     const [openApprovalDialog, setOpenApprovalDialog] = useState(false);
     const [folderTree, setFolderTree] = useState([]);
    const[selectedItem,setSelectedItem]=useState("")
-  // console.log("hgjhg",data)
-   
-  
-    useEffect(() => {
-       fetchFolderTree(accountId);
-    }, [accountId]);
-  
+
    // API call to fetch folder tree for a given template ID
     const fetchFolderTree = async (accountId) => {
       try {
         const res = await fetch(`https://www.snptaxes.com/api/accountsdoc/files/list/clientView?folderPath=${accountId}`);
+        console.log("responce",res)
         const data = await res.json();
-        console.log("janavi patil",data)
+        console.log("janavi patil",data.contents)
         if (res.ok) {
           setFolderTree(data.contents);
         } else {
@@ -163,6 +92,12 @@ console.log("acount id for the documentation",accId)
         setError('Error fetching folder tree');
       }
     };
+    useEffect(() => {
+  if (accountId) {
+    fetchFolderTree(accountId);
+  }
+}, [accountId]);
+
     const toggleFolder = (path, isReadOnly) => {
       if (isReadOnly) return;
       setExpandedFolders((prev) => ({
@@ -193,55 +128,14 @@ console.log("acount id for the documentation",accId)
       "signatureCompleted",
     ];
   
-    const statusTextMap = {
-      sendForSignature: "Send for Sign",
-      pendingSignature: "Waiting for Signature",
-      signatureCompleted: "Signature Received",
-    };
+   
     const SIGNATURE_API = process.env.REACT_APP_ESIGNATURE_API;
       const [token, setToken] = useState("");
   const [showBuilderFor, setShowBuilderFor] = useState(null);
     const [openDialog, setOpenDialog] = useState(false); 
-// Toggle signature and request token
-const toggleSignStatus = async (item) => {
-  try {
-    // Cycle status (optional, keep your logic)
-    const currentStatus = item.meta?.signStatus || "sendForSignature";
-    const currentIndex = SIGN_STATUSES.indexOf(currentStatus);
-    const nextIndex = (currentIndex + 1) % SIGN_STATUSES.length;
-    const nextStatus = SIGN_STATUSES[nextIndex];
-    // 
 
-    // Request token
-    const fileUrl = `https://snptaxes.com/uploads/accounts/${item.path}`;
-    const fileName = item.name;
-    const res = await fetch(
-      `${SIGNATURE_API}/api/generate-token?url=${encodeURIComponent(fileUrl)}&name=${encodeURIComponent(fileName)}&accountId=${accId}`
-    );
-    const data = await res.json();
 
-    setToken(data.token);
-    setShowBuilderFor(item); // important: must match the Dialog condition
-    setOpenDialog(true);
-    await updateStatus(item, "signStatus", nextStatus);
-  } catch (err) {
-    console.error(err);
-  }
-};
-
-    // const toggleSignStatus = (item) => {
-    //   console.log("signature item", item)
-    //   
-    //   const currentStatus = item.meta?.signStatus || "sendForSignature";
-  
-    //   // Find the next status in the cycle
-    //   const currentIndex = SIGN_STATUSES.indexOf(currentStatus);
-    //   const nextIndex = (currentIndex + 1) % SIGN_STATUSES.length; // loops back to start if at end
-    //   const nextStatus = SIGN_STATUSES[nextIndex];
-  
-    //   // Update the item meta
-    //   updateStatus(item, "signStatus", nextStatus);
-    // };
+    
     const APPROVAL_STATUSES = [
       "sendForApproval",
       "pendingApproval",
@@ -249,31 +143,9 @@ const toggleSignStatus = async (item) => {
       "approvalCompleted",
     ];
   
-    const approvalStatusTextMap = {
-      sendForApproval: "Send for Approval",
-      pendingApproval: "Waiting for Approval",
-      cancledApproval:"cancledApproval",
-      approvalCompleted: "Approval Completed",
-    };
+    
   
-    // const toggleApprovalStatus = (item) => {
-    //   const currentStatus = item.meta?.authStatus || "sendForApproval";
-  
-    //   // Find the next status in the cycle
-    //   const currentIndex = APPROVAL_STATUSES.indexOf(currentStatus);
-    //   const nextIndex = (currentIndex + 1) % APPROVAL_STATUSES.length; // loops back to start if at end
-    //   const nextStatus = APPROVAL_STATUSES[nextIndex];
-  
-    //   // Update the item meta
-    //   updateStatus(item, "authStatus", nextStatus);
-    // };
-  
-    // 🔹 Step 1: Click menu item → open dialog
-const toggleApprovalStatus = (item) => {
-  handleMenuClose(); // Close context menu
-  setSelectedItem(item); // store the current item for later use
-  setOpenApprovalDialog(true); // open the dialog
-};
+   
 // 🔹 Step 2: Close dialog
 const handleCloseDialog = () => {
   setOpenApprovalDialog(false);
@@ -281,50 +153,7 @@ const handleCloseDialog = () => {
   setSelectedItem(null);
 };
 
-// 🔹 Step 3: Send approval request
-const handleRequestApproval = async () => {
-  if (!selectedItem) return;
- console.log("signature path", selectedItem)
-  try {
-    const fileUrl = `https://snptaxes.com/uploads/accounts/${selectedItem.path}`;
 
-    const payload = {
-      accountId: accountId,
-      filename: selectedItem.name,
-      fileUrl,
-      clientEmail: clientEmail,
-      description: description,
-    };
-
-    console.log("payload", payload);
-
-    const res = await fetch(`${DOCS_MANAGMENTS}/approvals/request-approval`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) throw new Error("Failed to send approval request.");
-
-    alert(`Approval request sent to ${payload.clientEmail}`);
-
-    // ✅ Update authStatus after successful request
-    const currentStatus = selectedItem.meta?.authStatus || "sendForApproval";
-    const currentIndex = APPROVAL_STATUSES.indexOf(currentStatus);
-    const nextIndex = (currentIndex + 1) % APPROVAL_STATUSES.length;
-    const nextStatus = APPROVAL_STATUSES[nextIndex];
-
-    await updateStatus(selectedItem, "authStatus", nextStatus);
-
-   
-
-    // ✅ Close dialog
-    handleCloseDialog();
-  } catch (err) {
-    console.error("Approval request failed:", err);
-    alert("Failed to send approval request.");
-  }
-};
     // 🔹 Frontend: Update any status (read, sign, approval)
     const updateStatus = async (item, statusType, newValue) => {
       try {
@@ -454,8 +283,8 @@ const handleRequestApproval = async () => {
       }
 
       // ✅ Construct full file URL
-      const fileUrl = `https://www.snptaxes.com/uploads/accounts/${accId}/${fullPath}`;
-
+      const fileUrl = `https://www.snptaxes.com/uploads/accounts/${accountId}/${fullPath}`;
+console.log("fileurl",fileUrl)
       // ✅ Detect file extension (case-insensitive)
       const fileExt = fileName.split(".").pop().toLowerCase();
 
@@ -578,13 +407,7 @@ const handleRequestApproval = async () => {
                       <MoreVertIcon size={16} />
                     </IconButton>
                   )}
-                    {/* Optional: Folder menu */}
-                    {/* <IconButton
-                      size="small"
-                      onClick={(e) => handleMenuOpen(e, { ...item, fullPath })}
-                    >
-                      <MoreVertIcon size={16} />
-                    </IconButton> */}
+                    
                   </Box>
                 ) : (
                   // 📄 File with single dot icon
@@ -618,22 +441,6 @@ const handleRequestApproval = async () => {
                     </Typography>
                     <StatusIcons />
   
-                    {/* 🔵 Single blue dot icon for file menu */}
-                    {/* <Box
-                      className="file-menu-icon"
-                      sx={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: "50%",
-                        backgroundColor: "#1976d2",
-                        opacity: 0,
-                        transition: "opacity 0.2s",
-                        cursor: "pointer",
-                        mr: 1,
-                        ml: 1,
-                      }}
-                      onClick={(e) => handleMenuOpen(e, { ...item, fullPath })}
-                    /> */}
                      {!hideMenu && (
                     <Box
                       className="file-menu-icon"
@@ -734,7 +541,7 @@ const handleRequestApproval = async () => {
             isOpen={fileUploadDrawerOpen}
             onClose={() => setFileUploadDrawerOpen(false)}
             folderTree={folderTree}
-            fetchFolderTree={() => fetchFolderTree(accId)}
+            fetchFolderTree={() => fetchFolderTree(accountId)}
             selectedFolderForMenu={selectedFolderForMenu}
           />
   
@@ -743,9 +550,9 @@ const handleRequestApproval = async () => {
             onClose={() => {
               setNewFolderDrawerOpen(false);
             }}
-            accountId={accId}
+            accountId={accountId}
             folderTree={folderTree}
-            fetchFolderTree={() => fetchFolderTree(accId)}
+            fetchFolderTree={() => fetchFolderTree(accountId)}
             selectedFolderForMenu={selectedFolderForMenu}
           />
   
@@ -753,7 +560,7 @@ const handleRequestApproval = async () => {
             isOpen={folderUploaDrawerOpen}
             onClose={() => setFolderUploaDrawerOpen(false)}
             folderTree={folderTree}
-            fetchFolderTree={() => fetchFolderTree(accId)}
+            fetchFolderTree={() => fetchFolderTree(accountId)}
             selectedFolderForMenu={selectedFolderForMenu}
           />
   
@@ -763,7 +570,7 @@ const handleRequestApproval = async () => {
               setMoveDrawerOpen(false);
             }}
             folderTree={folderTree}
-            fetchFolderTree={() => fetchFolderTree(accId)}
+            fetchFolderTree={() => fetchFolderTree(accountId)}
             selectedFolderForMenu={selectedFolderForMenu}
           />
   
@@ -773,7 +580,7 @@ const handleRequestApproval = async () => {
               SetRenameDrawer(false);
             }}
             folderTree={folderTree}
-            fetchFolderTree={() => fetchFolderTree(accId)}
+            fetchFolderTree={() => fetchFolderTree(accountId)}
             selectedFolderForMenu={selectedFolderForMenu}
           />
         </Box>
@@ -784,131 +591,12 @@ const handleRequestApproval = async () => {
             📜 Folder Explorer
           </Typography>
           {folderTree ? (
-            renderTree(folderTree)
+            (renderTree(folderTree))
           ) : (
             <Typography>Loading folder data...</Typography>
           )}
         </Paper>
   
-        {/* Context Menu */}
-
-        {/* <Menu
-  anchorEl={menuAnchorEl}
-  open={Boolean(menuAnchorEl)}
-  onClose={handleMenuClose}
-  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-  transformOrigin={{ vertical: "top", horizontal: "right" }}
->
-  {(() => {
-    if (!selectedFolderForMenu) return null;
-
-    const item = selectedFolderForMenu;
-    const isFolder = item.type === "folder";
-    const isLocked = item?.meta?.readOnly === true;
-
-    // Determine doc category (adjust this logic if needed)
-    const path = item.path.toLowerCase();
-    let docType = "client"; // default
-    if (path.includes("firm")) docType = "firm";
-    if (path.includes("private")) docType = "private";
-
-    const menuItems = [];
-
-    // -------------------------------
-    // 📁 FOLDER TYPE
-    // -------------------------------
-    if (isFolder) {
-      if (docType === "client") {
-        menuItems.push(
-          { icon: <FolderIcon />, label: "New Folder", action: () => setNewFolderDrawerOpen(true) },
-          { icon: <DriveFileMoveIcon />, label: "Edit", action: () => SetRenameDrawer(true) },
-          { icon: <DriveFileMoveIcon />, label: "Move", action: () => setMoveDrawerOpen(true) },
-          { icon: <DeleteIcon />, label: "Delete", action: () => deleteItem(item) },
-          { icon: <UploadFileIcon />, label: "New File", action: () => setFileUploadDrawerOpen(true) },
-          { icon: <DriveFolderUploadIcon />, label: "Upload Folder", action: () => setFolderUploaDrawerOpen(true) },
-          // { icon: <LockIcon />, label: isLocked ? "Unlock" : "Lock", action: () => toggleReadOnly(item) }
-        );
-      } else if (docType === "firm") {
-        menuItems.push(
-          { icon: <FolderIcon />, label: "New Folder", action: () => setNewFolderDrawerOpen(true) },
-          { icon: <DriveFileMoveIcon />, label: "Edit", action: () => SetRenameDrawer(true) },
-          { icon: <DriveFileMoveIcon />, label: "Move", action: () => setMoveDrawerOpen(true) },
-           { icon: <UploadFileIcon />, label: "New File", action: () => setFileUploadDrawerOpen(true) },
-          { icon: <DriveFolderUploadIcon />, label: "Upload Folder", action: () => setFolderUploaDrawerOpen(true) },
-          { icon: <DeleteIcon />, label: "Delete", action: () => deleteItem(item) }
-        );
-      } else if (docType === "private") {
-        menuItems.push(
-          { icon: <FolderIcon />, label: "New Folder", action: () => setNewFolderDrawerOpen(true) },
-          { icon: <UploadFileIcon />, label: "New File", action: () => setFileUploadDrawerOpen(true) },
-          { icon: <DriveFileMoveIcon />, label: "Move", action: () => setMoveDrawerOpen(true) },
-          { icon: <DriveFileMoveIcon />, label: "Edit", action: () => SetRenameDrawer(true) },
-          { icon: <DeleteIcon />, label: "Delete", action: () => deleteItem(item) }
-        );
-      }
-    }
-
-    // -------------------------------
-    // 📄 FILE TYPE
-    // -------------------------------
-    else {
-      if (docType === "client") {
-        menuItems.push(
-          { icon: <DriveFileMoveIcon />, label: "Edit", action: () => SetRenameDrawer(true) },
-          { icon: <DriveFileMoveIcon />, label: "Move", action: () => setMoveDrawerOpen(true) },
-          // { icon: <LockIcon />, label: isLocked ? "Unlock" : "Lock", action: () => toggleReadOnly(item) },
-          { icon: <DeleteIcon />, label: "Delete", action: () => deleteItem(item) }
-        );
-      } else if (docType === "firm") {
-         const currentStatus = item.meta?.signStatus || "sendForSignature";
-         const currentApprovalStatus = item.meta?.authStatus || "sendForApproval";
-  const isApproved = currentApprovalStatus === "approvalCompleted";
-         menuItems.push(
-          { icon: <DriveFileMoveIcon />, label: "Edit", action: () => SetRenameDrawer(true) },
-          { icon: <DriveFileMoveIcon />, label: "Move", action: () => setMoveDrawerOpen(true) },
-          // { icon: <PenTool size={16} />, label: "Request Sign", action: () => toggleSignStatus(item) },
-    //         {
-    //   icon: <PenTool size={16} />,
-    //   label: statusTextMap[currentStatus],
-    //   action: () => toggleSignStatus(item),
-    //   custom: true, // flag to handle differently
-    //   currentStatus, // pass for icon color
-    // },
-    // {
-    //   icon: <Stamp size={16} />,
-    //   label: approvalStatusTextMap[currentApprovalStatus],
-    //   action: () => toggleApprovalStatus(item),
-    //   type: "approval",
-    //   isApproved,
-    // },
-          // { icon: <Stamp size={16} />, label: "Send Approval", action: () => toggleApprovalStatus(item) },
-          { icon: <DeleteIcon />, label: "Delete", action: () => deleteItem(item) },
-          { icon: <DownloadIcon />, label: "Download", action: () => window.open(item.url, "_blank") }
-        );
-      } else if (docType === "private") {
-        menuItems.push(
-          { icon: <DriveFileMoveIcon />, label: "Edit", action: () => SetRenameDrawer(true) },
-          { icon: <DeleteIcon />, label: "Delete", action: () => deleteItem(item) }
-        );
-      }
-    }
-
-    return menuItems.map(({ icon, label, action }) => (
-      <MenuItem
-        key={label}
-        disabled={label !== "Unlock" && isLocked} // allow unlock even if locked
-        onClick={() => {
-          action();
-          handleMenuClose();
-        }}
-        sx={{ fontSize: "0.8rem", py: 0.5 }}
-      >
-        {React.cloneElement(icon, { sx: { mr: 0.5, fontSize: 16 } })}
-        {label}
-      </MenuItem>
-    ));
-  })()}
-</Menu> */}
 
  {selectedFolderForMenu ? (
           selectedFolderForMenu.isParent ? (
@@ -928,7 +616,7 @@ const handleRequestApproval = async () => {
               selectedItem={selectedFolderForMenu}
               onRename={() => SetRenameDrawer(true)}
               onMove={() => setMoveDrawerOpen(true)}
-              accId={accId}
+              accId={accountId}
               onToggleReadStatus={toggleReadStatus}
               onToggleReadOnly={toggleReadOnly}
               onDelete={deleteItem}

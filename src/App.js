@@ -14,7 +14,7 @@ import Signup from "./login-signup/Signup";
 import Settings from "./pages/Settings";
 import ForgotPassword from "./login-signup/ForgotPassword"
 import ResetPassword from "./login-signup/ResetPassword";
-import UpdatePassword from "./login-signup/UpdatePassword";
+import UpdatePassword from "./login-signup/ActivateAccount";
 import DocsFolderTree from "./docs-management/DocsFolderTree";
 const App = () => {
   return (
@@ -23,13 +23,14 @@ const App = () => {
         <Routes>
           <Route path="/client/login" element={<SignIn />} />
           <Route path="/client/signup" element={<Signup />} />
-          <Route path="/client/forgotpass" element={<ForgotPassword />} />
+          <Route path="/client/forgot-password" element={<ForgotPassword />} />
           <Route
-            path="/client/resetpassword/:id/:token"
+            path="/client/reset-password/:token"
             element={<ResetPassword />}
           />
           <Route
-            path="/client/updatepassword/:id/:token"
+            // path="/client/updatepassword/:id/:token"
+              path="/client/updatepassword/:token"
             element={<UpdatePassword />}
           />
           <Route path="/" element={<Dashboard />}>

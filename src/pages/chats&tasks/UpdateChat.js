@@ -22,9 +22,7 @@ import { LoginContext } from "../../context/Context";
 import axios from "axios";
 const UpdateChat = () => {
    const CHAT_API = process.env.REACT_APP_CHAT_API;
-  const { logindata } = useContext(LoginContext);
-  console.log("login data", logindata);
-  const [loginUserId, setLoginUserId] = useState();
+ 
 const{accId} = useState(sessionStorage.getItem("accountId"))
      const fetchAccountDetails = async () => {
     try {
@@ -45,36 +43,7 @@ const{accId} = useState(sessionStorage.getItem("accountId"))
       fetchAccountDetails();
     // }
   }, [accId]);
-useEffect(() => {
-    if (logindata?.user?.id) {
-      const id = logindata.user.id;
-      setLoginUserId(id);
-      // setLoginUserId(logindata.user.id);
-      fetchUserData(id)
-    }
-  }, [logindata]);
-   const LOGIN_API = process.env.REACT_APP_USER_LOGIN;
-   const [senderEmail,setSenderEmail]= useState("")
-   const [senderName,setSenderName]=useState("")
- const fetchUserData = async (id) => {
-  
-    const myHeaders = new Headers();
 
-    const requestOptions = {
-      method: "GET",
-      headers: myHeaders,
-      redirect: "follow",
-    };
-    const url = `${LOGIN_API}/common/user/${id}`;
-    fetch(url , requestOptions)
-      .then((response) => response.json())
-      .then((result) => {
-        console.log("id", result);
-        setSenderEmail(result.email)
-setSenderName(result.username)
-      });
-  };
-  console.log("Login User ID:", loginUserId);
 
   const messageRefs = useRef({});
   const [highlightedId, setHighlightedId] = useState(null);
@@ -88,7 +57,7 @@ setSenderName(result.username)
   const [chatDescriptions, setChatDescriptions] = useState([]);
   const [editorContent, setEditorContent] = useState("");
   const [tasks, setTasks] = useState([]);
-const [accountId,setaccountId]=useState("")
+
 const [chatTemplate, setChatTemplate]=useState("")
   const getsChatDetails = async () => {
     try {
@@ -106,7 +75,7 @@ const [chatTemplate, setChatTemplate]=useState("")
       setChatTemplate(data.chat.chattemplateid)
       setTime(data.chat.updatedAt);
       setAccountName(data.chat.accountid.accountName);
-      setaccountId(data.chat.accountid._id)
+
       setChatDescriptions(data.chat.description || []);
     setTasks(data.chat.clienttasks.flat());
 
@@ -114,18 +83,30 @@ const [chatTemplate, setChatTemplate]=useState("")
       console.error("Error fetching data:", error);
     }
   };
-  const handleCheckboxChange = (index) => {
-    setTasks((prevTasks) => {
-      const updatedTasks = prevTasks.map((task, i) =>
-        i === index
-          ? { ...task, checked: task.checked === "true" ? "false" : "true" }
-          : task
-      );
+  // const handleCheckboxChange = (index) => {
+  //   setTasks((prevTasks) => {
+  //     const updatedTasks = prevTasks.map((task, i) =>
+  //       i === index
+  //         ? { ...task, checked: task.checked === "true" ? "false" : "true" }
+  //         : task
+  //     );
 
-      updateClientTask(updatedTasks);
-      return updatedTasks;
-    });
-  };
+  //     updateClientTask(updatedTasks);
+  //     return updatedTasks;
+  //   });
+  // };
+const handleCheckboxChange = (index) => {
+  setTasks((prevTasks) => {
+    const updatedTasks = prevTasks.map((task, i) =>
+      i === index
+        ? { ...task, checked: !task.checked }  // ✅ toggle boolean
+        : task
+    );
+
+    updateClientTask(updatedTasks);
+    return updatedTasks;
+  });
+};
 
   const updateClientTask = (updatedTasks) => {
     const myHeaders = new Headers();
@@ -136,8 +117,8 @@ const [chatTemplate, setChatTemplate]=useState("")
       taskUpdates: updatedTasks.map((task) => ({
         id: task.id,
         text: task.text,
-         checked: task.checked === "true" || task.checked === true,
-        // checked: task.checked.toString(), // Ensure boolean is sent as string "true"/"false"
+        checked: task.checked, 
+        
       })),
     });
 
@@ -158,7 +139,7 @@ const [chatTemplate, setChatTemplate]=useState("")
       .then((result) => {
         console.log("Backend response:", result);
         const allChecked = updatedTasks.every(
-          (task) => task.checked === true || task.checked === "true"
+          (task) => task.checked === true 
         );
 
         if (allChecked) {
@@ -413,7 +394,7 @@ const updateChatDescription = (message = "") => {
                               >
                                 {repliedMsg.fromwhome === "client"
                                   ? "You"
-                                  : repliedMsg.senderid?.username || "Admin"}
+                                  : repliedMsg.senderid|| "Admin"}
                               </Typography>
 
                               <Typography
@@ -518,7 +499,7 @@ const updateChatDescription = (message = "") => {
                   Replying to:{" "}
                   {replyTo.fromwhome === "client"
                     ? "You"
-                    : replyTo.senderid?.username || "Admin"}
+                    : replyTo.senderid || "Admin"}
                 </Typography>
 
                 <Typography
@@ -597,8 +578,7 @@ const updateChatDescription = (message = "") => {
                       sx={{
                         p: 1,
                         width: "100%",
-                        textDecoration:
-                          task.checked === task.checked ? "line-through" : "none",
+                      textDecoration: task.checked ? "line-through" : "none",
                       }}
                     >
                       <Typography variant="body1">{task.text}</Typography>

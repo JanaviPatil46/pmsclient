@@ -520,7 +520,7 @@ const handleLogin = async (e) => {
 
             <Link
               component={RouterLink}
-              to="/forgot-password"
+              to="/client/forgot-password"
               variant="body2"
               sx={{ alignSelf: "center" }}
             >
