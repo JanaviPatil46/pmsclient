@@ -84,7 +84,7 @@ const OrganizerDialog = ({ open, handleClose, organizer }) => {
       });
   };
   const ACCOUNT_API = process.env.REACT_APP_ACCOUNTS_URL;
-  const [accountId, setAccountId] = useState("");
+  const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
   const fetchAccountByUser = async (id) => {
     const myHeaders = new Headers();
 
@@ -109,7 +109,7 @@ const OrganizerDialog = ({ open, handleClose, organizer }) => {
      // API call to fetch folder tree for a given template ID
       const fetchFolderTree = async (accountId) => {
         try {
-          const res = await fetch(`https://www.snptaxes.com/api/accountsdoc/files/list?folderPath=${accountId}`);
+          const res = await fetch(`https://www.snptaxes.com/api/accountsdoc/files/list/clientView?folderPath=${accountId}`);
           const data = await res.json();
           console.log("janavi patil",data)
           if (res.ok) {

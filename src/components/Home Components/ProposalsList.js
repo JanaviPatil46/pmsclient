@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import DescriptionIcon from "@mui/icons-material/Description";
 import axios from "axios";
-import ProposalDialog from "../../pages/proposals/ProposalDialog"; 
+import ProposalPreviewDialog from "../../pages/proposals/ProposalPreviewDialog"; 
 const ProposalsList = ({accountId}) => {
   const PROPOSAL_API = process.env.REACT_APP_PROPOSAL_URL
   const [proposals, setProposals] = useState([]);
@@ -19,7 +19,7 @@ const ProposalsList = ({accountId}) => {
 console.log("vhjs", accountId)
   const fetchProposalsAllData = async () => {
     try {
-      const url = `${PROPOSAL_API}/proposalandels/proposals/pending/${accountId}`;
+      const url = `https://www.snptaxes.com/account/proposals/byaccount/${accountId}/status/pending`;
 
       const response = await fetch(url);
       if (!response.ok) {
@@ -27,7 +27,7 @@ console.log("vhjs", accountId)
       }
       const result = await response.json();
 console.log("result proposals", result)
-      setProposals(result.pendingProposals || []);
+      setProposals(result.proposallist || []);
     } catch (error) {
       console.error("Error fetching Proposals templates:", error);
     }
@@ -132,7 +132,7 @@ const signProposal = async (signatureData) => {
                         variant="body2"
                         sx={{ color: "text.secondary", cursor: "pointer" }}
                       >
-                        {proposal.proposalname}
+                        {proposal.general.proposalName}
                       </Typography>
                     </Box>
                     <Typography
@@ -167,19 +167,11 @@ const signProposal = async (signatureData) => {
   handleClose={handleCloseDialog}
   proposal={selectedProposal}
 /> */}
-<ProposalDialog
-  open={openDialog}
-  handleClose={handleCloseDialog}
-  proposal={selectedProposal}
-  onProposalSigned={async (signatureData) => {
-    try {
-      await signProposal(signatureData);
-      // Optionally refresh your proposals list or update state
-    } catch (error) {
-      console.error('Error signing proposal:', error);
-    }
-  }}
-/>
+ <ProposalPreviewDialog
+    open={openDialog}
+    handleClose={() => setOpenDialog(false)}
+    proposal={selectedProposal}
+  />
     </>
   );
 };

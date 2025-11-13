@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import { LoginContext } from "../../context/Context";
 import axios from "axios";
-import ProposalDialog from "../proposals/ProposalDialog";
+import ProposalPreviewDialog from "../proposals//ProposalPreviewDialog";
 import { data } from "react-router-dom";
 import { toast } from "material-react-toastify";
 const Proposals = () => {
@@ -28,37 +28,21 @@ const Proposals = () => {
   const [proposalsList, setProposalsList] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedProposal, setSelectedProposal] = useState(null);
-const [accountId, setAccountId] = useState("");
-  useEffect(() => {
-    if (logindata?.user?.id) {
-      const id = logindata.user.id;
-      setLoginUserId(id);
-      fetchAccountId(id);
-    }
-  }, [logindata]);
-
-  const fetchAccountId = (id) => {
-    axios
-      .get(
-        `${ACCOUNT_API}/accounts/accountdetails/accountdetailslist/listbyuserid/${id}`
-      )
-      .then((response) => {
-        console.log("accounts",response)
-        const accountId = response.data.accounts[0]._id;
-        console.log("accountid",accountId)
-        setAccountId(accountId); // store accountId
-      fetchPrprosalsAllData(accountId);
-      })
-      .catch((error) => console.log(error));
-  };
+const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
+ useEffect(() => {
+  if (accountId) {
+    fetchPrprosalsAllData(accountId);
+  }
+}, [accountId]);
 
   const fetchPrprosalsAllData = async (accId) => {
     try {
-      const url = `${PROPOSAL_API}/proposalandels/proposalaccountwise/proposalbyaccount/${accId}`;
+      const url = `https://www.snptaxes.com/account/proposals/byaccount/${accId}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch proposals");
       const result = await response.json();
-      setProposalsList(result.proposalesandelsAccountwise);
+      console.log("result",result)
+      setProposalsList(result.proposallist);
     } catch (error) {
       console.error("Error fetching proposals:", error);
     }
@@ -72,9 +56,7 @@ const [accountId, setAccountId] = useState("");
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedProposal(null);
-if (accountId) {
-    fetchPrprosalsAllData(accountId); // now refresh with correct ID
-  }
+
   };
 const signProposal = async (signatureData) => {
   console.log("signatureData",signatureData)
@@ -146,7 +128,7 @@ const signProposal = async (signatureData) => {
                   sx={{ cursor: "pointer" }}
                   onClick={() => handleOpenDialog(row)}
                 >
-                  {row.proposalname || "Untitled"}
+                  {row.general.proposalName || "Untitled"}
                 </Typography>
               </Tooltip>
             </TableCell>
@@ -199,21 +181,11 @@ const signProposal = async (signatureData) => {
 </Box>
 
       
-      <ProposalDialog
-  open={openDialog}
-  handleClose={handleCloseDialog}
-  proposal={selectedProposal}
-  onProposalSigned={async (signatureData) => {
-    try {
-      await signProposal(signatureData);
-        toast.success("Signature saved successfully!");
-    handleCloseDialog(); // this will refresh the proposals
-      // Optionally refresh your proposals list or update state
-    } catch (error) {
-      console.error('Error signing proposal:', error);
-    }
-  }}
-/>
+     <ProposalPreviewDialog
+    open={openDialog}
+    handleClose={() => setOpenDialog(false)}
+    proposal={selectedProposal}
+  />
     </Box>
   );
 };

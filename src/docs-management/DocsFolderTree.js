@@ -38,7 +38,11 @@ import DownloadIcon from '@mui/icons-material/Download';
 import ParentFolderMenu from "./ParentFolderMenu";
 import FolderMenu from "./FolderMenu";
 import FileMenu from "./FileMenu";
+import { FaFilePdf, FaFileWord, FaFileExcel, FaFileImage, FaFileAlt } from "react-icons/fa";
+import { AiFillFileUnknown } from "react-icons/ai";
 const DOCS_MANAGMENTS = process.env.REACT_APP_CLIENT_DOCS_MANAGE;
+
+
 const DocsFolderTree = () => {
    
   
@@ -307,7 +311,30 @@ console.log("fileurl",fileUrl)
       console.error("Error opening/downloading file:", error);
     }
   };
-  
+  const getFileIcon = (fileName) => {
+  const ext = fileName.split(".").pop().toLowerCase();
+
+  switch (ext) {
+    case "pdf":
+      return <FaFilePdf color="#d32f2f" size={18} />;
+    case "jpg":
+    case "jpeg":
+    case "png":
+    case "gif":
+      return <FaFileImage color="#1976d2" size={18} />;
+    case "doc":
+    case "docx":
+      return <FaFileWord color="#1565c0" size={18} />;
+    case "xls":
+    case "xlsx":
+      return <FaFileExcel color="#2e7d32" size={18} />;
+    case "txt":
+    case "md":
+      return <FaFileAlt color="#616161" size={18} />;
+    default:
+      return <AiFillFileUnknown color="#757575" size={18} />;
+  }
+};
    const renderTree = (items, level = 0, parentPath = "", isInsideFirmDocs = false) => {
       return (
         <>
@@ -421,11 +448,7 @@ console.log("fileurl",fileUrl)
                       "&:hover .file-menu-icon": { opacity: 1 },
                     }}
                   >
-                    <FileIcon
-                      size={16}
-                      color="#757575"
-                      style={{ marginRight: 6 }}
-                    />
+                   <Box sx={{ mr: 1 }}>{getFileIcon(item.name)}</Box>
                     <Typography
                       variant="body2"
                     sx={{
