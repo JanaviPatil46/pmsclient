@@ -5,14 +5,12 @@ import {
   Box,
   Paper,
   IconButton,
-  Menu,
-  MenuItem,FormControl,Alert,Select,CircularProgress,InputLabel,Dialog,DialogTitle,DialogContent,TextField,DialogActions
+ 
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
+
 
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import DeleteIcon from "@mui/icons-material/Delete";
-import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
+
 import FileUploadDrawer from "./drawers/FileUploadDrawer"
 import CreteFolderDrawer from "./drawers/CreteFolderDrawer"
 import FolderUploadDrawer from "./drawers/FolderUploadDrawer"
@@ -24,8 +22,7 @@ import {
   Lock as LockIcon,
   LockOpen as LockOpenIcon,
 } from "@mui/icons-material";
-import { useParams } from "react-router-dom";
-import axios from 'axios';
+
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
 import { Eye, PenTool, Stamp, Lock } from "lucide-react";
@@ -33,20 +30,15 @@ import {
   Folder as FolderClosedIcon,
   FolderOpen as FolderOpenIcon,
 } from "lucide-react";
-import { LoginContext } from '../context/Context';
-import DownloadIcon from '@mui/icons-material/Download';
+
 import ParentFolderMenu from "./ParentFolderMenu";
 import FolderMenu from "./FolderMenu";
 import FileMenu from "./FileMenu";
 import { FaFilePdf, FaFileWord, FaFileExcel, FaFileImage, FaFileAlt } from "react-icons/fa";
 import { AiFillFileUnknown } from "react-icons/ai";
-const DOCS_MANAGMENTS = process.env.REACT_APP_CLIENT_DOCS_MANAGE;
-
-
 const DocsFolderTree = () => {
    
-  
-       const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
+  const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
 
    
 
@@ -335,182 +327,504 @@ console.log("fileurl",fileUrl)
       return <AiFillFileUnknown color="#757575" size={18} />;
   }
 };
-   const renderTree = (items, level = 0, parentPath = "", isInsideFirmDocs = false) => {
-      return (
-        <>
-        <Box component="ul" sx={{ listStyle: "none", pl: level * 2, mb: 1 }}>
-          {items.map((item) => {
-            const fullPath = parentPath
-              ? `${parentPath}/${item.name}`
-              : item.name;
-            const meta = item.meta || {};
+  //  const renderTree = (items, level = 0, parentPath = "", isInsideFirmDocs = false) => {
+  //     return (
+  //       <>
+  //       <Box component="ul" sx={{ listStyle: "none", pl: level * 2, mb: 1 }}>
+  //         {items.map((item) => {
+  //           const fullPath = parentPath
+  //             ? `${parentPath}/${item.name}`
+  //             : item.name;
+  //           const meta = item.meta || {};
 
             
-          // ✅ Folder/file type checks
-          const isParent = level === 0 && item.type === "folder";
-          const isChild = level > 0 && item.type === "folder";
-          const isFile = item.type === "file";
+  //         // ✅ Folder/file type checks
+  //         const isParent = level === 0 && item.type === "folder";
+  //         const isChild = level > 0 && item.type === "folder";
+  //         const isFile = item.type === "file";
 
-          // ✅ Check if parent is "firm docs"
-          const isFirmDocsParent =
-            isParent && item.name.toLowerCase() === "firm docs shared with client";
+  //         // ✅ Check if parent is "firm docs"
+  //         const isFirmDocsParent =
+  //           isParent && item.name.toLowerCase() === "firm docs shared with client";
 
-          // ✅ Track if we’re inside firm docs (for children)
-          const insideFirmDocs = isInsideFirmDocs || isFirmDocsParent;
+  //         // ✅ Track if we’re inside firm docs (for children)
+  //         const insideFirmDocs = isInsideFirmDocs || isFirmDocsParent;
 
-          // ✅ Hide menu for everything inside firm docs
-          const hideMenu = insideFirmDocs;
+  //         // ✅ Hide menu for everything inside firm docs
+  //         const hideMenu = insideFirmDocs;
   
-            // 🎯 Define colors for statuses
-            const getColor = (status) => (status ? "#1976d2" : "#9e9e9e");
+  //           // 🎯 Define colors for statuses
+  //           const getColor = (status) => (status ? "#1976d2" : "#9e9e9e");
   
-            const StatusIcons = () => (
-              <Box sx={{ display: "flex", gap: 1, alignItems: "center", ml: 1 }}>
-                <Eye size={16} color={getColor(meta.readStatus)} />
-                <PenTool size={16} color={getColor(meta.signStatus)} />
-                <Stamp size={16} color={getColor(meta.authStatus)} />
-                <Lock size={16} color={meta.readOnly ? "#e53935" : "#9e9e9e"} />
-              </Box>
-            );
-       // ✅ File click handler with lock check
-          const handleSafeFileClick = () => {
-            if (meta.readOnly) {
-              alert("This file is locked and cannot be opened.");
-              return;
-            }
-            handleFileClick(fullPath, item.name);
-          };
-            return (
-              <li key={fullPath} style={{ marginBottom: 8 }}>
-                {item.type === "folder" ? (
-                  // 📁 Folder with open/close icon
-                  <Box
-                    sx={{
-                      p: 1,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      borderRadius: 2,
-                      cursor: "pointer",
-                       backgroundColor: isParent ? "#f0f7ff" : "#fff",
-                      // backgroundColor: "#fff",
-                      color:'black',
-                      "&:hover": { backgroundColor: "#f5f5f5",color:'black', },
-                      transition: "background-color 0.2s ease-in-out",
-                    }}
-                    onClick={() => toggleFolder(fullPath, meta.readOnly)}
-                  >
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      sx={{ flexGrow: 1, gap: 1 }}
-                    >
-                      {expandedFolders[fullPath] ? (
-                        <FolderOpenIcon color="#1976d2" size={18} />
-                      ) : (
-                        <FolderClosedIcon color="#757575" size={18} />
-                      )}
-                      <Typography
-                        variant="body1"
-                        fontWeight="medium"
-                        sx={{ wordBreak: "break-word" }}
-                      >
-                        {item.name}
-                      </Typography>
-                      <StatusIcons />
-                    </Box>
-  {!hideMenu && (
-                    <IconButton
-                      size="small"
-                      onClick={(e) =>
-                        handleMenuOpen(e, {
-                          ...item,
-                          fullPath,
-                          isParent,
-                          isChild,
-                        })
-                      }
-                    >
-                      <MoreVertIcon size={16} />
-                    </IconButton>
-                  )}
+  //           const StatusIcons = () => (
+  //             <Box sx={{ display: "flex", gap: 1, alignItems: "center", ml: 1 }}>
+  //               <Eye size={16} color={getColor(meta.readStatus)} />
+  //               <PenTool size={16} color={getColor(meta.signStatus)} />
+  //               <Stamp size={16} color={getColor(meta.authStatus)} />
+  //               <Lock size={16} color={meta.readOnly ? "#e53935" : "#9e9e9e"} />
+  //             </Box>
+  //           );
+  //      // ✅ File click handler with lock check
+  //         const handleSafeFileClick = () => {
+  //           if (meta.readOnly) {
+  //             alert("This file is locked and cannot be opened.");
+  //             return;
+  //           }
+  //           handleFileClick(fullPath, item.name);
+  //         };
+  //           return (
+  //             <li key={fullPath} style={{ marginBottom: 8 }}>
+  //               {item.type === "folder" ? (
+  //                 // 📁 Folder with open/close icon
+  //                 <Box
+  //                   sx={{
+  //                     p: 1,
+  //                     display: "flex",
+  //                     alignItems: "center",
+  //                     justifyContent: "space-between",
+  //                     borderRadius: 2,
+  //                     cursor: "pointer",
+  //                      backgroundColor: isParent ? "#f0f7ff" : "#fff",
+  //                     // backgroundColor: "#fff",
+  //                     color:'black',
+  //                     "&:hover": { backgroundColor: "#f5f5f5",color:'black', },
+  //                     transition: "background-color 0.2s ease-in-out",
+  //                   }}
+  //                   onClick={() => toggleFolder(fullPath, meta.readOnly)}
+  //                 >
+  //                   <Box
+  //                     display="flex"
+  //                     alignItems="center"
+  //                     sx={{ flexGrow: 1, gap: 1 }}
+  //                   >
+  //                     {expandedFolders[fullPath] ? (
+  //                       <FolderOpenIcon color="#1976d2" size={18} />
+  //                     ) : (
+  //                       <FolderClosedIcon color="#757575" size={18} />
+  //                     )}
+  //                     <Typography
+  //                       variant="body1"
+  //                       fontWeight="medium"
+  //                       sx={{ wordBreak: "break-word" }}
+  //                     >
+  //                       {item.name}
+  //                     </Typography>
+  //                     <StatusIcons />
+  //                   </Box>
+  // {!hideMenu && (
+  //                   <IconButton
+  //                     size="small"
+  //                     onClick={(e) =>
+  //                       handleMenuOpen(e, {
+  //                         ...item,
+  //                         fullPath,
+  //                         isParent,
+  //                         isChild,
+  //                       })
+  //                     }
+  //                   >
+  //                     <MoreVertIcon size={16} />
+  //                   </IconButton>
+  //                 )}
                     
-                  </Box>
-                ) : (
-                  // 📄 File with single dot icon
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      pl: 4,
-                      mb: 1,
-                      borderRadius: 2,
-                      "&:hover .file-menu-icon": { opacity: 1 },
-                    }}
-                  >
-                   <Box sx={{ mr: 1 }}>{getFileIcon(item.name)}</Box>
-                    <Typography
-                      variant="body2"
-                    sx={{
-                      flex: 1,
-                      wordBreak: "break-word",
-                      color: meta.readOnly ? "#999" : "#1976d2",
-                      textDecoration: meta.readOnly ? "none" : "underline",
-                      cursor: meta.readOnly ? "not-allowed" : "pointer",
-                    }}
-                       onClick={handleSafeFileClick}
-                    >
-                      {item.name}
-                    </Typography>
-                    <StatusIcons />
+  //                 </Box>
+  //               ) : (
+  //                 // 📄 File with single dot icon
+  //                 <Box
+  //                   sx={{
+  //                     display: "flex",
+  //                     alignItems: "center",
+  //                     pl: 4,
+  //                     mb: 1,
+  //                     borderRadius: 2,
+  //                     "&:hover .file-menu-icon": { opacity: 1 },
+  //                   }}
+  //                 >
+  //                  <Box sx={{ mr: 1 }}>{getFileIcon(item.name)}</Box>
+  //                   <Typography
+  //                     variant="body2"
+  //                   sx={{
+  //                     flex: 1,
+  //                     wordBreak: "break-word",
+  //                     color: meta.readOnly ? "#999" : "#1976d2",
+  //                     textDecoration: meta.readOnly ? "none" : "underline",
+  //                     cursor: meta.readOnly ? "not-allowed" : "pointer",
+  //                   }}
+  //                      onClick={handleSafeFileClick}
+  //                   >
+  //                     {item.name}
+  //                   </Typography>
+  //                   <StatusIcons />
   
-                     {!hideMenu && (
-                    <Box
-                      className="file-menu-icon"
-                      sx={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: "50%",
-                        backgroundColor: "#1976d2",
-                        opacity: 0,
-                        transition: "opacity 0.2s",
-                        cursor: "pointer",
-                        mr: 1,
-                        ml: 1,
-                      }}
-                      onClick={(e) =>
-                        handleMenuOpen(e, { ...item, fullPath, isFile: true })
-                      }
-                    />
-                  )}
-                  </Box>
-                )}
+  //                    {!hideMenu && (
+  //                   <Box
+  //                     className="file-menu-icon"
+  //                     sx={{
+  //                       width: 8,
+  //                       height: 8,
+  //                       borderRadius: "50%",
+  //                       backgroundColor: "#1976d2",
+  //                       opacity: 0,
+  //                       transition: "opacity 0.2s",
+  //                       cursor: "pointer",
+  //                       mr: 1,
+  //                       ml: 1,
+  //                     }}
+  //                     onClick={(e) =>
+  //                       handleMenuOpen(e, { ...item, fullPath, isFile: true })
+  //                     }
+  //                   />
+  //                 )}
+  //                 </Box>
+  //               )}
   
-                {/* Recursive children */}
-                {expandedFolders[fullPath] &&
-                  item.children &&
-                  item.children.length > 0 && (
-                    <Box
-                      sx={{
-                        ml: 2,
-                        mt: 1,
-                        borderLeft: "2px dashed #ccc",
-                        pl: 2,
-                      }}
-                    >
-                      {renderTree(item.children, level + 1, fullPath,insideFirmDocs)}
-                    </Box>
-                  )}
-              </li>
-            );
-          })}
-        </Box>
+  //               {/* Recursive children */}
+  //               {expandedFolders[fullPath] &&
+  //                 item.children &&
+  //                 item.children.length > 0 && (
+  //                   <Box
+  //                     sx={{
+  //                       ml: 2,
+  //                       mt: 1,
+  //                       borderLeft: "2px dashed #ccc",
+  //                       pl: 2,
+  //                     }}
+  //                   >
+  //                     {renderTree(item.children, level + 1, fullPath,insideFirmDocs)}
+  //                   </Box>
+  //                 )}
+  //             </li>
+  //           );
+  //         })}
+  //       </Box>
         
 
-        </>
-      );
-    };
-    return (
+  //       </>
+  //     );
+  //   };
+    
+//   const renderTree = (items, level = 0, parentPath = "", isInsideRestricted = false) => {
+//   return (
+//     <Box component="ul" sx={{ listStyle: "none", pl: level * 2, mb: 1 }}>
+//       {items.map((item) => {
+//         const fullPath = parentPath ? `${parentPath}/${item.name}` : item.name;
+//         const meta = item.meta || {};
+
+//         const isFolder = item.type === "folder";
+//         const isFile = item.type === "file";
+//         const isRootFolder = level === 0 && isFolder;
+
+//         // 📌 Folder name that should disable menu
+//         const restrictedFolderName = "firm documents shared with client";
+
+//         // 🔍 Check if this item is the restricted root folder
+//         const isFirmDocsRoot =
+//           isRootFolder &&
+//           item.name?.toLowerCase() === restrictedFolderName.toLowerCase();
+
+//         // 🧩 Determine if we are inside restricted folder path
+//         const insideRestricted = isInsideRestricted || isFirmDocsRoot;
+
+//         // 🚫 Hide menu for restricted sections
+//         const hideMenu = insideRestricted;
+
+//         const getColor = (status) => (status ? "#1976d2" : "#9e9e9e");
+
+//         const StatusIcons = () => (
+//           <Box sx={{ display: "flex", gap: 1, alignItems: "center", ml: 1 }}>
+//             <Eye size={16} color={getColor(meta.readStatus)} />
+//             <PenTool size={16} color={getColor(meta.signStatus)} />
+//             <Stamp size={16} color={getColor(meta.authStatus)} />
+//             <Lock size={16} color={meta.readOnly ? "#e53935" : "#9e9e9e"} />
+//           </Box>
+//         );
+
+//         const handleSafeFileClick = () => {
+//           if (meta.readOnly) {
+//             alert("This file is locked and cannot be opened.");
+//             return;
+//           }
+//           handleFileClick(fullPath, item.name);
+//         };
+
+//         return (
+//           <li key={fullPath} style={{ marginBottom: 8 }}>
+//             {isFolder ? (
+//               <Box
+//                 sx={{
+//                   p: 1,
+//                   display: "flex",
+//                   alignItems: "center",
+//                   justifyContent: "space-between",
+//                   borderRadius: 2,
+//                   cursor: "pointer",
+//                   backgroundColor: isRootFolder ? "#f0f7ff" : "#fff",
+//                   color: "black",
+//                   "&:hover": { backgroundColor: "#f5f5f5", color: "black" },
+//                   transition: "background-color 0.2s ease-in-out",
+//                 }}
+//                 onClick={() => toggleFolder(fullPath, meta.readOnly)}
+//               >
+//                 <Box display="flex" alignItems="center" sx={{ flexGrow: 1, gap: 1 }}>
+//                   {expandedFolders[fullPath] ? (
+//                     <FolderOpenIcon color="#1976d2" size={18} />
+//                   ) : (
+//                     <FolderClosedIcon color="#757575" size={18} />
+//                   )}
+//                   <Typography
+//                     variant="body1"
+//                     fontWeight="medium"
+//                     sx={{ wordBreak: "break-word" }}
+//                   >
+//                     {item.name}
+//                   </Typography>
+
+//                   <StatusIcons />
+//                 </Box>
+
+//                 {!hideMenu && (
+//                   <IconButton
+//                     size="small"
+//                     onClick={(e) =>
+//                       handleMenuOpen(e, {
+//                         ...item,
+//                         fullPath,
+//                         isFolder: true,
+//                       })
+//                     }
+//                   >
+//                     <MoreVertIcon size={16} />
+//                   </IconButton>
+//                 )}
+//               </Box>
+//             ) : (
+//               <Box
+//                 sx={{
+//                   display: "flex",
+//                   alignItems: "center",
+//                   pl: 4,
+//                   mb: 1,
+//                   borderRadius: 2,
+//                   "&:hover .file-menu-icon": { opacity: 1 },
+//                 }}
+//               >
+//                 <Box sx={{ mr: 1 }}>{getFileIcon(item.name)}</Box>
+
+//                 <Typography
+//                   variant="body2"
+//                   sx={{
+//                     flex: 1,
+//                     wordBreak: "break-word",
+//                     color: meta.readOnly ? "#999" : "#1976d2",
+//                     textDecoration: meta.readOnly ? "none" : "underline",
+//                     cursor: meta.readOnly ? "not-allowed" : "pointer",
+//                   }}
+//                   onClick={handleSafeFileClick}
+//                 >
+//                   {item.name}
+//                 </Typography>
+
+//                 <StatusIcons />
+
+//                 {!hideMenu && (
+//                   <Box
+//                     className="file-menu-icon"
+//                     sx={{
+//                       width: 8,
+//                       height: 8,
+//                       borderRadius: "50%",
+//                       backgroundColor: "#1976d2",
+//                       opacity: 0,
+//                       transition: "opacity 0.2s",
+//                       cursor: "pointer",
+//                       mr: 1,
+//                       ml: 1,
+//                     }}
+//                     onClick={(e) =>
+//                       handleMenuOpen(e, { ...item, fullPath, isFile: true })
+//                     }
+//                   />
+//                 )}
+//               </Box>
+//             )}
+
+//             {expandedFolders[fullPath] &&
+//               item.children &&
+//               item.children.length > 0 && (
+//                 <Box
+//                   sx={{ ml: 2, mt: 1, borderLeft: "2px dashed #ccc", pl: 2 }}
+//                 >
+//                   {renderTree(item.children, level + 1, fullPath, insideRestricted)}
+//                 </Box>
+//               )}
+//           </li>
+//         );
+//       })}
+//     </Box>
+//   );
+// };
+
+const renderTree = (items, level = 0, parentPath = "", isInsideRestricted = false) => {
+  return (
+    <Box component="ul" sx={{ listStyle: "none", pl: level * 2, mb: 1 }}>
+      {items.map((item) => {
+        const fullPath = parentPath ? `${parentPath}/${item.name}` : item.name;
+        const meta = item.meta || {};
+
+        const isFolder = item.type === "folder";
+        const isFile = item.type === "file";
+        const isRootFolder = level === 0 && isFolder;
+
+        // Restricted folder name
+        const restrictedFolderName = "firm documents shared with client";
+
+        // Check if this is the restricted root folder
+        const isFirmDocsRoot =
+          isRootFolder &&
+          item.name?.toLowerCase() === restrictedFolderName.toLowerCase();
+
+        // Track whether we are inside restricted area
+        const insideRestricted = isInsideRestricted || isFirmDocsRoot;
+
+        const hideMenu = insideRestricted;
+
+        const getColor = (status) => (status ? "#1976d2" : "#9e9e9e");
+
+        const StatusIcons = () => (
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center", ml: 1 }}>
+            <Eye size={16} color={getColor(meta.readStatus)} />
+            <PenTool size={16} color={getColor(meta.signStatus)} />
+            <Stamp size={16} color={getColor(meta.authStatus)} />
+            <Lock size={16} color={meta.readOnly ? "#e53935" : "#9e9e9e"} />
+          </Box>
+        );
+
+        const handleSafeFileClick = () => {
+          if (meta.readOnly) {
+            alert("This file is locked and cannot be opened.");
+            return;
+          }
+          handleFileClick(fullPath, item.name);
+        };
+
+        return (
+          <li key={fullPath} style={{ marginBottom: 8 }}>
+            {isFolder ? (
+              <Box
+                sx={{
+                  p: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  borderRadius: 2,
+                  cursor: "pointer",
+                  backgroundColor: isRootFolder ? "#f0f7ff" : "#fff",
+                  color: "black",
+                  "&:hover": { backgroundColor: "#f5f5f5", color: "black" },
+                  transition: "background-color 0.2s ease-in-out",
+                }}
+                onClick={() => toggleFolder(fullPath, meta.readOnly)}
+              >
+                <Box display="flex" alignItems="center" sx={{ flexGrow: 1, gap: 1 }}>
+                  {expandedFolders[fullPath] ? (
+                    <FolderOpenIcon color="#1976d2" size={18} />
+                  ) : (
+                    <FolderClosedIcon color="#757575" size={18} />
+                  )}
+
+                  <Typography
+                    variant="body1"
+                    fontWeight="medium"
+                    sx={{ wordBreak: "break-word" }}
+                  >
+                    {item.name}
+                  </Typography>
+
+                  {/* Hide StatusIcons inside restricted area */}
+                  {!insideRestricted && <StatusIcons />}
+                </Box>
+
+                {!hideMenu && (
+                  <IconButton
+                    size="small"
+                    onClick={(e) =>
+                      handleMenuOpen(e, { ...item, fullPath, isFolder: true })
+                    }
+                  >
+                    <MoreVertIcon size={16} />
+                  </IconButton>
+                )}
+              </Box>
+            ) : (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  pl: 4,
+                  mb: 1,
+                  borderRadius: 2,
+                  "&:hover .file-menu-icon": { opacity: 1 },
+                }}
+              >
+                <Box sx={{ mr: 1 }}>{getFileIcon(item.name)}</Box>
+
+                <Typography
+                  variant="body2"
+                  sx={{
+                    flex: 1,
+                    wordBreak: "break-word",
+                    color: meta.readOnly ? "#999" : "#1976d2",
+                    textDecoration: meta.readOnly ? "none" : "underline",
+                    cursor: meta.readOnly ? "not-allowed" : "pointer",
+                  }}
+                  onClick={handleSafeFileClick}
+                >
+                  {item.name}
+                </Typography>
+
+                {/* Hide StatusIcons inside restricted area */}
+                {!insideRestricted && <StatusIcons />}
+
+                {!hideMenu && (
+                  <Box
+                    className="file-menu-icon"
+                    sx={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      backgroundColor: "#1976d2",
+                      opacity: 0,
+                      transition: "opacity 0.2s",
+                      cursor: "pointer",
+                      mr: 1,
+                      ml: 1,
+                    }}
+                    onClick={(e) =>
+                      handleMenuOpen(e, { ...item, fullPath, isFile: true })
+                    }
+                  />
+                )}
+              </Box>
+            )}
+
+            {expandedFolders[fullPath] &&
+              item.children &&
+              item.children.length > 0 && (
+                <Box sx={{ ml: 2, mt: 1, borderLeft: "2px dashed #ccc", pl: 2 }}>
+                  {renderTree(item.children, level + 1, fullPath, insideRestricted)}
+                </Box>
+              )}
+          </li>
+        );
+      })}
+    </Box>
+  );
+};
+
+
+  
+  
+  return (
  
   <Box sx={{ margin: "auto", p: 3 }}>
        

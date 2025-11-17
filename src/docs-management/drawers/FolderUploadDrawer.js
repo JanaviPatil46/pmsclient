@@ -463,7 +463,104 @@ const FolderUploadDrawer = ({
   );
 };
 
-// Recursive folder tree
+// // Recursive folder tree
+// const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
+//   const [expanded, setExpanded] = useState({});
+
+//   const toggleExpand = (path) => {
+//     setExpanded((prev) => ({ ...prev, [path]: !prev[path] }));
+//   };
+
+//   return (
+//     <List disablePadding>
+//       {items?.map((item) => {
+//         const isExpanded = expanded[item.path];
+//         const isSelected = selectedFolder === item.path;
+
+//         if (item.type !== "folder") return null;
+
+//         return (
+//           <React.Fragment key={item.path}>
+//             <ListItem
+//               sx={{
+//                 pl: 2 + level * 2,
+//                 bgcolor: isSelected ? "#b2d8ff" : "transparent",
+//                 borderRadius: 1,
+//                 mb: 0.5,
+//                 "&:hover": { bgcolor: "#dbefff",color:'black', },
+//                 cursor: item.meta?.readOnly ? "not-allowed" : "pointer",
+//               }}
+//               onClick={() => {
+//                 if (!item.meta?.readOnly) onSelect(item.path);
+//               }}
+//             >
+//               <ListItemIcon
+//                 onClick={(e) => {
+//                   e.stopPropagation();
+//                   toggleExpand(item.path);
+//                 }}
+//               >
+//                 {isExpanded ? <FolderOpenIcon /> : <FolderIcon />}
+//               </ListItemIcon>
+
+//               <ListItemText
+//                 primary={item.name}
+//                 sx={{
+//                   fontWeight: isSelected ? "bold" : "normal",
+//                   color: isSelected ? "#0056b3" : "inherit",
+//                 }}
+//               />
+
+//               {item.children?.length > 0 &&
+//                 (isExpanded ? (
+//                   <ExpandLess
+//                     onClick={(e) => {
+//                       e.stopPropagation();
+//                       toggleExpand(item.path);
+//                     }}
+//                   />
+//                 ) : (
+//                   <ExpandMore
+//                     onClick={(e) => {
+//                       e.stopPropagation();
+//                       toggleExpand(item.path);
+//                     }}
+//                   />
+//                 ))}
+//             </ListItem>
+
+//             <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+//               {/* Subfolders */}
+//               <FolderTreeSelector
+//                 items={item.children}
+//                 onSelect={onSelect}
+//                 selectedFolder={selectedFolder}
+//                 level={level + 1}
+//               />
+
+//               {/* Files inside folder */}
+//               {item.meta?.files?.length > 0 && (
+//                 <List sx={{ pl: 4 }}>
+//                   {item.meta.files.map((file) => (
+//                     <ListItem key={file.name} sx={{ pl: 2 }}>
+//                       <ListItemIcon>
+//                         <InsertDriveFileIcon fontSize="small" />
+//                       </ListItemIcon>
+//                       <ListItemText
+//                         primary={`${file.name}${file.readOnly ? " (Read Only)" : ""}`}
+//                       />
+//                     </ListItem>
+//                   ))}
+//                 </List>
+//               )}
+//             </Collapse>
+//           </React.Fragment>
+//         );
+//       })}
+//     </List>
+//   );
+// };
+
 const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
   const [expanded, setExpanded] = useState({});
 
@@ -474,10 +571,13 @@ const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
   return (
     <List disablePadding>
       {items?.map((item) => {
-        const isExpanded = expanded[item.path];
-        const isSelected = selectedFolder === item.path;
-
         if (item.type !== "folder") return null;
+
+        // ⛔ Skip displaying this folder completely
+        if (item.name?.toLowerCase() === "firm documents shared with client") return null;
+
+        const isSelected = selectedFolder === item.path;
+        const isExpanded = expanded[item.path];
 
         return (
           <React.Fragment key={item.path}>
@@ -487,7 +587,7 @@ const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
                 bgcolor: isSelected ? "#b2d8ff" : "transparent",
                 borderRadius: 1,
                 mb: 0.5,
-                "&:hover": { bgcolor: "#dbefff",color:'black', },
+                "&:hover": { bgcolor: "#dbefff", color: "black" },
                 cursor: item.meta?.readOnly ? "not-allowed" : "pointer",
               }}
               onClick={() => {
@@ -529,37 +629,23 @@ const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
                 ))}
             </ListItem>
 
-            <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-              {/* Subfolders */}
-              <FolderTreeSelector
-                items={item.children}
-                onSelect={onSelect}
-                selectedFolder={selectedFolder}
-                level={level + 1}
-              />
-
-              {/* Files inside folder */}
-              {item.meta?.files?.length > 0 && (
-                <List sx={{ pl: 4 }}>
-                  {item.meta.files.map((file) => (
-                    <ListItem key={file.name} sx={{ pl: 2 }}>
-                      <ListItemIcon>
-                        <InsertDriveFileIcon fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={`${file.name}${file.readOnly ? " (Read Only)" : ""}`}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              )}
-            </Collapse>
+            {item.children?.length > 0 && (
+              <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                <FolderTreeSelector
+                  items={item.children}
+                  onSelect={onSelect}
+                  selectedFolder={selectedFolder}
+                  level={level + 1}
+                />
+              </Collapse>
+            )}
           </React.Fragment>
         );
       })}
     </List>
   );
 };
+
 
 export default FolderUploadDrawer;
 

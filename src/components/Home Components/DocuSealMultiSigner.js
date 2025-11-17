@@ -65,7 +65,7 @@ const DocuSealMultiSigner = ({ submissions, targetEmail }) => {
       submission.submitters.map((s) => ({
         slug: s.slug,
         email: s.email,
-        submissionId: submission.id,
+        submissionId: submission._id,
         templateName: submission.template?.name,
         createdAt: submission.created_at,
       }))
@@ -145,66 +145,15 @@ const DocuSealMultiSigner = ({ submissions, targetEmail }) => {
               </IconButton>
             </DialogTitle>
             <DialogContent dividers>
-              {/* {selectedSlug && (
-                <DocusealForm
-                  src={`https://docuseal.com/s/${selectedSlug}`}
-                  email={targetEmail}
-                  onComplete={(data) => {
-                    console.log("Form signed", data);
-                    alert("Document signed successfully!");
-
-                    // 1️⃣ Update the e-sign status in backend by externalId
-                    fetch(
-                      `${SIGNATURE_API}/signautrelist/update/${data.template.external_id}`,
-                      {
-                        method: "PATCH",
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                          status: "completed",
-                          // submissionId: data.submission_id, // optional: store Docuseal submission ID
-                        }),
-                      }
-                    )
-                      .then((res) => res.json())
-                      .then((updateResult) => {
-                        console.log("Esign record updated", updateResult);
-                      })
-                      .catch((error) => {
-                        console.error("Failed to update e-sign record", error);
-                      });
-                    // Send POST request to backend to notify admin
-                    fetch(`${SIGNATURE_API}/notify-admin`, {
-                      method: "POST",
-                      headers: {
-                        "Content-Type": "application/json",
-                      },
-                      body: JSON.stringify({
-                        clientName: targetEmail, // or replace with actual client name if available
-                        documentName: selectedSlug, // you can use s.templateName if needed
-                      }),
-                    })
-                      .then((res) => res.json())
-                      .then((result) => {
-                        console.log("Admin notified", result);
-                      })
-                      .catch((error) => {
-                        console.error("Failed to notify admin", error);
-                      });
-
-                    handleCloseDialog();
-                  }}
-                />
-              )} */}
+              
               {selectedSlug && (
   <DocusealForm
     src={`https://docuseal.com/s/${selectedSlug}`}
     email={targetEmail}
     onComplete={async (data) => {
-      console.log("Form signed", data);
-      alert("Document signed successfully!");
-
+      // console.log("Form signed", data);
+      // alert("Document signed successfully!");
+console.log("Post-sign data:", data);
       try {
         // 1️⃣ Update the e-sign status in Docuseal record
         const updateEsignRes = await fetch(
@@ -214,7 +163,7 @@ const DocuSealMultiSigner = ({ submissions, targetEmail }) => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               status: "completed",
-              // submissionId: data.submission_id, // optional
+               submissionId: data.submission_id, // optional
             }),
           }
         );

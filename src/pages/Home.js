@@ -14,6 +14,7 @@ import axios from "axios";
 import { LoginContext } from "../context/Context";
 import DocuSealWrapper from "../components/Home Components/DocuSealWrapper";
 import DocumnetApprovals from "../components/Home Components/DocumnetApprovals";
+import { set } from "lodash";
 const Home = () => {
   const ACCOUNT_API = process.env.REACT_APP_ACCOUNTS_URL;
   // const { logindata } = useContext(LoginContext);
@@ -88,7 +89,7 @@ const Home = () => {
 
    
      const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
-  const [adminUserId,setAdminUserId]= useState()
+  const [adminUserId,setAdminUserId]= useState(sessionStorage.getItem("email"))
    const fetchAccountDetails = async () => {
     try {
       const res = await axios.get(
@@ -96,6 +97,7 @@ const Home = () => {
       );
       // setAccount(res.data);
       console.log("result", res.data);
+      // setAdminUserId(res.data.adminUserId)
     } catch (error) {
       console.error("Error fetching account details:", error);
     }

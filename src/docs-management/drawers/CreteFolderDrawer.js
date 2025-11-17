@@ -434,6 +434,67 @@ console.log("res",res)
 //     </List>
 //   );
 // };
+// const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
+//   const [expanded, setExpanded] = useState({});
+
+//   const toggleExpand = (path) => {
+//     setExpanded((prev) => ({ ...prev, [path]: !prev[path] }));
+//   };
+
+//   return (
+//     <List disablePadding>
+//       {items?.map((item) => {
+//         if (item.type !== "folder") return null;
+
+//         const isSelected = selectedFolder === item.path;
+//         const isExpanded = expanded[item.path];
+
+//         return (
+//           <React.Fragment key={item.path}>
+//             <ListItem
+//               sx={{
+//                 pl: 2 + level * 2,
+//                 bgcolor: isSelected ? "#b2d8ff" : "transparent",
+//                 borderRadius: 1,
+//                 mb: 0.5,
+//                 "&:hover": { bgcolor: "#dbefff",color:'black', },
+//                 cursor: item.meta?.readOnly ? "not-allowed" : "pointer",
+//               }}
+//               onClick={() => {
+//                 if (!item.meta?.readOnly) onSelect(item.path);
+//               }}
+//             >
+//               <ListItemIcon onClick={(e) => { e.stopPropagation(); toggleExpand(item.path); }}>
+//                 {isExpanded ? <FolderOpenIcon /> : <FolderIcon />}
+//               </ListItemIcon>
+//               <ListItemText
+//                 primary={item.name}
+//                 sx={{
+//                   fontWeight: isSelected ? "bold" : "normal",
+//                   color: isSelected ? "#0056b3" : "inherit",
+//                 }}
+//               />
+//               {item.children?.length > 0 &&
+//                 (isExpanded ? <ExpandLess onClick={(e) => { e.stopPropagation(); toggleExpand(item.path); }} /> : <ExpandMore onClick={(e) => { e.stopPropagation(); toggleExpand(item.path); }} />)}
+//             </ListItem>
+
+//             {item.children?.length > 0 && (
+//               <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+//                 <FolderTreeSelector
+//                   items={item.children}
+//                   onSelect={onSelect}
+//                   selectedFolder={selectedFolder}
+//                   level={level + 1}
+//                 />
+//               </Collapse>
+//             )}
+//           </React.Fragment>
+//         );
+//       })}
+//     </List>
+//   );
+// };
+
 const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
   const [expanded, setExpanded] = useState({});
 
@@ -446,6 +507,9 @@ const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
       {items?.map((item) => {
         if (item.type !== "folder") return null;
 
+        // ⛔ Skip displaying this folder completely
+        if (item.name?.toLowerCase() === "firm documents shared with client") return null;
+
         const isSelected = selectedFolder === item.path;
         const isExpanded = expanded[item.path];
 
@@ -457,16 +521,22 @@ const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
                 bgcolor: isSelected ? "#b2d8ff" : "transparent",
                 borderRadius: 1,
                 mb: 0.5,
-                "&:hover": { bgcolor: "#dbefff",color:'black', },
+                "&:hover": { bgcolor: "#dbefff", color: "black" },
                 cursor: item.meta?.readOnly ? "not-allowed" : "pointer",
               }}
               onClick={() => {
                 if (!item.meta?.readOnly) onSelect(item.path);
               }}
             >
-              <ListItemIcon onClick={(e) => { e.stopPropagation(); toggleExpand(item.path); }}>
+              <ListItemIcon
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleExpand(item.path);
+                }}
+              >
                 {isExpanded ? <FolderOpenIcon /> : <FolderIcon />}
               </ListItemIcon>
+
               <ListItemText
                 primary={item.name}
                 sx={{
@@ -474,8 +544,23 @@ const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
                   color: isSelected ? "#0056b3" : "inherit",
                 }}
               />
+
               {item.children?.length > 0 &&
-                (isExpanded ? <ExpandLess onClick={(e) => { e.stopPropagation(); toggleExpand(item.path); }} /> : <ExpandMore onClick={(e) => { e.stopPropagation(); toggleExpand(item.path); }} />)}
+                (isExpanded ? (
+                  <ExpandLess
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleExpand(item.path);
+                    }}
+                  />
+                ) : (
+                  <ExpandMore
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleExpand(item.path);
+                    }}
+                  />
+                ))}
             </ListItem>
 
             {item.children?.length > 0 && (
@@ -494,5 +579,6 @@ const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
     </List>
   );
 };
+
 export default CreateFolderDrawer;
 
