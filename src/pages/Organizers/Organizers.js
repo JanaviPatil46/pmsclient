@@ -74,7 +74,8 @@ const Organizers = () => {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedOrganizer(null);
-    // fetchOrganizers();
+    fetchOrganizers(accountId);
+    
   };
   return (
     <Box sx={{ width: "100%", maxWidth: "1700px", p: 2 }}>

@@ -1,156 +1,157 @@
+
+
 // import React, { useState, useEffect } from "react";
+// import {
+//   Drawer,
+//   Box,
+//   Typography,
+//   TextField,
+//   Button,
+//   List,
+//   ListItem,
+//   ListItemIcon,
+//   ListItemText,
+//   Collapse,
+// } from "@mui/material";
+// import FolderIcon from "@mui/icons-material/Folder";
+// import FolderOpenIcon from "@mui/icons-material/FolderOpen";
+// import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+// import ExpandLess from "@mui/icons-material/ExpandLess";
+// import ExpandMore from "@mui/icons-material/ExpandMore";
 // import axios from "axios";
-
-// const drawerStyle = {
-//   position: "fixed",
-//   top: 0,
-//   right: 0,
-//   height: "100%",
-//   width: "350px",
-//   backgroundColor: "#8de066ff",
-//   boxShadow: "-2px 0 5px rgba(0,0,0,0.3)",
-//   padding: "20px",
-//   transition: "transform 0.3s ease-in-out",
-//   zIndex: 1000,
-// };
-
-// const overlayStyle = {
-//   position: "fixed",
-//   top: 0,
-//   left: 0,
-//   width: "100%",
-//   height: "100%",
-//   backgroundColor: "rgba(0,0,0,0.3)",
-//   zIndex: 999,
-// };
+// import { toast } from "material-react-toastify";
 
 // const FileUploadDrawer = ({
 //   isOpen,
 //   onClose,
 //   folderTree,
 //   fetchFolderTree,
-//   selectedFolderForMenu,
+//   selectedFolderForMenu,file
 // }) => {
-//   const [file, setFile] = useState(null);
+//   // const [file, setFile] = useState(null);
 //   const [selectedFolder, setSelectedFolder] = useState("");
 //   const [message, setMessage] = useState("");
-
-//   const handleFileChange = (e) => setFile(e.target.files[0]);
-
-//   const handleFolderSelect = (path) => setSelectedFolder(path);
-
+//    const [files, setFiles] = useState([]);
 //   useEffect(() => {
-//     // Set selected folder only when drawer opens
 //     if (isOpen && selectedFolderForMenu) {
 //       setSelectedFolder(selectedFolderForMenu.path);
 //     } else if (!isOpen) {
-//       setSelectedFolder(""); // reset internal selection when drawer closes
+//       setSelectedFolder("");
+//       // setFile(null);
+//       setMessage("");
 //     }
 //   }, [isOpen, selectedFolderForMenu]);
 
+//   // const handleFileChange = (e) => setFile(e.target.files[0]);
+//     const handleFileChange = (e) => {
+//     const selectedFiles = Array.from(e.target.files);
+//     const maxSize = 50 * 1024 * 1024; // 50 MB
+//     const forbiddenTypes = ["video/", "audio/"];
+
+//     const validFiles = selectedFiles.filter((file) => {
+//       if (file.size > maxSize) {
+//         alert(`❌ ${file.name} exceeds 50 MB limit.`);
+//         return false;
+//       }
+//       if (forbiddenTypes.some((type) => file.type.startsWith(type))) {
+//         alert(`❌ ${file.name} is an audio or video file — not allowed.`);
+//         return false;
+//       }
+//       return true;
+//     });
+
+//     setFiles(validFiles);
+//   };
+//   const handleFolderSelect = (path) => setSelectedFolder(path);
+
+
 //   const handleUpload = async () => {
-//     if (!file || !selectedFolder) {
-//       setMessage("Please select a file and folder.");
+//     if (files.length === 0 || !selectedFolder) {
+//       setMessage("Please select files and a folder.");
 //       return;
 //     }
 
 //     try {
 //       const formData = new FormData();
-//       formData.append("file", file);
+//       files.forEach((file) => formData.append("files", file));
 
 //       const res = await axios.post(
-//         `https://www.snptaxes.com/api/accountsdoc/file/upload?folderPath=${encodeURIComponent(
+//               `https://www.snptaxes.com/api/accountsdoc/file/upload?folderPath=${encodeURIComponent(
 //           selectedFolder
 //         )}`,
 //         formData,
 //         { headers: { "Content-Type": "multipart/form-data" } }
 //       );
 
-//       setMessage(`✅ File uploaded: ${res.data.fileMeta.name}`);
-//       setFile(null);
-//       fetchFolderTree(); // refresh folder explorer
+//       setMessage(`✅ ${res.data.message || "Files uploaded successfully"}`);
+//       toast.success(`✅ ${res.data.message || "Files uploaded successfully"}`)
+//       setFiles([]);
+//       onClose();
+//      fetchFolderTree();
 //     } catch (err) {
 //       console.error(err);
-//       setMessage("❌ Error uploading file");
+//       setMessage("❌ Error uploading files");
 //     }
 //   };
-
-//   if (!isOpen) return null;
-
 //   return (
-//     <>
-//       <div style={overlayStyle} onClick={onClose}></div>
-//       <div
-//         style={{
-//           ...drawerStyle,
-//           transform: isOpen ? "translateX(0)" : "translateX(100%)",
+//     <Drawer anchor="right" open={isOpen} onClose={onClose}  ModalProps={{
+//           keepMounted: true // Improves performance on mobile
 //         }}
-//       >
-//         <h3>📄 Upload File </h3>
+//         sx={{
+//           zIndex: (theme) => theme.zIndex.modal + 1, // ensure above dialog
+//           width: 600,
+//         }}>
+//       <Box sx={{ width: 400, p: 3,  height: "100%" }}>
+//         <Typography variant="h6" gutterBottom>
+//           📄 Upload File
+//         </Typography>
 
-//         <label>Selected Folder:</label>
-//         <input
-//           type="text"
-//           value={selectedFolder}
-//           onChange={(e) => setSelectedFolder(e.target.value)}
-//           placeholder="Enter folder path or select from tree"
-//           style={{ width: "100%", marginBottom: "10px", padding: "5px" }}
-//         />
-
-//         <input
-//           type="file"
-//           onChange={handleFileChange}
-//           style={{ width: "100%", marginBottom: "10px" }}
-//         />
-
-//         <button
+// <Button
+//                   variant="outlined"
+//                   component="label"
+//                   fullWidth
+//                   sx={{ mt: 1, mb: 2 }}
+//                 >
+//                   {files.length > 0
+//                     ? `${files.length} file(s) selected`
+//                     : "Select Files"}
+//                   <input type="file" hidden multiple onChange={handleFileChange} />
+//                 </Button>
+//         <Button
+//           variant="contained"
+//           color="primary"
+//           fullWidth
 //           onClick={handleUpload}
-//           style={{
-//             width: "100%",
-//             padding: "10px",
-//             backgroundColor: "#0b5ed7",
-//             color: "#fff",
-//             border: "none",
-//             cursor: "pointer",
-//           }}
 //         >
 //           Upload
-//         </button>
+//         </Button>
 
-//         {message && <p style={{ marginTop: "10px" }}>{message}</p>}
+//         {message && (
+//           <Typography sx={{ mt: 2, fontWeight: "bold" }}>{message}</Typography>
+//         )}
 
-//         <button
-//           onClick={onClose}
-//           style={{
-//             marginTop: "20px",
-//             padding: "6px 10px",
-//             backgroundColor: "#ccc",
-//             border: "none",
-//             cursor: "pointer",
-//           }}
-//         >
+//         <Button variant="outlined" fullWidth sx={{ mt: 2 }} onClick={onClose}>
 //           Close
-//         </button>
+//         </Button>
 
-//         <div style={{ marginTop: "20px" }}>
-//           {!selectedFolder && ( // ✅ Show tree only if no folder is pre-selected
-//             <>
-//               <h4>Select Parent Folder from Tree</h4>
-//               <FolderTreeSelector
-//                 items={folderTree}
-//                 onSelect={handleFolderSelect}
-//                 selectedFolder={selectedFolder}
-//               />
-//             </>
-//           )}
-//         </div>
-//       </div>
-//     </>
+//         <Box sx={{ mt: 3 }}>
+//           <Typography variant="subtitle1" gutterBottom>
+//             Select Folder from Tree
+//           </Typography>
+//           <FolderTreeSelector
+//             items={folderTree}
+//             onSelect={handleFolderSelect}
+//             selectedFolder={selectedFolder}
+//           />
+//         </Box>
+//       </Box>
+//     </Drawer>
 //   );
 // };
 
-// // 🔹 Recursive Folder Selector inside Drawer with Expand/Collapse
-// const FolderTreeSelector = ({ items, onSelect, level = 0 }) => {
+
+
+// const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
 //   const [expanded, setExpanded] = useState({});
 
 //   const toggleExpand = (path) => {
@@ -158,68 +159,83 @@
 //   };
 
 //   return (
-//     <ul style={{ paddingLeft: `${level * 15}px`, listStyleType: "none" }}>
-//       {items?.map((item) => (
-//         <li key={item.path} style={{ marginBottom: "4px" }}>
-//           {item.type === "folder" ? (
-//             <>
-//               {/* Folder name with expand/collapse */}
-//               <span
-//                 style={{ cursor: "pointer", color: "#0b5ed7" }}
-//                 onClick={() => toggleExpand(item.path)}
-//               >
-//                 {expanded[item.path] ? "📂" : "📁"} {item.name}{" "}
-//                 {item.meta?.readOnly}
-//               </span>
+//     <List disablePadding>
+//       {items?.map((item) => {
+//         if (item.type !== "folder") return null;
 
-//               {/* Select Folder Button (disabled if read-only) */}
-//               <button
-//                 onClick={() => onSelect(item.path)}
-//                 disabled={item.meta?.readOnly}
-//                 style={{
-//                   marginLeft: "10px",
-//                   padding: "2px 6px",
-//                   cursor: item.meta?.readOnly ? "not-allowed" : "pointer",
-//                   opacity: item.meta?.readOnly ? 0.5 : 1,
+//         // ⛔ Skip displaying this folder completely
+//         if (item.name?.toLowerCase() === "firm documents shared with client") return null;
+
+//         const isSelected = selectedFolder === item.path;
+//         const isExpanded = expanded[item.path];
+
+//         return (
+//           <React.Fragment key={item.path}>
+//             <ListItem
+//               sx={{
+//                 pl: 2 + level * 2,
+//                 bgcolor: isSelected ? "#b2d8ff" : "transparent",
+//                 borderRadius: 1,
+//                 mb: 0.5,
+//                 "&:hover": { bgcolor: "#dbefff", color: "black" },
+//                 cursor: item.meta?.readOnly ? "not-allowed" : "pointer",
+//               }}
+//               onClick={() => {
+//                 if (!item.meta?.readOnly) onSelect(item.path);
+//               }}
+//             >
+//               <ListItemIcon
+//                 onClick={(e) => {
+//                   e.stopPropagation();
+//                   toggleExpand(item.path);
 //                 }}
 //               >
-//                 Select
-//               </button>
+//                 {isExpanded ? <FolderOpenIcon /> : <FolderIcon />}
+//               </ListItemIcon>
 
-//               {/* Expand children recursively */}
-//               {expanded[item.path] &&
-//                 item.children &&
-//                 item.children.length > 0 && (
-//                   <FolderTreeSelector
-//                     items={item.children}
-//                     onSelect={onSelect}
-//                     level={level + 1}
+//               <ListItemText
+//                 primary={item.name}
+//                 sx={{
+//                   fontWeight: isSelected ? "bold" : "normal",
+//                   color: isSelected ? "#0056b3" : "inherit",
+//                 }}
+//               />
+
+//               {item.children?.length > 0 &&
+//                 (isExpanded ? (
+//                   <ExpandLess
+//                     onClick={(e) => {
+//                       e.stopPropagation();
+//                       toggleExpand(item.path);
+//                     }}
 //                   />
-//                 )}
+//                 ) : (
+//                   <ExpandMore
+//                     onClick={(e) => {
+//                       e.stopPropagation();
+//                       toggleExpand(item.path);
+//                     }}
+//                   />
+//                 ))}
+//             </ListItem>
 
-//               {/* Show files inside folder */}
-//               {expanded[item.path] &&
-//                 item.meta?.files &&
-//                 item.meta.files.length > 0 && (
-//                   <ul style={{ paddingLeft: "15px" }}>
-//                     {item.meta.files.map((file) => (
-//                       <li key={file.name}>
-//                         📄 {file.name} {file.readOnly ? "(Read Only)" : ""}
-//                       </li>
-//                     ))}
-//                   </ul>
-//                 )}
-//             </>
-//           ) : (
-//             <span>
-//               📄 {item.name} {item.meta?.readOnly ? "(Read Only)" : ""}
-//             </span>
-//           )}
-//         </li>
-//       ))}
-//     </ul>
+//             {item.children?.length > 0 && (
+//               <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+//                 <FolderTreeSelector
+//                   items={item.children}
+//                   onSelect={onSelect}
+//                   selectedFolder={selectedFolder}
+//                   level={level + 1}
+//                 />
+//               </Collapse>
+//             )}
+//           </React.Fragment>
+//         );
+//       })}
+//     </List>
 //   );
 // };
+
 
 // export default FileUploadDrawer;
 
@@ -228,7 +244,6 @@ import {
   Drawer,
   Box,
   Typography,
-  TextField,
   Button,
   List,
   ListItem,
@@ -238,116 +253,168 @@ import {
 } from "@mui/material";
 import FolderIcon from "@mui/icons-material/Folder";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import axios from "axios";
 import { toast } from "material-react-toastify";
+
 const FileUploadDrawer = ({
   isOpen,
   onClose,
   folderTree,
   fetchFolderTree,
-  selectedFolderForMenu,file
+  selectedFolderForMenu,
+  file, // This is the file passed from parent OrganizerDialog
+  onUploadSuccess, // Callback to parent when upload is successful
+  onUploadError, // Callback to parent when upload fails
 }) => {
-  // const [file, setFile] = useState(null);
   const [selectedFolder, setSelectedFolder] = useState("");
   const [message, setMessage] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (isOpen && selectedFolderForMenu) {
       setSelectedFolder(selectedFolderForMenu.path);
     } else if (!isOpen) {
       setSelectedFolder("");
-      // setFile(null);
       setMessage("");
+      setIsUploading(false);
     }
   }, [isOpen, selectedFolderForMenu]);
 
-  // const handleFileChange = (e) => setFile(e.target.files[0]);
   const handleFolderSelect = (path) => setSelectedFolder(path);
 
   const handleUpload = async () => {
     if (!file || !selectedFolder) {
-      setMessage("Please select a file and folder.");
+      setMessage("Please select a file and a folder.");
       return;
     }
 
+    setIsUploading(true);
+    setMessage("");
+
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("files", file);
 
       const res = await axios.post(
         `https://www.snptaxes.com/api/accountsdoc/file/upload?folderPath=${encodeURIComponent(
           selectedFolder
         )}`,
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        { 
+          headers: { "Content-Type": "multipart/form-data" },
+          onUploadProgress: (progressEvent) => {
+            const progress = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            setMessage(`Uploading... ${progress}%`);
+          }
+        }
       );
 
-      setMessage(`✅ File uploaded: ${res.data.fileMeta.name}`);
-      toast.success(`✅ File uploaded: ${res.data.fileMeta.name}`)
-      // setFile(null);
-      onClose();
-      // fetchFolderTree();
+      const successMessage = `✅ ${res.data.message || "File uploaded successfully"}`;
+      setMessage(successMessage);
+      // toast.success(successMessage);
+      
+      // Call the success callback with file data
+      if (onUploadSuccess) {
+        onUploadSuccess({
+          fileName: file.name,
+          filePath: selectedFolder,
+          uploadDate: new Date().toISOString(),
+          serverResponse: res.data
+        });
+      }
+
+      // Refresh folder tree and close drawer
+      if (fetchFolderTree) {
+        fetchFolderTree();
+      }
+      
+      // Don't close immediately - let user see success message
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+
     } catch (err) {
-      console.error(err);
-      setMessage("❌ Error uploading file");
+      console.error("Upload error:", err);
+      const errorMessage = "❌ Error uploading file";
+      setMessage(errorMessage);
+      toast.error(errorMessage);
+      
+      // Call the error callback
+      if (onUploadError) {
+        onUploadError(err);
+      }
+    } finally {
+      setIsUploading(false);
     }
   };
 
   return (
-    <Drawer anchor="right" open={isOpen} onClose={onClose}  ModalProps={{
-          keepMounted: true // Improves performance on mobile
-        }}
-        sx={{
-          zIndex: (theme) => theme.zIndex.modal + 1, // ensure above dialog
-          width: 600,
-        }}>
-      <Box sx={{ width: 400, p: 3, bgcolor: "#f0f8ff", height: "100%" }}>
+    <Drawer 
+      anchor="right" 
+      open={isOpen} 
+      onClose={onClose}  
+      ModalProps={{
+        keepMounted: true
+      }}
+      sx={{
+        zIndex: (theme) => theme.zIndex.modal + 1,
+        width: 600,
+      }}
+    >
+      <Box sx={{ width: 400, p: 3, height: "100%" }}>
         <Typography variant="h6" gutterBottom>
           📄 Upload File
         </Typography>
 
-        {/* <TextField
-          label="Selected Folder"
-          placeholder="Enter folder path or select from tree"
-          value={selectedFolder}
-          InputProps={{ readOnly: true }}
-          fullWidth
-          margin="dense"
-        /> */}
-
-        {/* <Button
-          variant="outlined"
-          component="label"
-          fullWidth
-          sx={{ mt: 1, mb: 2 }}
-        >
-          {file ? file.name : "Select File"}
-          <input type="file" hidden onChange={handleFileChange} />
-        </Button> */}
+        {/* Display selected file info */}
+        {file && (
+          <Box sx={{ mb: 2, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Selected File:
+            </Typography>
+            <Typography variant="body2">
+              <strong>Name:</strong> {file.name}
+            </Typography>
+            <Typography variant="body2">
+              <strong>Size:</strong> {(file.size / (1024 * 1024)).toFixed(2)} MB
+            </Typography>
+            <Typography variant="body2">
+              <strong>Type:</strong> {file.type || 'Unknown'}
+            </Typography>
+          </Box>
+        )}
 
         <Button
           variant="contained"
           color="primary"
           fullWidth
           onClick={handleUpload}
+          disabled={!file || !selectedFolder || isUploading}
+          sx={{ mb: 2 }}
         >
-          Upload
+          {isUploading ? 'Uploading...' : 'Upload File'}
         </Button>
 
         {message && (
-          <Typography sx={{ mt: 2, fontWeight: "bold" }}>{message}</Typography>
+          <Typography 
+            sx={{ 
+              mt: 2, 
+              mb: 2, 
+              fontWeight: "bold",
+              color: message.includes('❌') ? 'error.main' : 'success.main'
+            }}
+          >
+            {message}
+          </Typography>
         )}
 
-        <Button variant="outlined" fullWidth sx={{ mt: 2 }} onClick={onClose}>
-          Close
-        </Button>
-
-        <Box sx={{ mt: 3 }}>
+        <Box sx={{ mt: 3, mb: 3 }}>
           <Typography variant="subtitle1" gutterBottom>
-            Select Folder from Tree
+            Select Upload Folder
           </Typography>
           <FolderTreeSelector
             items={folderTree}
@@ -355,12 +422,20 @@ const FileUploadDrawer = ({
             selectedFolder={selectedFolder}
           />
         </Box>
+
+        <Button 
+          variant="outlined" 
+          fullWidth 
+          onClick={onClose}
+          disabled={isUploading}
+        >
+          Cancel
+        </Button>
       </Box>
     </Drawer>
   );
 };
 
-// Recursive Folder Tree with files and MUI
 const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
   const [expanded, setExpanded] = useState({});
 
@@ -371,10 +446,13 @@ const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
   return (
     <List disablePadding>
       {items?.map((item) => {
-        const isExpanded = expanded[item.path];
-        const isSelected = selectedFolder === item.path;
-
         if (item.type !== "folder") return null;
+
+        // ⛔ Skip displaying this folder completely
+        if (item.name?.toLowerCase() === "firm documents shared with client") return null;
+
+        const isSelected = selectedFolder === item.path;
+        const isExpanded = expanded[item.path];
 
         return (
           <React.Fragment key={item.path}>
@@ -384,7 +462,7 @@ const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
                 bgcolor: isSelected ? "#b2d8ff" : "transparent",
                 borderRadius: 1,
                 mb: 0.5,
-                "&:hover": { bgcolor: "#dbefff" },
+                "&:hover": { bgcolor: "#dbefff", color: "black" },
                 cursor: item.meta?.readOnly ? "not-allowed" : "pointer",
               }}
               onClick={() => {
@@ -396,6 +474,7 @@ const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
                   e.stopPropagation();
                   toggleExpand(item.path);
                 }}
+                sx={{ cursor: 'pointer', minWidth: 40 }}
               >
                 {isExpanded ? <FolderOpenIcon /> : <FolderIcon />}
               </ListItemIcon>
@@ -415,6 +494,7 @@ const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
                       e.stopPropagation();
                       toggleExpand(item.path);
                     }}
+                    sx={{ cursor: 'pointer' }}
                   />
                 ) : (
                   <ExpandMore
@@ -422,40 +502,21 @@ const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
                       e.stopPropagation();
                       toggleExpand(item.path);
                     }}
+                    sx={{ cursor: 'pointer' }}
                   />
                 ))}
             </ListItem>
 
-            <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-              {/* Render subfolders recursively */}
-              <FolderTreeSelector
-                items={item.children}
-                onSelect={onSelect}
-                selectedFolder={selectedFolder}
-                level={level + 1}
-              />
-
-              {/* Render files inside folder */}
-              {item.meta?.files?.length > 0 && (
-                <List sx={{ pl: 4 }}>
-                  {item.meta.files.map((file) => (
-                    <ListItem
-                      key={file.name}
-                      sx={{ pl: 2 }}
-                    >
-                      <ListItemIcon>
-                        <InsertDriveFileIcon fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={`${file.name}${
-                          file.readOnly ? " (Read Only)" : ""
-                        }`}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              )}
-            </Collapse>
+            {item.children?.length > 0 && (
+              <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                <FolderTreeSelector
+                  items={item.children}
+                  onSelect={onSelect}
+                  selectedFolder={selectedFolder}
+                  level={level + 1}
+                />
+              </Collapse>
+            )}
           </React.Fragment>
         );
       })}
@@ -464,4 +525,3 @@ const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
 };
 
 export default FileUploadDrawer;
-

@@ -18,7 +18,7 @@ import SignatureCanvas from "react-signature-canvas";
 import axios from "axios";
 import CloseIcon from "@mui/icons-material/Close";
 import HTMLReactParser from "html-react-parser";
-
+import { toast } from "material-react-toastify";
 const ProposalPreviewDialog = ({ open, handleClose, proposal }) => {
   const [activeStep, setActiveStep] = useState("general");
   // Signature States
@@ -86,6 +86,7 @@ const ProposalPreviewDialog = ({ open, handleClose, proposal }) => {
       };
 
       await axios.post(`https://www.snptaxes.com/account/proposals/sign/${proposal._id}`, payload);
+      toast.success("Proposal signed successfully");
       handleClose();
     } catch (err) {
       console.error("Signature save error:", err);

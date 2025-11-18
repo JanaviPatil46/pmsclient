@@ -286,20 +286,60 @@ const OrganizerDialog = ({ open, handleClose, organizer }) => {
   );
 
   // Function to prepare data for submission (used by both auto-save and submit)
-  const prepareSubmitData = (finalSubmit = false) => {
-    // Get all sections in correct order (base sections with repeated sections inserted after their parent)
-    const allSectionsInOrder = getVisibleSections();
+  // const prepareSubmitData = (finalSubmit = false) => {
+  //   // Get all sections in correct order (base sections with repeated sections inserted after their parent)
+  //   const allSectionsInOrder = getVisibleSections();
 
-    const sectionsData = allSectionsInOrder.map((section) => ({
-      name: section?.text || "",
-      id: section?.id || "",
-      text: section?.text || "",
-      sectionsettings: section?.sectionsettings,
-      formElements:
-        section?.formElements?.map((question) => ({
+  //   const sectionsData = allSectionsInOrder.map((section) => ({
+  //     name: section?.text || "",
+  //     id: section?.id || "",
+  //     text: section?.text || "",
+  //     sectionsettings: section?.sectionsettings,
+  //     formElements:
+  //       section?.formElements?.map((question) => ({
+  //         type: question?.type || "",
+  //         id: question?.id || "",
+  //         sectionid: Number(section?.id) || 0, // Ensure it's a number
+  //         options:
+  //           question?.options?.map((option) => ({
+  //             id: option?.id || "",
+  //             text: option?.text || "",
+  //             selected: getOptionSelectedState(question, option, Number(section.id)),
+  //           })) || [],
+  //         text: question?.text || "",
+  //         textvalue: getQuestionTextValue(question, Number(section.id)),
+  //         questionsectionsettings: question?.questionsectionsettings,
+  //         ...(question.type === "File Upload" && {
+  //           fileMetadata: {
+  //             fileName: uploadedFiles[`${section.id}_${question.text}`] || "",
+  //           },
+  //         }),
+  //       })) || [],
+  //   }));
+
+  //   return {
+  //     sections: sectionsData,
+  //     status: finalSubmit ? "Completed" : "In Progress",
+  //     completedby: accountName,
+  //     active: true,
+  //     repeatedSections: repeatedSections,
+  //   };
+  // };
+const prepareSubmitData = (finalSubmit = false) => {
+  // Get all sections in correct order (base sections with repeated sections inserted after their parent)
+  const allSectionsInOrder = getVisibleSections();
+
+  const sectionsData = allSectionsInOrder.map((section) => ({
+    name: section?.text || "",
+    id: section?.id || "",
+    text: section?.text || "",
+    sectionsettings: section?.sectionsettings,
+    formElements:
+      section?.formElements?.map((question) => {
+        const questionData = {
           type: question?.type || "",
           id: question?.id || "",
-          sectionid: Number(section?.id) || 0, // Ensure it's a number
+          sectionid: Number(section?.id) || 0,
           options:
             question?.options?.map((option) => ({
               id: option?.id || "",
@@ -309,23 +349,42 @@ const OrganizerDialog = ({ open, handleClose, organizer }) => {
           text: question?.text || "",
           textvalue: getQuestionTextValue(question, Number(section.id)),
           questionsectionsettings: question?.questionsectionsettings,
-          ...(question.type === "File Upload" && {
-            fileMetadata: {
-              fileName: uploadedFiles[`${section.id}_${question.text}`] || "",
-            },
-          }),
-        })) || [],
-    }));
+        };
 
-    return {
-      sections: sectionsData,
-      status: finalSubmit ? "Completed" : "In Progress",
-      completedby: accountName,
-      active: true,
-      repeatedSections: repeatedSections,
-    };
+        // Add file metadata for file upload questions
+        if (question.type === "File Upload") {
+          const fileKey = `${section.id}_${question.text}`;
+          const fileInfo = uploadedFiles[fileKey];
+          
+          if (fileInfo && fileInfo.status === 'completed') {
+            questionData.fileMetadata = {
+              fileName: fileInfo.fileName,
+              filePath: fileInfo.filePath || '',
+              uploadDate: fileInfo.uploadDate || new Date().toISOString(),
+              uploadedBy: accountName || username,
+            };
+          } else if (fileInfo) {
+            // File is still pending or uploading
+            questionData.fileMetadata = {
+              fileName: fileInfo.fileName,
+              status: fileInfo.status,
+            };
+            console.log('Saving file metadata:', questionData.fileMetadata);
+          }
+        }
+
+        return questionData;
+      }) || [],
+  }));
+
+  return {
+    sections: sectionsData,
+    status: finalSubmit ? "Completed" : "In Progress",
+    completedby: accountName,
+    active: true,
+    repeatedSections: repeatedSections,
   };
-
+};
   // Auto-save whenever relevant state changes
   useEffect(() => {
     if (open && organizer?._id) {
@@ -591,69 +650,7 @@ const shouldShowSection = (section) => {
   }
 };
 
-  // const shouldShowSection = (section) => {
-  //   if (!section.sectionsettings?.conditional) return true;
-  //   const conditions = section.sectionsettings.conditions || [];
 
-  //   return conditions.every((condition) => {
-  //     if (!condition.question || !condition.answer) return false;
-
-  //     // Check in base sections
-  //     for (const key in radioValues) {
-  //       const [checkSectionId] = key.split('_');
-  //       const numericCheckSectionId = Number(checkSectionId);
-  //       // Only check base sections (not repeated ones)
-  //       if (!Object.values(repeatedSections).flat().includes(numericCheckSectionId)) {
-  //         if (
-  //           key.endsWith(`_${condition.question}`) &&
-  //           radioValues[key] === condition.answer
-  //         ) {
-  //           return true;
-  //         }
-  //       }
-  //     }
-
-  //     for (const key in checkboxValues) {
-  //       const [checkSectionId] = key.split('_');
-  //       const numericCheckSectionId = Number(checkSectionId);
-  //       if (!Object.values(repeatedSections).flat().includes(numericCheckSectionId)) {
-  //         if (
-  //           key.endsWith(`_${condition.question}`) &&
-  //           checkboxValues[key]?.[condition.answer]
-  //         ) {
-  //           return true;
-  //         }
-  //       }
-  //     }
-
-  //     for (const key in selectedDropdownValues) {
-  //       const [checkSectionId] = key.split('_');
-  //       const numericCheckSectionId = Number(checkSectionId);
-  //       if (!Object.values(repeatedSections).flat().includes(numericCheckSectionId)) {
-  //         if (
-  //           key.endsWith(`_${condition.question}`) &&
-  //           selectedDropdownValues[key] === condition.answer
-  //         ) {
-  //           return true;
-  //         }
-  //       }
-  //     }
-
-  //     for (const key in selectedYesNoValues) {
-  //       const [checkSectionId] = key.split('_');
-  //       const numericCheckSectionId = Number(checkSectionId);
-  //       if (!Object.values(repeatedSections).flat().includes(numericCheckSectionId)) {
-  //         if (
-  //           key.endsWith(`_${condition.question}`) &&
-  //           selectedYesNoValues[key] === condition.answer
-  //         ) {
-  //           return true;
-  //         }
-  //       }
-  //     }
-  //     return false;
-  //   });
-  // };
 
   // Get all visible sections including repeated ones in correct order
   const getVisibleSections = () => {
@@ -686,71 +683,6 @@ const shouldShowSection = (section) => {
   const visibleSections = getVisibleSections();
   const totalSteps = visibleSections.length;
 
-  // const shouldShowElement = (element, sectionId) => {
-  //   const settings = element.questionsectionsettings;
-  //   if (!settings?.conditional) return true;
-  //   const conditions = settings?.conditions || [];
-
-  //   for (const condition of conditions) {
-  //     const { question, answer } = condition;
-  //     if (!question || !answer) continue;
-
-  //     let conditionMet = false;
-
-  //     // Check conditions in the same section only
-  //     for (const key in radioValues) {
-  //       const [keySectionId] = key.split('_');
-  //       const numericKeySectionId = Number(keySectionId);
-  //       const numericCurrentSectionId = typeof sectionId === 'string' ? Number(sectionId) : sectionId;
-        
-  //       if (numericKeySectionId === numericCurrentSectionId && key.endsWith(`_${question}`) && radioValues[key] === answer) {
-  //         conditionMet = true;
-  //         break;
-  //       }
-  //     }
-  //     if (conditionMet) continue;
-
-  //     for (const key in checkboxValues) {
-  //       const [keySectionId] = key.split('_');
-  //       const numericKeySectionId = Number(keySectionId);
-  //       const numericCurrentSectionId = typeof sectionId === 'string' ? Number(sectionId) : sectionId;
-        
-  //       if (numericKeySectionId === numericCurrentSectionId && key.endsWith(`_${question}`) && checkboxValues[key]?.[answer]) {
-  //         conditionMet = true;
-  //         break;
-  //       }
-  //     }
-  //     if (conditionMet) continue;
-
-  //     for (const key in selectedDropdownValues) {
-  //       const [keySectionId] = key.split('_');
-  //       const numericKeySectionId = Number(keySectionId);
-  //       const numericCurrentSectionId = typeof sectionId === 'string' ? Number(sectionId) : sectionId;
-        
-  //       if (numericKeySectionId === numericCurrentSectionId && key.endsWith(`_${question}`) && selectedDropdownValues[key] === answer) {
-  //         conditionMet = true;
-  //         break;
-  //       }
-  //     }
-  //     if (conditionMet) continue;
-
-  //     for (const key in selectedYesNoValues) {
-  //       const [keySectionId] = key.split('_');
-  //       const numericKeySectionId = Number(keySectionId);
-  //       const numericCurrentSectionId = typeof sectionId === 'string' ? Number(sectionId) : sectionId;
-        
-  //       if (numericKeySectionId === numericCurrentSectionId && key.endsWith(`_${question}`) && selectedYesNoValues[key] === answer) {
-  //         conditionMet = true;
-  //         break;
-  //       }
-  //     }
-  //     if (conditionMet) continue;
-
-  //     return false;
-  //   }
-
-  //   return true;
-  // };
 const shouldShowElement = (element, sectionId) => {
   const settings = element.questionsectionsettings;
   if (!settings?.conditional) return true;
@@ -931,38 +863,69 @@ const shouldShowElement = (element, sectionId) => {
     }
   };
 
-  const getQuestionTextValue = (question, sectionId) => {
-    const numericSectionId = typeof sectionId === 'string' ? Number(sectionId) : sectionId;
-    const key = `${numericSectionId}_${question.text}`;
+  // const getQuestionTextValue = (question, sectionId) => {
+  //   const numericSectionId = typeof sectionId === 'string' ? Number(sectionId) : sectionId;
+  //   const key = `${numericSectionId}_${question.text}`;
 
-    switch (question.type) {
-      case "Free Entry":
-      case "Email":
-      case "Number":
-        return inputValues[key] || "";
-      case "Radio Buttons":
-        return radioValues[key] || "";
-      case "Checkboxes":
-        return checkboxValues[key]
-          ? Object.keys(checkboxValues[key])
-              .filter((k) => checkboxValues[key][k])
-              .join(", ")
-          : "";
-      case "Yes/No":
-        return selectedYesNoValues[key] || "";
-      case "Dropdown":
-        return selectedDropdownValues[key] || "";
-      case "Date":
-        return startDate?.toISOString() || "";
-      case "Text Editor":
-        return question.text || "";
-      case "File Upload":
-        return uploadedFiles[key] || "";
-      default:
-        return "";
-    }
-  };
+  //   switch (question.type) {
+  //     case "Free Entry":
+  //     case "Email":
+  //     case "Number":
+  //       return inputValues[key] || "";
+  //     case "Radio Buttons":
+  //       return radioValues[key] || "";
+  //     case "Checkboxes":
+  //       return checkboxValues[key]
+  //         ? Object.keys(checkboxValues[key])
+  //             .filter((k) => checkboxValues[key][k])
+  //             .join(", ")
+  //         : "";
+  //     case "Yes/No":
+  //       return selectedYesNoValues[key] || "";
+  //     case "Dropdown":
+  //       return selectedDropdownValues[key] || "";
+  //     case "Date":
+  //       return startDate?.toISOString() || "";
+  //     case "Text Editor":
+  //       return question.text || "";
+  //     case "File Upload":
+  //       return uploadedFiles[key] || "";
+  //     default:
+  //       return "";
+  //   }
+  // };
+const getQuestionTextValue = (question, sectionId) => {
+  const numericSectionId = typeof sectionId === 'string' ? Number(sectionId) : sectionId;
+  const key = `${numericSectionId}_${question.text}`;
 
+  switch (question.type) {
+    case "Free Entry":
+    case "Email":
+    case "Number":
+      return inputValues[key] || "";
+    case "Radio Buttons":
+      return radioValues[key] || "";
+    case "Checkboxes":
+      return checkboxValues[key]
+        ? Object.keys(checkboxValues[key])
+            .filter((k) => checkboxValues[key][k])
+            .join(", ")
+        : "";
+    case "Yes/No":
+      return selectedYesNoValues[key] || "";
+    case "Dropdown":
+      return selectedDropdownValues[key] || "";
+    case "Date":
+      return startDate?.toISOString() || "";
+    case "Text Editor":
+      return question.text || "";
+    case "File Upload":
+      // Return the file name for display purposes
+      return uploadedFiles[key]?.fileName || "";
+    default:
+      return "";
+  }
+};
   const getOptionSelectedState = (question, option, sectionId) => {
     const numericSectionId = typeof sectionId === 'string' ? Number(sectionId) : sectionId;
     const key = `${numericSectionId}_${question.text}`;
@@ -1042,9 +1005,26 @@ const shouldShowElement = (element, sectionId) => {
                 initialDate = dayjs(element.textvalue);
                 break;
               case "File Upload":
-                if (element.textvalue) {
-                  newUploadedFiles[key] = element.textvalue;
-                }
+                // if (element.textvalue) {
+                //   newUploadedFiles[key] = element.textvalue;
+                // }
+                  // Load from fileMetadata if available
+              if (element.fileMetadata && element.fileMetadata.fileName) {
+                newUploadedFiles[key] = {
+                  fileName: element.fileMetadata.fileName,
+                  filePath: element.fileMetadata.filePath,
+                  uploadDate: element.fileMetadata.uploadDate,
+                  uploadedBy: element.fileMetadata.uploadedBy,
+                  status: 'completed'
+                };
+                console.log('Loaded file metadata from DB:', newUploadedFiles[key]); // DEBUG LOG
+              } else if (element.textvalue) {
+                // Fallback to textvalue for backward compatibility
+                newUploadedFiles[key] = {
+                  fileName: element.textvalue,
+                  status: 'completed'
+                };
+              }
                 break;
             }
           }
@@ -1491,113 +1471,87 @@ const shouldShowElement = (element, sectionId) => {
                   </Box>
                 )}
 
+ 
                 {element.type === "File Upload" && (
-                  <Box mt={2}>
-                    <Typography
-                      variant="subtitle2"
-                      component="p"
-                      gutterBottom
-                      sx={{ fontWeight: "550" }}
-                    >
-                      {element.text}
-                       {element.questionsectionsettings?.required && (
-                        <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
-                      )}
-                    </Typography>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                      }}
-                    >
-                      <Typography
-                        variant="body1"
-                        component="label"
-                        htmlFor={`fileInput_${sectionId}_${element.id}`}
-                        sx={{
-                          cursor: isElementActive(element)
-                            ? "default"
-                            : "pointer",
-                        }}
-                      >
-                        Upload Document
-                      </Typography>
-                      <Input
-                        type="file"
-                        id={`fileInput_${sectionId}_${element.id}`}
-                        onChange={(e) => {
-                          const selectedFile = e.target.files[0];
-                          if (selectedFile) {
-                            setFile(selectedFile);
-                            setIsDocumentForm(true);
-                            const key = `${sectionId}_${element.text}`;
-                            setUploadedFiles((prev) => ({
-                              ...prev,
-                              [key]: selectedFile.name,
-                            }));
-                            setAnsweredElements((prev) => ({
-                              ...prev,
-                              [key]: true,
-                            }));
-                          }
-                        }}
-                        sx={{ display: "none" }}
-                        disabled={isElementActive(element)}
-                      />
-                    </Box>
-                    {hasError(sectionId, element.text) && (
-                      <Typography 
-                        variant="caption" 
-                        color="error" 
-                        sx={{ display: 'block', mt: 0.5, ml: 1 }}
-                      >
-                        {getErrorMessage(sectionId, element.text)}
-                      </Typography>
-                    )}
-                    {uploadedFiles[
-                      `${sectionId}_${element.text}`
-                    ] && (
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1,
-                          mt: 1,
-                        }}
-                      >
-                        <Typography variant="caption">
-                          Selected file:{" "}
-                          {
-                            uploadedFiles[
-                              `${sectionId}_${element.text}`
-                            ]
-                          }
-                        </Typography>
-                        <IconButton
-                          size="small"
-                          onClick={() => {
-                            const key = `${sectionId}_${element.text}`;
-                            setUploadedFiles((prev) => {
-                              const newState = { ...prev };
-                              delete newState[key];
-                              return newState;
-                            });
-                            setAnsweredElements((prev) => ({
-                              ...prev,
-                              [key]: false,
-                            }));
-                            const data = prepareSubmitData(false);
-                            debouncedAutoSave(data);
-                          }}
-                          disabled={isElementActive(element)}
-                        >
-                          <CloseIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    )}
-                  </Box>
-                )}
+  <Box mt={2}>
+    <Typography
+      variant="subtitle2"
+      component="p"
+      gutterBottom
+      sx={{ fontWeight: "550" }}
+    >
+      {element.text}
+      {element.questionsectionsettings?.required && (
+        <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
+      )}
+    </Typography>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 1,
+      }}
+    >
+      <Button
+        variant="outlined"
+        component="label"
+        disabled={isElementActive(element)}
+      >
+        Choose File
+        <Input
+          type="file"
+          onChange={(e) => {
+            const selectedFile = e.target.files[0];
+            if (selectedFile) {
+              setFile(selectedFile);
+              setIsDocumentForm(true);
+              const key = `${sectionId}_${element.text}`;
+              
+              // Store temporary file info until upload is complete
+              setUploadedFiles((prev) => ({
+                ...prev,
+                [key]: {
+                  fileName: selectedFile.name,
+                  file: selectedFile,
+                  status: 'pending' // pending, uploading, completed, error
+                },
+              }));
+            }
+          }}
+          sx={{ display: "none" }}
+          disabled={isElementActive(element)}
+        />
+      </Button>
+      
+      {uploadedFiles[`${sectionId}_${element.text}`] && (
+        <Typography variant="body2">
+          {uploadedFiles[`${sectionId}_${element.text}`].fileName}
+        </Typography>
+      )}
+    </Box>
+    {hasError(sectionId, element.text) && (
+      <Typography 
+        variant="caption" 
+        color="error" 
+        sx={{ display: 'block', mt: 0.5, ml: 1 }}
+      >
+        {getErrorMessage(sectionId, element.text)}
+      </Typography>
+    )}
+    
+    {/* Show upload status */}
+    {uploadedFiles[`${sectionId}_${element.text}`]?.status === 'uploading' && (
+      <Typography variant="caption" color="primary">
+        Uploading...
+      </Typography>
+    )}
+    {uploadedFiles[`${sectionId}_${element.text}`]?.status === 'completed' && (
+      <Typography variant="caption" color="success.main">
+        ✓ Uploaded successfully
+      </Typography>
+    )}
+  </Box>
+)}
               </Box>
             )
         )}
@@ -1731,7 +1685,7 @@ const shouldShowElement = (element, sectionId) => {
         </Dialog>
       </LocalizationProvider>
 
-      <FileUploadDrawer
+      {/* <FileUploadDrawer
         isOpen={isDocumentForm}
         organizer={organizer}
         onClose={() => setIsDocumentForm(false)}
@@ -1774,7 +1728,66 @@ const shouldShowElement = (element, sectionId) => {
           }
           setFile(null);
         }}
-      />
+      /> */}
+      <FileUploadDrawer
+  isOpen={isDocumentForm}
+  organizer={organizer}
+  onClose={() => setIsDocumentForm(false)}
+  file={file}
+  accountId={accountId}
+  folderTree={folderTree}
+  onUploadSuccess={(fileData) => {
+    console.log("File uploaded successfully:", fileData);
+    
+    // Find the key for the current file being uploaded
+    const key = Object.keys(uploadedFiles).find(
+      (k) => uploadedFiles[k]?.file === file
+    );
+
+    if (key) {
+      // Update the uploadedFiles state with complete file metadata
+      setUploadedFiles((prev) => ({
+        ...prev,
+        [key]: {
+          fileName: fileData.fileName,
+          filePath: fileData.filePath, // Add file path if available
+          uploadDate: new Date().toISOString(),
+          status: 'completed'
+        },
+      }));
+
+      // Mark as answered
+      setAnsweredElements((prev) => ({
+        ...prev,
+        [key]: true,
+      }));
+
+      // Trigger auto-save with the updated file metadata
+      const data = prepareSubmitData(false);
+      debouncedAutoSave(data);
+      
+      toast.success("File uploaded successfully!");
+    }
+
+    setIsDocumentForm(false);
+    setFile(null);
+  }}
+  onUploadError={(error) => {
+    console.error("File upload failed:", error);
+    const key = Object.keys(uploadedFiles).find(
+      (k) => uploadedFiles[k]?.file === file
+    );
+    if (key) {
+      setUploadedFiles((prev) => {
+        const newState = { ...prev };
+        delete newState[key];
+        return newState;
+      });
+    }
+    setFile(null);
+    toast.error("File upload failed!");
+  }}
+/>
     </>
   );
 };

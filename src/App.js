@@ -12,7 +12,7 @@ import Invoices from "./pages/Billing/Invoices";
 import PayInvoice from "./pages/Billing/PayInvoice";
 import Signup from "./login-signup/Signup";
 import Settings from "./pages/Settings";
-import ForgotPassword from "./login-signup/ForgotPassword"
+import ForgotPassword from "./login-signup/ForgotPassword";
 import ResetPassword from "./login-signup/ResetPassword";
 import UpdatePassword from "./login-signup/ActivateAccount";
 import DocsFolderTree from "./docs-management/DocsFolderTree";
@@ -21,6 +21,7 @@ const App = () => {
     <>
       <BrowserRouter basename="/client">
         <Routes>
+            <Route path="/" element={<Navigate to="/client/login" replace />} />
           <Route path="/client/login" element={<SignIn />} />
           <Route path="/client/signup" element={<Signup />} />
           <Route path="/client/forgot-password" element={<ForgotPassword />} />
@@ -30,7 +31,7 @@ const App = () => {
           />
           <Route
             // path="/client/updatepassword/:id/:token"
-              path="/client/updatepassword/:token"
+            path="/client/updatepassword/:token"
             element={<UpdatePassword />}
           />
           <Route path="/" element={<Dashboard />}>

@@ -56,29 +56,9 @@ const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedProposal(null);
-
+fetchPrprosalsAllData(accountId);
   };
-const signProposal = async (signatureData) => {
-  console.log("signatureData",signatureData)
-  try {
-    const response = await axios.patch(
-      `${PROPOSAL_API}/proposalandels/proposalaccountwise/${signatureData.proposalId}/sign`,
-      {
-        
-        signature: signatureData.signature,
-        signedAt: signatureData.signedAt,
-          signedBy:signatureData.signedBy
-      },
-      
-    );
- console.log(response)
-    return response.data;
-   
-  } catch (error) {
-    console.error('Error signing proposal:', error);
-    throw error;
-  }
-};
+
   return (
     <Box sx={{ width: "100%", maxWidth: "1700px", p: 2 }}>
       <Typography variant="h4" fontWeight={600} gutterBottom>
@@ -92,7 +72,7 @@ const signProposal = async (signatureData) => {
     <Table sx={{ minWidth: 800 }} aria-label="proposals table">
       <TableHead>
         <TableRow>
-          {["Proposal Name", "Status", "Date", "Signed"].map((label, index) => (
+          {["Proposal Name", "Status", "Date", ].map((label, index) => (
             <TableCell
               key={index}
               sx={{
@@ -170,9 +150,7 @@ const signProposal = async (signatureData) => {
               })}
             </TableCell>
 
-            <TableCell>
-              
-            </TableCell>
+           
           </TableRow>
         ))}
       </TableBody>
@@ -183,7 +161,7 @@ const signProposal = async (signatureData) => {
       
      <ProposalPreviewDialog
     open={openDialog}
-    handleClose={() => setOpenDialog(false)}
+    handleClose={handleCloseDialog}
     proposal={selectedProposal}
   />
     </Box>

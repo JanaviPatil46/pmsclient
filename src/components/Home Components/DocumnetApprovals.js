@@ -492,7 +492,7 @@ const DocumentApprovals = ({ accountId,adminUserId }) => {
               onClick={handleCancelClick}
               // onClick={() => handleAction(selectedDoc._id, "cancel")}
             >
-              Cancel
+              Disapprove
             </Button>
           </DialogActions>
         )}
