@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { useLocation,useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -38,7 +38,7 @@ const PayInvoice = () => {
   const [selectedAccountType, setSelectedAccountType] = useState(accountTypeOptions[0]);
 
 
-
+const navigate = useNavigate();
   const handleAccountHolderTypeChange = (_, value) => {
     setSelectedAccountHolderType(value);
   };
@@ -133,7 +133,7 @@ const handleConfirmPayment = async () => {
       selectedInvoices.forEach((invoice) => {
         console.log(`Invoice ${invoice.invoicenumber} - Paid: $${invoice.summary.total}, Status: Paid`);
       });
-
+navigate("/client/billing")
       // Optionally: navigate or close dialog here
     } else {
       toast.error("Payment succeeded but some invoices failed to update");

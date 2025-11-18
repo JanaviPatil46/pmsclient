@@ -1,175 +1,5 @@
 
 
-// import React, { useState, useEffect } from "react";
-// import axios from "axios";
-// import {
-//   Card,
-//   CardContent,
-//   Typography,
-//   Box,
-//   Stack,
-//   Paper,
-//   Button,
-//   Chip,
-// } from "@mui/material";
-// import DescriptionIcon from "@mui/icons-material/Description";
-
-// const DocumentApprovals = ({ accountId }) => {
-//   const [clientEmail, setClientEmail] = useState("");
-//   const [approvals, setApprovals] = useState([]);
-
-//   const ACCOUNT_API = process.env.REACT_APP_ACCOUNTS_URL;
-//   const DOCS_MANAGMENTS = process.env.REACT_APP_CLIENT_DOCS_MANAGE;
-
-//   const fetchAccountDetails = async () => {
-//     try {
-//       const res = await fetch(`${ACCOUNT_API}/accounts/accountdetails/${accountId}`);
-//       const data = await res.json();
-//       setClientEmail(data.account?.contacts?.[0]?.email || "");
-//     } catch (err) {
-//       console.error("Failed to fetch account details", err);
-//     }
-//   };
-
-//   const fetchApprovals = async () => {
-//     try {
-//       const { data } = await axios.get(
-//         // `${DOCS_MANAGMENTS}/approvals/client-approvals/${clientEmail}`
-//         `${DOCS_MANAGMENTS}/approvals/approvalList/${accountId}/pending`
-//       );
-//       setApprovals(data.pendingApprovals  || []);
-//     } catch (error) {
-//       console.error("Error fetching approvals:", error);
-//     }
-//   };
-
-//  const handleAction = async (id, action) => {
-//   try {
-//     await axios.patch(
-//       `${DOCS_MANAGMENTS}/approvals/client-approvals/${id}`,
-//       { action } // send action in body
-//     );
-//     fetchApprovals();
-//   } catch (error) {
-//     console.error(`Error ${action} approval:`, error);
-//   }
-// };
-
-
-//   useEffect(() => {
-//     if (accountId) fetchAccountDetails();
-//   }, [accountId]);
-
-//   useEffect(() => {
-//     if (clientEmail) fetchApprovals();
-//   }, [clientEmail]);
-
-//   return (
-//     <>
-//       {approvals.length > 0 && (
-//         <Box>
-//           <Stack
-//             sx={{
-//               p: 0,
-//               display: "flex",
-//               alignItems: "center",
-//               justifyContent: "space-between",
-//               flexDirection: "row",
-//             }}
-//           >
-//             <Typography
-//               component="h2"
-//               variant="subtitle2"
-//               gutterBottom
-//               sx={{ fontWeight: "600" }}
-//             >
-//               Pending Approvals ({approvals.length})
-//             </Typography>
-//           </Stack>
-
-//           <Box mt={2}>
-//             {approvals.map((doc, index) => (
-//               <Stack key={index} mb={1.5}>
-//                 <Paper
-//                   sx={{
-//                     p: 2,
-//                     borderRadius: 2,
-//                     boxShadow: 1,
-//                     transition: "all 0.3s",
-//                     cursor: "pointer",
-//                     "&:hover .approval-actions": {
-//                       opacity: 1,
-//                       visibility: "visible",
-//                     },
-//                   }}
-//                 >
-//                   <Box
-//                     sx={{
-//                       display: "flex",
-//                       justifyContent: "space-between",
-//                       alignItems: "center",
-//                     }}
-//                   >
-//                     <Box display="flex" alignItems="center" gap={1}>
-//                       <DescriptionIcon
-//                         fontSize="small"
-//                         sx={{ color: "#f0c000" }}
-//                       />
-//                       <Typography
-//                         variant="body2"
-//                         sx={{ color: "text.secondary" }}
-//                       >
-//                         {doc.filename}
-//                       </Typography>
-//                       {/* <Chip
-//                         label={doc.status}
-//                         color="warning"
-//                         size="small"
-//                         sx={{ ml: 1 }}
-//                       /> */}
-//                     </Box>
-
-//                     <Stack
-//                       direction="row"
-//                       spacing={1}
-//                       className="approval-actions"
-//                       sx={{
-//                         opacity: 0,
-//                         visibility: "hidden",
-//                         transition: "all 0.3s",
-//                       }}
-//                     >
-//                       <Button
-//                         variant="contained"
-//                         color="success"
-//                         size="small"
-//                         onClick={() => handleAction(doc._id, "approve")}
-//                       >
-//                         Approve
-//                       </Button>
-//                       <Button
-//                         variant="outlined"
-//                         color="error"
-//                         size="small"
-//                         onClick={() => handleAction(doc._id, "cancel")}
-//                       >
-//                         Cancel
-//                       </Button>
-//                     </Stack>
-//                   </Box>
-//                 </Paper>
-//               </Stack>
-//             ))}
-//           </Box>
-//         </Box>
-//       )}
-//     </>
-//   );
-// };
-
-// export default DocumentApprovals;
-
-
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -187,7 +17,7 @@ import DescriptionIcon from "@mui/icons-material/Description";
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import axios from "axios";
 import CloseIcon from '@mui/icons-material/Close';
-
+import { toast } from "material-react-toastify";
 const DocumentApprovals = ({ accountId,adminUserId }) => {
   const [clientEmail, setClientEmail] = useState(sessionStorage.getItem("email"));
   const [approvals, setApprovals] = useState([]);
@@ -198,16 +28,7 @@ const DocumentApprovals = ({ accountId,adminUserId }) => {
   const ACCOUNT_API = process.env.REACT_APP_ACCOUNTS_URL;
   const DOCS_MANAGMENTS = process.env.REACT_APP_CLIENT_DOCS_MANAGE;
 
-  // const fetchAccountDetails = async () => {
-  //   try {
-  //     const res = await fetch(`${ACCOUNT_API}/accounts/accountdetails/${accountId}`);
-  //     const data = await res.json();
-  //     setClientEmail(data.account?.contacts?.[0]?.email || "");
-  //   } catch (err) {
-  //     console.error("Failed to fetch account details", err);
-  //   }
-  // };
-
+  
   const fetchApprovals = async () => {
     try {
       const { data } = await axios.get(
@@ -222,26 +43,10 @@ const DocumentApprovals = ({ accountId,adminUserId }) => {
   const [cancelReason, setCancelReason] = useState("");
   
 
-  // const handleAction = async (id, action, reason = "") => {
-  //   try {
-  //     await axios.patch(`${DOCS_MANAGMENTS}/approvals/client-approvals/${id}`, {
-  //       action,
-  //       description: reason,
-  //       accountId,
-  //       adminUserId,
-  //     });
-  //      console.log("✅ Approval response:", res.data);
-  //     setOpenViewer(false);
-  //     setCancelDialogOpen(false);
-  //     setCancelReason("");
-  //     fetchApprovals();
-  //   } catch (error) {
-  //     console.error(`Error ${action} approval:`, error);
-  //   }
-  // };
+ 
 
     // 🔹 Frontend: Update any status (read, sign, approval)
-    const updateStatus = async (item, statusType, newValue) => {
+    const updateStatus = async (item, statusType, newValue,action) => {
       try {
         if (!item?.path) return alert("Invalid item selected");
   
@@ -264,8 +69,14 @@ const DocumentApprovals = ({ accountId,adminUserId }) => {
         const data = await res.json();
   
         if (res.ok) {
-          alert(data.message || "Status updated successfully");
+          // alert(data.message || "Status updated successfully");
           // fetchFolderTree(accountId); // refresh folder tree to reflect change
+           toast.success(
+      action === "approve"
+        ? "Document approved successfully 🎉"
+        : "Document disapproved successfully ❌"
+    );
+
         } else {
           alert(data.error || "Failed to update status");
         }
@@ -296,20 +107,6 @@ const DocumentApprovals = ({ accountId,adminUserId }) => {
 
     console.log("✅ Approval response:", res.data);
 
-    // // Optionally alert or show a toast
-    // if (res.data?.message) {
-    //   console.log("Server Message:", res.data.message);
-    // }
-
-    // // 🔹 Update status on document after approval/cancel
-    // if (selectedDoc?.path) {
-    //   const newStatus = action === "approve" ? "approvalCompleted" : "cancledApproval";
-    //   console.log("🟡 Updating document status:", newStatus);
-
-    //   await updateStatus(selectedDoc, "authStatus", newStatus);
-    // } else {
-    //   console.warn("⚠️ No path found for selectedDoc, skipping updateStatus");
-    // }
  // ✅ Extract parent folder path from fileUrl
     if (selectedDoc?.fileUrl) {
       // Remove base URL and '/uploads/accounts/'
@@ -327,7 +124,7 @@ const DocumentApprovals = ({ accountId,adminUserId }) => {
         const newStatus = action === "approve" ? "approvalCompleted" : "cancledApproval";
 
         // Call updateStatus
-        await updateStatus({ path: parentPath }, "authStatus", newStatus);
+        await updateStatus({ path: parentPath }, "authStatus", newStatus,action);
       } else {
         console.warn("⚠️ Could not extract parentPath from fileUrl:", selectedDoc.fileUrl);
       }
@@ -364,9 +161,7 @@ const DocumentApprovals = ({ accountId,adminUserId }) => {
     setSelectedDoc(null);
   };
 
-  // useEffect(() => {
-  //   if (accountId) fetchAccountDetails();
-  // }, [accountId]);
+  
 
   useEffect(() => {
     if (clientEmail) fetchApprovals();

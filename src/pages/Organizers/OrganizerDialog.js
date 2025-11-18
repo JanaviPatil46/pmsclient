@@ -1472,7 +1472,7 @@ const getQuestionTextValue = (question, sectionId) => {
                 )}
 
  
-                {element.type === "File Upload" && (
+                {/* {element.type === "File Upload" && (
   <Box mt={2}>
     <Typography
       variant="subtitle2"
@@ -1520,6 +1520,92 @@ const getQuestionTextValue = (question, sectionId) => {
           }}
           sx={{ display: "none" }}
           disabled={isElementActive(element)}
+        />
+      </Button>
+      
+      {uploadedFiles[`${sectionId}_${element.text}`] && (
+        <Typography variant="body2">
+          {uploadedFiles[`${sectionId}_${element.text}`].fileName}
+        </Typography>
+      )}
+    </Box>
+    {hasError(sectionId, element.text) && (
+      <Typography 
+        variant="caption" 
+        color="error" 
+        sx={{ display: 'block', mt: 0.5, ml: 1 }}
+      >
+        {getErrorMessage(sectionId, element.text)}
+      </Typography>
+    )}
+    
+   
+    {uploadedFiles[`${sectionId}_${element.text}`]?.status === 'uploading' && (
+      <Typography variant="caption" color="primary">
+        Uploading...
+      </Typography>
+    )}
+    {uploadedFiles[`${sectionId}_${element.text}`]?.status === 'completed' && (
+      <Typography variant="caption" color="success.main">
+        ✓ Uploaded successfully
+      </Typography>
+    )}
+  </Box>
+)} */}
+{element.type === "File Upload" && (
+  <Box mt={2}>
+    <Typography
+      variant="subtitle2"
+      component="p"
+      gutterBottom
+      sx={{ fontWeight: "550" }}
+    >
+      {element.text}
+      {element.questionsectionsettings?.required && (
+        <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
+      )}
+    </Typography>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 1,
+      }}
+    >
+      <Button
+        variant="outlined"
+        component="label"
+        disabled={
+          isElementActive(element) || 
+          uploadedFiles[`${sectionId}_${element.text}`]?.status === 'completed'
+        }
+      >
+        Choose File
+        <Input
+          type="file"
+          onChange={(e) => {
+            const selectedFile = e.target.files[0];
+            if (selectedFile) {
+              setFile(selectedFile);
+              setIsDocumentForm(true);
+              const key = `${sectionId}_${element.text}`;
+              
+              // Store temporary file info until upload is complete
+              setUploadedFiles((prev) => ({
+                ...prev,
+                [key]: {
+                  fileName: selectedFile.name,
+                  file: selectedFile,
+                  status: 'pending' // pending, uploading, completed, error
+                },
+              }));
+            }
+          }}
+          sx={{ display: "none" }}
+          disabled={
+            isElementActive(element) || 
+            uploadedFiles[`${sectionId}_${element.text}`]?.status === 'completed'
+          }
         />
       </Button>
       

@@ -35,25 +35,7 @@ const Invoices = () => {
     // Log all selected row IDs
     console.log("Selected IDs:", newSelected); // Log all selected IDs
   };
-  // useEffect(() => {
-  //   if (logindata?.user?.id) {
-  //     const id = logindata.user.id;
-  //     setLoginUserId(id);
-  //     fetchAccountId(id);
-  //   }
-  // }, [logindata]);
-  // const fetchAccountId = (id) => {
-  //   axios
-  //     .get(
-  //       `${ACCOUNT_API}/accounts/accountdetails/accountdetailslist/listbyuserid/${id}`
-  //     )
-  //     .then((response) => {
-  //       const accountId = response.data.accounts[0]._id;
-  //       setAccountName(response.data.accounts[0].accountName)
-  //       fetchidwiseData(accountId);
-  //     })
-  //     .catch((error) => console.log(error));
-  // };
+  
   const fetchidwiseData = async (accountId) => {
     try {
       const url = `${INVOICE_API}/workflow/invoices/invoice/invoicelistby/accountid/${accountId}`;
@@ -83,6 +65,9 @@ const Invoices = () => {
     },
   });
 };
+const hasPaidInvoiceSelected = BillingInvoice
+  .filter(inv => selected.includes(inv._id))
+  .some(inv => inv.invoiceStatus?.toLowerCase() === "paid");
 
   return (
     <Box
@@ -211,6 +196,7 @@ const Invoices = () => {
             size="small"
             color="primary"
             onClick={handlePayInvoice}
+             disabled={hasPaidInvoiceSelected} 
            sx={{
               backgroundColor: 'text.menu',
               color: 'primary.contrastText',
