@@ -285,46 +285,7 @@ const OrganizerDialog = ({ open, handleClose, organizer }) => {
     [organizer?._id]
   );
 
-  // Function to prepare data for submission (used by both auto-save and submit)
-  // const prepareSubmitData = (finalSubmit = false) => {
-  //   // Get all sections in correct order (base sections with repeated sections inserted after their parent)
-  //   const allSectionsInOrder = getVisibleSections();
-
-  //   const sectionsData = allSectionsInOrder.map((section) => ({
-  //     name: section?.text || "",
-  //     id: section?.id || "",
-  //     text: section?.text || "",
-  //     sectionsettings: section?.sectionsettings,
-  //     formElements:
-  //       section?.formElements?.map((question) => ({
-  //         type: question?.type || "",
-  //         id: question?.id || "",
-  //         sectionid: Number(section?.id) || 0, // Ensure it's a number
-  //         options:
-  //           question?.options?.map((option) => ({
-  //             id: option?.id || "",
-  //             text: option?.text || "",
-  //             selected: getOptionSelectedState(question, option, Number(section.id)),
-  //           })) || [],
-  //         text: question?.text || "",
-  //         textvalue: getQuestionTextValue(question, Number(section.id)),
-  //         questionsectionsettings: question?.questionsectionsettings,
-  //         ...(question.type === "File Upload" && {
-  //           fileMetadata: {
-  //             fileName: uploadedFiles[`${section.id}_${question.text}`] || "",
-  //           },
-  //         }),
-  //       })) || [],
-  //   }));
-
-  //   return {
-  //     sections: sectionsData,
-  //     status: finalSubmit ? "Completed" : "In Progress",
-  //     completedby: accountName,
-  //     active: true,
-  //     repeatedSections: repeatedSections,
-  //   };
-  // };
+ 
 const prepareSubmitData = (finalSubmit = false) => {
   // Get all sections in correct order (base sections with repeated sections inserted after their parent)
   const allSectionsInOrder = getVisibleSections();
@@ -1471,87 +1432,6 @@ const getQuestionTextValue = (question, sectionId) => {
                   </Box>
                 )}
 
- 
-                {/* {element.type === "File Upload" && (
-  <Box mt={2}>
-    <Typography
-      variant="subtitle2"
-      component="p"
-      gutterBottom
-      sx={{ fontWeight: "550" }}
-    >
-      {element.text}
-      {element.questionsectionsettings?.required && (
-        <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
-      )}
-    </Typography>
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        gap: 1,
-      }}
-    >
-      <Button
-        variant="outlined"
-        component="label"
-        disabled={isElementActive(element)}
-      >
-        Choose File
-        <Input
-          type="file"
-          onChange={(e) => {
-            const selectedFile = e.target.files[0];
-            if (selectedFile) {
-              setFile(selectedFile);
-              setIsDocumentForm(true);
-              const key = `${sectionId}_${element.text}`;
-              
-              // Store temporary file info until upload is complete
-              setUploadedFiles((prev) => ({
-                ...prev,
-                [key]: {
-                  fileName: selectedFile.name,
-                  file: selectedFile,
-                  status: 'pending' // pending, uploading, completed, error
-                },
-              }));
-            }
-          }}
-          sx={{ display: "none" }}
-          disabled={isElementActive(element)}
-        />
-      </Button>
-      
-      {uploadedFiles[`${sectionId}_${element.text}`] && (
-        <Typography variant="body2">
-          {uploadedFiles[`${sectionId}_${element.text}`].fileName}
-        </Typography>
-      )}
-    </Box>
-    {hasError(sectionId, element.text) && (
-      <Typography 
-        variant="caption" 
-        color="error" 
-        sx={{ display: 'block', mt: 0.5, ml: 1 }}
-      >
-        {getErrorMessage(sectionId, element.text)}
-      </Typography>
-    )}
-    
-   
-    {uploadedFiles[`${sectionId}_${element.text}`]?.status === 'uploading' && (
-      <Typography variant="caption" color="primary">
-        Uploading...
-      </Typography>
-    )}
-    {uploadedFiles[`${sectionId}_${element.text}`]?.status === 'completed' && (
-      <Typography variant="caption" color="success.main">
-        ✓ Uploaded successfully
-      </Typography>
-    )}
-  </Box>
-)} */}
 {element.type === "File Upload" && (
   <Box mt={2}>
     <Typography
@@ -1771,50 +1651,6 @@ const getQuestionTextValue = (question, sectionId) => {
         </Dialog>
       </LocalizationProvider>
 
-      {/* <FileUploadDrawer
-        isOpen={isDocumentForm}
-        organizer={organizer}
-        onClose={() => setIsDocumentForm(false)}
-        file={file}
-        accountId={accountId}
-        folderTree={folderTree}
-        onUploadSuccess={(fileData) => {
-          console.log("File uploaded successfully:", fileData);
-          const fileName = fileData.fileName;
-
-          const key = Object.keys(uploadedFiles).find(
-            (k) => uploadedFiles[k] === file?.name
-          );
-
-          if (key) {
-            setUploadedFiles((prev) => ({
-              ...prev,
-              [key]: fileName,
-            }));
-
-            const data = prepareSubmitData(false);
-            debouncedAutoSave(data);
-          }
-
-          // setFile(null);
-         
-          setIsDocumentForm(false);
-        }}
-        onUploadError={(error) => {
-          console.error("File upload failed:", error);
-          const key = Object.keys(uploadedFiles).find(
-            (k) => uploadedFiles[k] === file?.name
-          );
-          if (key) {
-            setUploadedFiles((prev) => {
-              const newState = { ...prev };
-              delete newState[key];
-              return newState;
-            });
-          }
-          setFile(null);
-        }}
-      /> */}
       <FileUploadDrawer
   isOpen={isDocumentForm}
   organizer={organizer}
@@ -1878,3 +1714,88 @@ const getQuestionTextValue = (question, sectionId) => {
   );
 };
 export default OrganizerDialog;
+ // Function to prepare data for submission (used by both auto-save and submit)
+  // const prepareSubmitData = (finalSubmit = false) => {
+  //   // Get all sections in correct order (base sections with repeated sections inserted after their parent)
+  //   const allSectionsInOrder = getVisibleSections();
+
+  //   const sectionsData = allSectionsInOrder.map((section) => ({
+  //     name: section?.text || "",
+  //     id: section?.id || "",
+  //     text: section?.text || "",
+  //     sectionsettings: section?.sectionsettings,
+  //     formElements:
+  //       section?.formElements?.map((question) => ({
+  //         type: question?.type || "",
+  //         id: question?.id || "",
+  //         sectionid: Number(section?.id) || 0, // Ensure it's a number
+  //         options:
+  //           question?.options?.map((option) => ({
+  //             id: option?.id || "",
+  //             text: option?.text || "",
+  //             selected: getOptionSelectedState(question, option, Number(section.id)),
+  //           })) || [],
+  //         text: question?.text || "",
+  //         textvalue: getQuestionTextValue(question, Number(section.id)),
+  //         questionsectionsettings: question?.questionsectionsettings,
+  //         ...(question.type === "File Upload" && {
+  //           fileMetadata: {
+  //             fileName: uploadedFiles[`${section.id}_${question.text}`] || "",
+  //           },
+  //         }),
+  //       })) || [],
+  //   }));
+
+  //   return {
+  //     sections: sectionsData,
+  //     status: finalSubmit ? "Completed" : "In Progress",
+  //     completedby: accountName,
+  //     active: true,
+  //     repeatedSections: repeatedSections,
+  //   };
+  // };
+  
+      {/* <FileUploadDrawer
+        isOpen={isDocumentForm}
+        organizer={organizer}
+        onClose={() => setIsDocumentForm(false)}
+        file={file}
+        accountId={accountId}
+        folderTree={folderTree}
+        onUploadSuccess={(fileData) => {
+          console.log("File uploaded successfully:", fileData);
+          const fileName = fileData.fileName;
+
+          const key = Object.keys(uploadedFiles).find(
+            (k) => uploadedFiles[k] === file?.name
+          );
+
+          if (key) {
+            setUploadedFiles((prev) => ({
+              ...prev,
+              [key]: fileName,
+            }));
+
+            const data = prepareSubmitData(false);
+            debouncedAutoSave(data);
+          }
+
+          // setFile(null);
+         
+          setIsDocumentForm(false);
+        }}
+        onUploadError={(error) => {
+          console.error("File upload failed:", error);
+          const key = Object.keys(uploadedFiles).find(
+            (k) => uploadedFiles[k] === file?.name
+          );
+          if (key) {
+            setUploadedFiles((prev) => {
+              const newState = { ...prev };
+              delete newState[key];
+              return newState;
+            });
+          }
+          setFile(null);
+        }}
+      /> */}
