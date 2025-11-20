@@ -1,230 +1,3 @@
-// // ============================
-// // 📁 Drawer: Create Folder (with highlight on selection)
-// // ============================
-
-// import React, { useState, useEffect } from "react";
-// import axios from "axios";
-
-// const drawerStyle = {
-//   position: "fixed",
-//   top: 0,
-//   right: 0,
-//   height: "100%",
-//   width: "350px",
-//   backgroundColor: "#8de066ff",
-//   boxShadow: "-2px 0 5px rgba(0,0,0,0.3)",
-//   padding: "20px",
-//   transition: "transform 0.3s ease-in-out",
-//   zIndex: 1000,
-// };
-
-// const overlayStyle = {
-//   position: "fixed",
-//   top: 0,
-//   left: 0,
-//   width: "100%",
-//   height: "100%",
-//   backgroundColor: "rgba(0,0,0,0.3)",
-//   zIndex: 999,
-// };
-
-// const MoveDrawer = ({
-//   isOpen,
-//   onClose,
-//   folderTree,
-//   fetchFolderTree,
-//   selectedFolderForMenu,
-// }) => {
-//   const [destinationPath, setDestinationPath] = useState("");
-//   const [sourcePath, setSourcePath] = useState("");
-//   const [message, setMessage] = useState("");
-
-//   const handleFolderSelect = (path) => setDestinationPath(path);
-//   useEffect(() => {
-//     // Set selected folder only when drawer opens
-//     if (isOpen && selectedFolderForMenu) {
-//       setSourcePath(selectedFolderForMenu.path);
-//     } else if (!isOpen) {
-//       setSourcePath(""); // reset internal selection when drawer closes
-//     }
-//   }, [isOpen, selectedFolderForMenu]);
-
-//   // 🔹 Function to move file/folder
-//   const handleMove = async () => {
-//     try {
-//       setMessage("");
-
-//       if (!sourcePath || !destinationPath) {
-//         setMessage("Please enter both source and destination paths.");
-//         return;
-//       }
-
-//       const res = await axios.post(
-//         "https://www.snptaxes.com/api/accountsdoc/move",
-//         {
-//           sourcePath,
-//           destinationPath,
-//         }
-//       );
-
-//       setMessage(res.data.message);
-//     } catch (err) {
-//       if (err.response) setMessage(err.response.data.error || "Move failed");
-//       else setMessage("Server not reachable");
-//     }
-//   };
-
-//   if (!isOpen) return null;
-
-//   return (
-//     <>
-//       <div style={overlayStyle} onClick={onClose}></div>
-//       <div
-//         style={{
-//           ...drawerStyle,
-//           transform: isOpen ? "translateX(0)" : "translateX(100%)",
-//         }}
-//       >
-//         <h3>📁 Move Folder / File</h3>
-
-//         <label>Source Path:</label>
-//         <input
-//           type="text"
-//           value={sourcePath}
-//           readOnly
-//           placeholder="Select from tree"
-//           style={{
-//             width: "100%",
-//             marginBottom: "10px",
-//             padding: "5px",
-//             backgroundColor: "#f9f9f9",
-//           }}
-//         />
-
-//         <label>Destination Path</label>
-//         <input
-//           type="text"
-//           value={destinationPath}
-//           onChange={(e) => setDestinationPath(e.target.value)}
-//           placeholder="Enter new folder name"
-//           style={{ width: "100%", marginBottom: "10px", padding: "5px" }}
-//         />
-
-//         <button
-//           onClick={handleMove}
-//           style={{
-//             width: "100%",
-//             padding: "10px",
-//             backgroundColor: "#0b5ed7",
-//             color: "#fff",
-//             border: "none",
-//             cursor: "pointer",
-//           }}
-//         >
-//           Move
-//         </button>
-
-//         {message && (
-//           <p style={{ marginTop: "10px", fontWeight: "bold" }}>{message}</p>
-//         )}
-
-//         <button
-//           onClick={onClose}
-//           style={{
-//             marginTop: "20px",
-//             padding: "6px 10px",
-//             backgroundColor: "#ccc",
-//             border: "none",
-//             cursor: "pointer",
-//           }}
-//         >
-//           Close
-//         </button>
-
-//         <div style={{ marginTop: "20px" }}>
-//           <>
-//             <h4>Select Parent Folder from Tree</h4>
-//             <FolderTreeSelector
-//               items={folderTree}
-//               onSelect={handleFolderSelect}
-//               selectedFolder={sourcePath}
-//             />
-//           </>
-//         </div>
-//       </div>
-//     </>
-//   );
-// };
-
-// // 🔹 Recursive Folder Selector with Highlight
-// const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
-//   const [expanded, setExpanded] = useState({});
-
-//   const toggleExpand = (path) => {
-//     setExpanded((prev) => ({ ...prev, [path]: !prev[path] }));
-//   };
-
-//   return (
-//     <ul style={{ paddingLeft: `${level * 15}px`, listStyleType: "none" }}>
-//       {items?.map((item) => {
-//         const isSelected = selectedFolder === item.path;
-
-//         return (
-//           <li
-//             key={item.path}
-//             style={{
-//               marginBottom: "4px",
-//               backgroundColor: isSelected ? "#b2d8ff" : "transparent",
-//               borderRadius: "5px",
-//               padding: "3px 5px",
-//             }}
-//           >
-//             {item.type === "folder" ? (
-//               <>
-//                 <span
-//                   style={{
-//                     cursor: "pointer",
-//                     color: isSelected ? "#0056b3" : "#0b5ed7",
-//                     fontWeight: isSelected ? "bold" : "normal",
-//                   }}
-//                   onClick={() => toggleExpand(item.path)}
-//                 >
-//                   {expanded[item.path] ? "📂" : "📁"} {item.name}
-//                 </span>
-//                 <button
-//                   onClick={() => onSelect(item.path)}
-//                   disabled={item.meta?.readOnly}
-//                   style={{
-//                     marginLeft: "10px",
-//                     padding: "2px 6px",
-//                     cursor: item.meta?.readOnly ? "not-allowed" : "pointer",
-//                     opacity: item.meta?.readOnly ? 0.5 : 1,
-//                   }}
-//                 >
-//                   Select
-//                 </button>
-
-//                 {expanded[item.path] &&
-//                   item.children &&
-//                   item.children.length > 0 && (
-//                     <FolderTreeSelector
-//                       items={item.children}
-//                       onSelect={onSelect}
-//                       selectedFolder={selectedFolder}
-//                       level={level + 1}
-//                     />
-//                   )}
-//               </>
-//             ) : null}
-//           </li>
-//         );
-//       })}
-//     </ul>
-//   );
-// };
-
-// export default MoveDrawer;
-
 // ============================
 // 📁 Drawer: Move Folder / File (MUI Version)
 // ============================
@@ -242,7 +15,8 @@ import {
   ListItemButton,
   ListItemText,
   Collapse,
-  Alert,ListItemIcon
+  Alert,
+  ListItemIcon,
 } from "@mui/material";
 import FolderIcon from "@mui/icons-material/Folder";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
@@ -286,8 +60,8 @@ const MoveDrawer = ({
       );
 
       setMessage(res.data.message);
-      toast.success('Moved Successfully')
-      onClose()
+      toast.success("Moved Successfully");
+      onClose();
       fetchFolderTree?.();
     } catch (err) {
       if (err.response) setMessage(err.response.data.error || "Move failed");
@@ -302,27 +76,22 @@ const MoveDrawer = ({
           📁 Move Folder / File
         </Typography>
 
-        {/* <TextField
-          label="Source Path"
-          value={sourcePath}
-          fullWidth
-          margin="dense"
-          InputProps={{ readOnly: true }}
-        /> */}
-
-        {/* <TextField
-          label="Destination Path"
-          value={destinationPath}
-          onChange={(e) => setDestinationPath(e.target.value)}
-          fullWidth
-          margin="dense"
-        /> */}
-
         <Button
-          variant="contained"
+          // variant="contained"
           fullWidth
-          sx={{ mt: 2 }}
+          // sx={{ mt: 2 }}
           onClick={handleMove}
+          color="primary"
+          sx={{
+            backgroundColor: "text.menu",
+            mt: 2,
+            color: "primary.contrastText",
+            "&:hover": {
+              backgroundColor: "menu.dark",
+              boxShadow: 1,
+            },
+            transition: "background-color 0.2s ease",
+          }}
         >
           Move
         </Button>
@@ -390,14 +159,19 @@ const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
                 bgcolor: isSelected ? "#b2d8ff" : "transparent",
                 borderRadius: 1,
                 mb: 0.5,
-                "&:hover": { bgcolor: "#dbefff",color:'black', },
+                "&:hover": { bgcolor: "#dbefff", color: "black" },
                 cursor: item.meta?.readOnly ? "not-allowed" : "pointer",
               }}
               onClick={() => {
                 if (!item.meta?.readOnly) onSelect(item.path);
               }}
             >
-              <ListItemIcon onClick={(e) => { e.stopPropagation(); toggleExpand(item.path); }}>
+              <ListItemIcon
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleExpand(item.path);
+                }}
+              >
                 {isExpanded ? <FolderOpenIcon /> : <FolderIcon />}
               </ListItemIcon>
               <ListItemText
@@ -408,7 +182,21 @@ const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
                 }}
               />
               {item.children?.length > 0 &&
-                (isExpanded ? <ExpandLess onClick={(e) => { e.stopPropagation(); toggleExpand(item.path); }} /> : <ExpandMore onClick={(e) => { e.stopPropagation(); toggleExpand(item.path); }} />)}
+                (isExpanded ? (
+                  <ExpandLess
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleExpand(item.path);
+                    }}
+                  />
+                ) : (
+                  <ExpandMore
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleExpand(item.path);
+                    }}
+                  />
+                ))}
             </ListItem>
 
             {item.children?.length > 0 && (
@@ -429,4 +217,3 @@ const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
 };
 
 export default MoveDrawer;
-

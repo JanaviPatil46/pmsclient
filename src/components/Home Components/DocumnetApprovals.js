@@ -46,15 +46,19 @@ const DocumentApprovals = ({ accountId,adminUserId }) => {
  
 
     // 🔹 Frontend: Update any status (read, sign, approval)
-    const updateStatus = async (item, statusType, newValue,action) => {
+    const updateStatus = async (item, statusType, newValue,action,reason = "") => {
       try {
         if (!item?.path) return alert("Invalid item selected");
   
         const body = {
           targetPath: item.path,
-          status: {
-            [statusType]: newValue, // dynamic key
-          },
+          // status: {
+          //   [statusType]: newValue, // dynamic key
+          // },
+           status: {
+        [statusType]: newValue,
+        ...(action === "cancel" && reason ? { cancelReason: reason } : {})
+      }
         };
   
         const res = await fetch(
@@ -124,7 +128,15 @@ const DocumentApprovals = ({ accountId,adminUserId }) => {
         const newStatus = action === "approve" ? "approvalCompleted" : "cancledApproval";
 
         // Call updateStatus
-        await updateStatus({ path: parentPath }, "authStatus", newStatus,action);
+        // await updateStatus({ path: parentPath }, "authStatus", newStatus,action);
+        await updateStatus(
+  { path: parentPath },
+  "authStatus",
+  newStatus,
+  action,
+  cancelReason
+);
+
       } else {
         console.warn("⚠️ Could not extract parentPath from fileUrl:", selectedDoc.fileUrl);
       }

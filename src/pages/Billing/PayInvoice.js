@@ -36,6 +36,7 @@ const PayInvoice = () => {
   const [lastName, setLastName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [selectedAccountType, setSelectedAccountType] = useState(accountTypeOptions[0]);
+const [errors, setErrors] = useState({});
 
 
 const navigate = useNavigate();
@@ -53,6 +54,40 @@ const navigate = useNavigate();
 //   };
 
 const handleConfirmPayment = async () => {
+
+    const newErrors = {};
+
+  // ===== VALIDATION =====
+  if (selectedAccountHolderType?.value === "individual") {
+    if (!firstName.trim()) newErrors.firstName = "First name is required";
+    if (!lastName.trim()) newErrors.lastName = "Last name is required";
+  }
+
+  if (selectedAccountHolderType?.value === "business") {
+    if (!companyName.trim()) newErrors.companyName = "Company name is required";
+  }
+
+  // Routing & account number validation
+  if (!routingNumber.trim()) {
+    newErrors.routingNumber = "Routing number is required";
+  } else if (!/^\d{9}$/.test(routingNumber.trim())) {
+    newErrors.routingNumber = "Routing number must be 9 digits";
+  }
+
+  if (!accountNumber.trim()) {
+    newErrors.accountNumber = "Account number is required";
+  } else if (accountNumber.trim().length < 6) {
+    newErrors.accountNumber = "Account number must be at least 6 digits";
+  }
+
+  // Check if errors exist
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors);
+    return toast.error("Please correct the highlighted errors");
+  }
+
+  // Clear previous errors
+  setErrors({});
   let method;
 
   const totalAmount = selectedInvoices.reduce((sum, row) => sum + row.summary.total, 0);
@@ -224,7 +259,7 @@ navigate("/client/billing")
 
         {selectedAccountHolderType?.value === "individual" && (
           <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-            <TextField
+            {/* <TextField
               fullWidth
               label="First Name"
               size="small"
@@ -237,19 +272,50 @@ navigate("/client/billing")
               size="small"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-            />
+            /> */}
+            <TextField
+  fullWidth
+  label="First Name"
+  size="small"
+  value={firstName}
+  error={!!errors.firstName}
+  helperText={errors.firstName}
+  onChange={(e) => setFirstName(e.target.value)}
+/>
+
+<TextField
+  fullWidth
+  label="Last Name"
+  size="small"
+  value={lastName}
+  error={!!errors.lastName}
+  helperText={errors.lastName}
+  onChange={(e) => setLastName(e.target.value)}
+/>
+
           </Box>
         )}
 
         {selectedAccountHolderType?.value === "business" && (
+          // <TextField
+          //   fullWidth
+          //   label="Company Name"
+          //   size="small"
+          //   value={companyName}
+          //   onChange={(e) => setCompanyName(e.target.value)}
+          //   sx={{ mt: 2 }}
+          // />
           <TextField
-            fullWidth
-            label="Company Name"
-            size="small"
-            value={companyName}
-            onChange={(e) => setCompanyName(e.target.value)}
-            sx={{ mt: 2 }}
-          />
+  fullWidth
+  label="Company Name"
+  size="small"
+  value={companyName}
+  error={!!errors.companyName}
+  helperText={errors.companyName}
+  onChange={(e) => setCompanyName(e.target.value)}
+  sx={{ mt: 2 }}
+/>
+
         )}
 
         <InputLabel sx={{ mt: 2 }}>Account Type</InputLabel>

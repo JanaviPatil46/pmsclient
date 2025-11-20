@@ -1,235 +1,4 @@
-// // ============================
-// // 📁 Drawer: Create Folder (with highlight on selection)
-// // ============================
 
-// import React, { useState, useEffect } from "react";
-// import axios from "axios";
-
-// const drawerStyle = {
-//   position: "fixed",
-//   top: 0,
-//   right: 0,
-//   height: "100%",
-//   width: "350px",
-//   backgroundColor: "#8de066ff",
-//   boxShadow: "-2px 0 5px rgba(0,0,0,0.3)",
-//   padding: "20px",
-//   transition: "transform 0.3s ease-in-out",
-//   zIndex: 1000,
-// };
-
-// const overlayStyle = {
-//   position: "fixed",
-//   top: 0,
-//   left: 0,
-//   width: "100%",
-//   height: "100%",
-//   backgroundColor: "rgba(0,0,0,0.3)",
-//   zIndex: 999,
-// };
-
-// const CreateFolderDrawer = ({
-//   isOpen,
-//   onClose,
-//   folderTree,
-//   fetchFolderTree,
-//   selectedFolderForMenu,
-// }) => {
-//   const [folderName, setFolderName] = useState("");
-//   const [selectedFolder, setSelectedFolder] = useState("");
-//   const [message, setMessage] = useState("");
-
-//   const handleFolderSelect = (path) => setSelectedFolder(path);
-//   useEffect(() => {
-//     // Set selected folder only when drawer opens
-//     if (isOpen && selectedFolderForMenu) {
-//       setSelectedFolder(selectedFolderForMenu.path);
-//     } else if (!isOpen) {
-//       setSelectedFolder(""); // reset internal selection when drawer closes
-//     }
-//   }, [isOpen, selectedFolderForMenu]);
-
-//   // ✅ Create folder function
-//   const handleCreateFolder = async () => {
-//     if (!folderName) {
-//       setMessage("⚠️ Folder name is required!");
-//       return;
-//     }
-
-//     try {
-//       const res = await axios.post(
-//         "https://www.snptaxes.com/api/accountsdoc/folder",
-//         {
-//           name: folderName,
-//           parentPath: selectedFolder || "",
-//         }
-//       );
-
-//       setMessage(`✅ Folder created: ${res.data.metaData.name}`);
-//       setFolderName("");
-//       fetchFolderTree();
-//     } catch (err) {
-//       console.error(err);
-//       setMessage(
-//         `❌ Error creating folder: ${
-//           err.response?.data?.error || "Server Error"
-//         }`
-//       );
-//     }
-//   };
-
-//   if (!isOpen) return null;
-
-//   return (
-//     <>
-//       <div style={overlayStyle} onClick={onClose}></div>
-//       <div
-//         style={{
-//           ...drawerStyle,
-//           transform: isOpen ? "translateX(0)" : "translateX(100%)",
-//         }}
-//       >
-//         <h3>📁 Create New Folder</h3>
-
-//         <label>Folder Name:</label>
-//         <input
-//           type="text"
-//           value={folderName}
-//           onChange={(e) => setFolderName(e.target.value)}
-//           placeholder="Enter new folder name"
-//           style={{ width: "100%", marginBottom: "10px", padding: "5px" }}
-//         />
-
-//         <label>Parent Folder Path:</label>
-//         <input
-//           type="text"
-//           value={selectedFolder}
-//           readOnly
-//           placeholder="Select from tree"
-//           style={{
-//             width: "100%",
-//             marginBottom: "10px",
-//             padding: "5px",
-//             backgroundColor: "#f9f9f9",
-//           }}
-//         />
-
-//         <button
-//           onClick={handleCreateFolder}
-//           style={{
-//             width: "100%",
-//             padding: "10px",
-//             backgroundColor: "#0b5ed7",
-//             color: "#fff",
-//             border: "none",
-//             cursor: "pointer",
-//           }}
-//         >
-//           Create Folder
-//         </button>
-
-//         {message && (
-//           <p style={{ marginTop: "10px", fontWeight: "bold" }}>{message}</p>
-//         )}
-
-//         <button
-//           onClick={onClose}
-//           style={{
-//             marginTop: "20px",
-//             padding: "6px 10px",
-//             backgroundColor: "#ccc",
-//             border: "none",
-//             cursor: "pointer",
-//           }}
-//         >
-//           Close
-//         </button>
-
-//         <div style={{ marginTop: "20px" }}>
-//           {!selectedFolder && ( // ✅ Show tree only if no folder is pre-selected
-//             <>
-//               <h4>Select Parent Folder from Tree</h4>
-//               <FolderTreeSelector
-//                 items={folderTree}
-//                 onSelect={handleFolderSelect}
-//                 selectedFolder={selectedFolder}
-//               />
-//             </>
-//           )}
-//         </div>
-//       </div>
-//     </>
-//   );
-// };
-
-// // 🔹 Recursive Folder Selector with Highlight
-// const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
-//   const [expanded, setExpanded] = useState({});
-
-//   const toggleExpand = (path) => {
-//     setExpanded((prev) => ({ ...prev, [path]: !prev[path] }));
-//   };
-
-//   return (
-//     <ul style={{ paddingLeft: `${level * 15}px`, listStyleType: "none" }}>
-//       {items?.map((item) => {
-//         const isSelected = selectedFolder === item.path;
-
-//         return (
-//           <li
-//             key={item.path}
-//             style={{
-//               marginBottom: "4px",
-//               backgroundColor: isSelected ? "#b2d8ff" : "transparent",
-//               borderRadius: "5px",
-//               padding: "3px 5px",
-//             }}
-//           >
-//             {item.type === "folder" ? (
-//               <>
-//                 <span
-//                   style={{
-//                     cursor: "pointer",
-//                     color: isSelected ? "#0056b3" : "#0b5ed7",
-//                     fontWeight: isSelected ? "bold" : "normal",
-//                   }}
-//                   onClick={() => toggleExpand(item.path)}
-//                 >
-//                   {expanded[item.path] ? "📂" : "📁"} {item.name}
-//                 </span>
-//                 <button
-//                   onClick={() => onSelect(item.path)}
-//                   disabled={item.meta?.readOnly}
-//                   style={{
-//                     marginLeft: "10px",
-//                     padding: "2px 6px",
-//                     cursor: item.meta?.readOnly ? "not-allowed" : "pointer",
-//                     opacity: item.meta?.readOnly ? 0.5 : 1,
-//                   }}
-//                 >
-//                   Select
-//                 </button>
-
-//                 {expanded[item.path] &&
-//                   item.children &&
-//                   item.children.length > 0 && (
-//                     <FolderTreeSelector
-//                       items={item.children}
-//                       onSelect={onSelect}
-//                       selectedFolder={selectedFolder}
-//                       level={level + 1}
-//                     />
-//                   )}
-//               </>
-//             ) : null}
-//           </li>
-//         );
-//       })}
-//     </ul>
-//   );
-// };
-
-// export default CreateFolderDrawer;
 
 // ============================
 // 📁 Drawer: Create Folder (MUI version)
@@ -328,11 +97,20 @@ console.log("res",res)
        
 
         <Button
-          variant="contained"
+          // variant="contained"
           color="primary"
           onClick={handleCreateFolder}
           fullWidth
-          sx={{ mt: 2 }}
+           sx={{
+              backgroundColor: 'text.menu',
+              mt:2,
+              color: 'primary.contrastText',
+              '&:hover': {
+                backgroundColor: 'menu.dark',
+                boxShadow: 1,
+              },
+              transition: 'background-color 0.2s ease'
+            }}
         >
           Create Folder
         </Button>

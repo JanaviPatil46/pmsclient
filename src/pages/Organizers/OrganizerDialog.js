@@ -796,6 +796,13 @@ const shouldShowElement = (element, sectionId) => {
       myHeaders.append("Content-Type", "application/json");
 
       const data = prepareSubmitData(true);
+       // Determine if this is a final submission that should seal the organizer
+    const isFinalSubmission = data.status === "Completed";
+    
+    // Add issealed flag to the data when completing
+    if (isFinalSubmission) {
+      data.issealed = true;
+    }
       const endpoint =
         data.status === "Completed"
           ? `${ORGANIZER_TEMP_API}/workflow/orgaccwise/organizeraccountwise/completeandnotify/${organizer._id}`
@@ -814,8 +821,20 @@ const shouldShowElement = (element, sectionId) => {
         throw new Error(result.message || "Failed to update organizer");
       }
 
-      toast.success("Organizer updated successfully");
+      // toast.success("Organizer updated successfully");
+        // If this was a final submission, show success message and close
+    if (isFinalSubmission) {
+      toast.success("Organizer completed and sealed successfully!");
+      
+      // Update the local organizer state to reflect it's sealed
+      organizer.issealed = true;
+      
       handleClose();
+    } else {
+      toast.success("Organizer saved successfully");
+      handleClose();
+    }
+      // handleClose();
     } catch (error) {
       console.error("Error submitting organizer:", error);
       toast.error(
@@ -824,37 +843,6 @@ const shouldShowElement = (element, sectionId) => {
     }
   };
 
-  // const getQuestionTextValue = (question, sectionId) => {
-  //   const numericSectionId = typeof sectionId === 'string' ? Number(sectionId) : sectionId;
-  //   const key = `${numericSectionId}_${question.text}`;
-
-  //   switch (question.type) {
-  //     case "Free Entry":
-  //     case "Email":
-  //     case "Number":
-  //       return inputValues[key] || "";
-  //     case "Radio Buttons":
-  //       return radioValues[key] || "";
-  //     case "Checkboxes":
-  //       return checkboxValues[key]
-  //         ? Object.keys(checkboxValues[key])
-  //             .filter((k) => checkboxValues[key][k])
-  //             .join(", ")
-  //         : "";
-  //     case "Yes/No":
-  //       return selectedYesNoValues[key] || "";
-  //     case "Dropdown":
-  //       return selectedDropdownValues[key] || "";
-  //     case "Date":
-  //       return startDate?.toISOString() || "";
-  //     case "Text Editor":
-  //       return question.text || "";
-  //     case "File Upload":
-  //       return uploadedFiles[key] || "";
-  //     default:
-  //       return "";
-  //   }
-  // };
 const getQuestionTextValue = (question, sectionId) => {
   const numericSectionId = typeof sectionId === 'string' ? Number(sectionId) : sectionId;
   const key = `${numericSectionId}_${question.text}`;
@@ -1626,7 +1614,15 @@ const getQuestionTextValue = (question, sectionId) => {
                   )}
 
                   {activeStep < totalSteps - 1 ? (
-                    <Button onClick={handleNext} variant="contained">
+                    <Button onClick={handleNext} color="primary"  sx={{
+              backgroundColor: 'text.menu',
+              color: 'primary.contrastText',
+              '&:hover': {
+                backgroundColor: 'menu.dark',
+                boxShadow: 1,
+              },
+              transition: 'background-color 0.2s ease'
+            }}>
                       Next{" "}
                       <ArrowForwardIcon
                         fontSize="small"
@@ -1634,7 +1630,15 @@ const getQuestionTextValue = (question, sectionId) => {
                       />
                     </Button>
                   ) : (
-                    <Button variant="contained" onClick={handleSubmit}>
+                    <Button  onClick={handleSubmit} color="primary"  sx={{
+              backgroundColor: 'text.menu',
+              color: 'primary.contrastText',
+              '&:hover': {
+                backgroundColor: 'menu.dark',
+                boxShadow: 1,
+              },
+              transition: 'background-color 0.2s ease'
+            }}>
                       Submit
                     </Button>
                   )}
@@ -1714,88 +1718,3 @@ const getQuestionTextValue = (question, sectionId) => {
   );
 };
 export default OrganizerDialog;
- // Function to prepare data for submission (used by both auto-save and submit)
-  // const prepareSubmitData = (finalSubmit = false) => {
-  //   // Get all sections in correct order (base sections with repeated sections inserted after their parent)
-  //   const allSectionsInOrder = getVisibleSections();
-
-  //   const sectionsData = allSectionsInOrder.map((section) => ({
-  //     name: section?.text || "",
-  //     id: section?.id || "",
-  //     text: section?.text || "",
-  //     sectionsettings: section?.sectionsettings,
-  //     formElements:
-  //       section?.formElements?.map((question) => ({
-  //         type: question?.type || "",
-  //         id: question?.id || "",
-  //         sectionid: Number(section?.id) || 0, // Ensure it's a number
-  //         options:
-  //           question?.options?.map((option) => ({
-  //             id: option?.id || "",
-  //             text: option?.text || "",
-  //             selected: getOptionSelectedState(question, option, Number(section.id)),
-  //           })) || [],
-  //         text: question?.text || "",
-  //         textvalue: getQuestionTextValue(question, Number(section.id)),
-  //         questionsectionsettings: question?.questionsectionsettings,
-  //         ...(question.type === "File Upload" && {
-  //           fileMetadata: {
-  //             fileName: uploadedFiles[`${section.id}_${question.text}`] || "",
-  //           },
-  //         }),
-  //       })) || [],
-  //   }));
-
-  //   return {
-  //     sections: sectionsData,
-  //     status: finalSubmit ? "Completed" : "In Progress",
-  //     completedby: accountName,
-  //     active: true,
-  //     repeatedSections: repeatedSections,
-  //   };
-  // };
-  
-      {/* <FileUploadDrawer
-        isOpen={isDocumentForm}
-        organizer={organizer}
-        onClose={() => setIsDocumentForm(false)}
-        file={file}
-        accountId={accountId}
-        folderTree={folderTree}
-        onUploadSuccess={(fileData) => {
-          console.log("File uploaded successfully:", fileData);
-          const fileName = fileData.fileName;
-
-          const key = Object.keys(uploadedFiles).find(
-            (k) => uploadedFiles[k] === file?.name
-          );
-
-          if (key) {
-            setUploadedFiles((prev) => ({
-              ...prev,
-              [key]: fileName,
-            }));
-
-            const data = prepareSubmitData(false);
-            debouncedAutoSave(data);
-          }
-
-          // setFile(null);
-         
-          setIsDocumentForm(false);
-        }}
-        onUploadError={(error) => {
-          console.error("File upload failed:", error);
-          const key = Object.keys(uploadedFiles).find(
-            (k) => uploadedFiles[k] === file?.name
-          );
-          if (key) {
-            setUploadedFiles((prev) => {
-              const newState = { ...prev };
-              delete newState[key];
-              return newState;
-            });
-          }
-          setFile(null);
-        }}
-      /> */}
