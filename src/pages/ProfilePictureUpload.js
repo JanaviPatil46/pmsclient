@@ -1,10 +1,11 @@
 
-import React, { useState,useEffect } from 'react';
+
+
+import React, { useState, useEffect } from 'react';
 import { 
   Avatar,
   Button,
   CircularProgress,
-  IconButton,
   Box,
   Typography
 } from '@mui/material';
@@ -12,32 +13,26 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import EditIcon from '@mui/icons-material/Edit';
 import axios from 'axios';
 import { toast } from 'material-react-toastify';
-// import { useSnackbar } from 'notistack';
 
-const ProfilePictureUpload = ({ userId, currentImage, onUploadSuccess }) => {
-  const LOGIN_API = process.env.REACT_APP_USER_LOGIN
+const ProfilePictureUpload = ({ accountId, currentImage, onUploadSuccess }) => {
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(currentImage);
   const [isUploading, setIsUploading] = useState(false);
-console.log("currentImage",currentImage)
- // Transform the currentImage URL when component mounts or currentImage changes
+console.log("Current Image:", currentImage);
+console.log("Preview Image:", preview);
+  // Update preview when currentImage changes
   useEffect(() => {
     if (currentImage) {
-      // Replace 'uploads/' with 'profilepicture/' in the path
-      const transformedUrl = currentImage.replace('uploads/', 'profilepicture/');
-      setPreview(`${LOGIN_API}/${transformedUrl}`);
+      setPreview(`https://www.snptaxes.com/${currentImage}`);
     }
   }, [currentImage]);
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setImage(file);
-      
-      // Create preview
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result);
-      };
+      reader.onloadend = () => setPreview(reader.result);
       reader.readAsDataURL(file);
     }
   };
@@ -53,26 +48,25 @@ console.log("currentImage",currentImage)
 
     try {
       setIsUploading(true);
-      const response = await axios.post(
-        `${LOGIN_API}/common/${userId}/profile-picture`,
+      await axios.patch(
+        `https://www.snptaxes.com/api/accounts/${accountId}/profile-picture`,
         formData,
         {
           headers: {
             'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
         }
       );
 
       toast.success('Profile picture updated successfully');
-      if (onUploadSuccess) {
-        onUploadSuccess(response.data.profilePicture);
-      }
+      if (onUploadSuccess) onUploadSuccess(); // <-- Call refetch
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error(error.response?.data?.error || 'Failed to upload profile picture');
+      toast.error(error.response?.data?.message || 'Failed to upload profile picture');
     } finally {
       setIsUploading(false);
+      setImage(null);
     }
   };
 
@@ -81,11 +75,7 @@ console.log("currentImage",currentImage)
       <Box sx={{ position: 'relative' }}>
         <Avatar
           src={preview || currentImage}
-          sx={{ 
-            width: 120, 
-            height: 120,
-            border: '2px solid #eee'
-          }}
+          sx={{ width: 120, height: 120, border: '2px solid #eee' }}
         />
         <input
           accept="image/*"
@@ -96,23 +86,19 @@ console.log("currentImage",currentImage)
         />
         <label htmlFor="profile-picture-upload">
           <Box
-            // color="primary"
-            aria-label="upload picture"
             component="span"
             sx={{
               position: 'absolute',
               bottom: 0,
               right: 0,
-              borderRadius:'10px',
-              cursor:'pointer',
-              padding:'6px 8px',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              padding: '6px 8px',
               backgroundColor: 'primary.main',
-              '&:hover': {
-                backgroundColor: 'primary.dark',
-              }
+              '&:hover': { backgroundColor: 'primary.dark' },
             }}
           >
-            <EditIcon sx={{ color: 'white',}} fontSize='small' />
+            <EditIcon sx={{ color: 'white' }} fontSize="small" />
           </Box>
         </label>
       </Box>
@@ -122,15 +108,25 @@ console.log("currentImage",currentImage)
           <Typography variant="body2" sx={{ mt: 1 }}>
             {image.name} ({Math.round(image.size / 1024)} KB)
           </Typography>
-          
+
           <Button
-            variant="contained"
+            // variant="contained"
             color="primary"
             startIcon={<CloudUploadIcon />}
             onClick={handleUpload}
             disabled={isUploading}
             fullWidth
-            sx={{ mt: 2 }}
+            // sx={{ mt: 2 }}
+            sx={{
+              backgroundColor: 'text.menu',
+              mt: 2,
+              color: 'primary.contrastText',
+              '&:hover': {
+                backgroundColor: 'menu.dark',
+                boxShadow: 1,
+              },
+              transition: 'background-color 0.2s ease'
+            }}
           >
             {isUploading ? (
               <>

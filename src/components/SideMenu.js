@@ -23,6 +23,7 @@ import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { toast } from "material-react-toastify";
 import MenuButton from "./MenuButton";
+import PersonIcon from "@mui/icons-material/Person";
 import SwitchAccountIcon from "@mui/icons-material/SwitchAccount";
 // import Logo from "../Images/snplogo.png";
 import Logo from "../Images/snplogo-removebg-preview.png";
@@ -60,10 +61,10 @@ export default function SideMenu() {
   };
   const navigate = useNavigate();
 
-  const [accounts, setAccounts] = useState(() => {
-    const savedAccounts = sessionStorage.getItem("accounts");
-    return savedAccounts ? JSON.parse(savedAccounts) : [];
-  });
+  // const [accounts, setAccounts] = useState(() => {
+  //   const savedAccounts = sessionStorage.getItem("accounts");
+  //   return savedAccounts ? JSON.parse(savedAccounts) : [];
+  // });
   const [selectedAccount, setSelectedAccount] = useState(
     sessionStorage.getItem("accountId")
   );
@@ -210,12 +211,23 @@ export default function SideMenu() {
             borderColor: "divider",
           }}
         >
-          <Avatar
+          {/* <Avatar
             sx={{ width: 36, height: 36 }}
             alt={accountInfo?.accountName || "Account"}
-            // src={profilePicture}
-          />
-
+         src={`https://www.snptaxes.com/${accountInfo?.profilePicture}`}
+          /> */}
+<Avatar
+  sx={{ width: 36, height: 36, bgcolor: "grey.300", color: "grey.700" }}
+  alt={accountInfo?.accountName || "Account"}
+  src={
+    accountInfo?.profilePicture
+      ? `https://www.snptaxes.com/${accountInfo.profilePicture}`
+      : undefined
+  }
+>
+  {/* Fallback icon when no profile picture */}
+  {!accountInfo?.profilePicture && <PersonIcon />}
+</Avatar>
           <Box sx={{ mr: "auto" }}>
             {/* ✅ Account Info Section */}
             {accountInfo ? (
@@ -252,11 +264,19 @@ export default function SideMenu() {
             }
             placement="right"
           >
+            
             <Avatar
-              sx={{ width: 36, height: 36, mx: "auto" }}
-              alt={accountInfo?.accountName || "Account"}
-              // src={profilePicture}
-            />
+  sx={{ width: 36, height: 36, bgcolor: "grey.300", color: "grey.700" }}
+  alt={accountInfo?.accountName || "Account"}
+  src={
+    accountInfo?.profilePicture
+      ? `https://www.snptaxes.com/${accountInfo.profilePicture}`
+      : undefined
+  }
+>
+  {/* Fallback icon when no profile picture */}
+  {!accountInfo?.profilePicture && <PersonIcon />}
+</Avatar>
           </Tooltip>
         </Box>
       )}
