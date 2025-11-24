@@ -16,10 +16,12 @@ import ForgotPassword from "./login-signup/ForgotPassword";
 import ResetPassword from "./login-signup/ResetPassword";
 import UpdatePassword from "./login-signup/ActivateAccount";
 import DocsFolderTree from "./docs-management/DocsFolderTree";
+import AutoLogoutHandler from "./login-signup/AutoLogoutHandler";
 const App = () => {
   return (
     <>
       <BrowserRouter basename="/client">
+       {/* <AutoLogoutHandler /> */}
         <Routes>
             <Route path="/" element={<Navigate to="/client/login" replace />} />
           <Route path="/client/login" element={<SignIn />} />

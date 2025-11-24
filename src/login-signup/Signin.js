@@ -1,9 +1,7 @@
-
-
 import * as React from "react";
-import { useState } from "react";
+import { useState ,useEffect } from "react";
 import Box from "@mui/material/Box";
-import {Select} from "@mui/material";
+import { Select } from "@mui/material";
 import Button from "@mui/material/Button";
 import CssBaseline from "@mui/material/CssBaseline";
 import Divider from "@mui/material/Divider";
@@ -16,9 +14,16 @@ import Stack from "@mui/material/Stack";
 import MuiCard from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
 import { toast } from "material-react-toastify";
-import { InputAdornment, IconButton, Fade, Menu, MenuItem } from "@mui/material";
+import {
+  InputAdornment,
+  IconButton,
+  Fade,
+  Menu,
+  MenuItem,
+} from "@mui/material";
 
 import axios from "axios";
+import {jwtDecode} from "jwt-decode";
 import AppTheme from "../shared-theme/AppTheme";
 import ColorModeSelect from "../shared-theme/ColorModeSelect";
 
@@ -69,263 +74,55 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
   },
 }));
 
+// =====================================
+// AUTO LOGOUT FUNCTION
+// =====================================
+// =====================================
+// AUTO LOGOUT USING JWT EXPIRY (4 MIN)
+// =====================================
+const setupAutoLogout = (token, logoutFunc) => {
+  try {
+    const decoded = jwtDecode(token);
+    const expiresAt = decoded.exp * 1000; // convert to ms
+    const now = Date.now();
 
-// export default function SignIn(props) {
-//   const navigate = useNavigate();
+    if (expiresAt <= now) {
+      logoutFunc();
+      return;
+    }
 
-//   const [emailError, setEmailError] = React.useState(false);
-//   const [emailErrorMessage, setEmailErrorMessage] = React.useState("");
-//   const [passwordError, setPasswordError] = React.useState(false);
-//   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
-  
-//   const [inpval, setInpval] = useState({
-//     email: "",
-//     password: "",
-//     showPassword: false,
-//     passwordError: false,
-//     passwordErrorMessage: "",
-//   });
+    const remaining = expiresAt - now;
 
-//   const handleChange = (prop) => (event) => {
-//     setInpval({ ...inpval, [prop]: event.target.value });
-//   };
+    // Auto-logout timer
+    setTimeout(() => {
+      logoutFunc();
+    }, remaining);
 
-//   const handleClickShowPassword = () => {
-//     setInpval({
-//       ...inpval,
-//       showPassword: !inpval.showPassword,
-//     });
-//   };
+  } catch (err) {
+    logoutFunc();
+  }
+};
 
-//   const handleMouseDownPassword = (event) => {
-//     event.preventDefault();
-//   };
 
-//   const setVal = (e) => {
-//     const { name, value } = e.target;
-//     setInpval(() => {
-//       return {
-//         ...inpval,
-//         [name]: value,
-//       };
-//     });
-//   };
+const logoutUser = (navigate) => {
+  sessionStorage.clear();
+  toast.info("Session expired. Please login again.");
+  navigate("/client/login");
+};
 
-//   const LOGIN_API = process.env.REACT_APP_USER_LOGIN;
+// axios global logout on 401
+axios.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.response?.status === 401) {
+      sessionStorage.clear();
+      window.location.href = "/client/login"; // force redirect
+    }
+    return Promise.reject(err);
+  }
+);
 
-//   const validateInputs = () => {
-//     const email = document.getElementById("email");
-//     const password = document.getElementById("password");
 
-//     let isValid = true;
-
-//     if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
-//       setEmailError(true);
-//       setEmailErrorMessage("Please enter a valid email address.");
-//       isValid = false;
-//     } else {
-//       setEmailError(false);
-//       setEmailErrorMessage("");
-//     }
-
-//     if (!password.value || password.value.length < 6) {
-//       setPasswordError(true);
-//       setPasswordErrorMessage("Password must be at least 6 characters long.");
-//       isValid = false;
-//     } else {
-//       setPasswordError(false);
-//       setPasswordErrorMessage("");
-//     }
-
-//     return isValid;
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     const { email, password } = inpval;
-//     const expiryTime = 8 * 60 * 60;
-
-//     // Input validation
-//     if (!email) {
-//       toast.error("Email is required!");
-//       return;
-//     } else if (!email.includes("@")) {
-//       toast.error("Invalid email format!");
-//       return;
-//     }
-
-//     if (!password) {
-//       toast.error("Password is required!");
-//       return;
-//     } else if (password.length < 6) {
-//       toast.error("Password must be at least 6 characters long!");
-//       return;
-//     }
-
-//     try {
-//       const loginUrl = `${LOGIN_API}/common/clientlogin/generatetokenforclient`;
-//       const loginPayload = { 
-//         email, 
-//         password, 
-//         expiryTime
-//       };
-
-//       const loginResponse = await fetch(loginUrl, {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify(loginPayload),
-//       });
-
-//       console.log("Response status:", loginResponse.status);
-      
-//       const loginResult = await loginResponse.json();
-//       console.log("Full response:", loginResult);
-
-//       if (loginResult.status === 200) {
-//         console.log("Login successful, token received");
-//         sessionStorage.setItem("clientdatatoken", loginResult.result.token);
-//         Cookies.set("clientuserToken", loginResult.result.token);
-
-//          // Store only the email for potential user selection in dashboard
-//         sessionStorage.setItem("pendingUserEmail", email);
-//         navigate("/client/client/home");
-//         toast.success("Login Successful");
-//         setInpval({ ...inpval, email: "", password: "" });
-//       } else {
-//         console.error("Login failed with message:", loginResult.message);
-//         toast.error(loginResult.message || "Login failed");
-//       }
-//     } catch (error) {
-//       console.group("Login Error");
-//       console.error("Error object:", error);
-//       console.error("Error message:", error.message);
-//       console.error("Stack trace:", error.stack);
-//       console.groupEnd();
-//       toast.error("An error occurred. Please try again.");
-//     }
-//   };
-
-//   return (
-//     <AppTheme {...props}>
-//       <CssBaseline enableColorScheme />
-//       <SignInContainer direction="column" justifyContent="space-between">
-//         <ColorModeSelect
-//           sx={{ position: "fixed", top: "1rem", right: "1rem" }}
-//         />
-//         <Card variant="outlined">
-//           <Typography
-//             component="h1"
-//             variant="h4"
-//             sx={{ width: "100%", fontSize: "clamp(2rem, 10vw, 2.15rem)" }}
-//           >
-//             Sign in
-//           </Typography>
-//           <Box
-//             component="form"
-//             onSubmit={handleSubmit}
-//             noValidate
-//             sx={{
-//               display: "flex",
-//               flexDirection: "column",
-//               width: "100%",
-//               gap: 2,
-//             }}
-//           >
-//             <FormControl>
-//               <FormLabel htmlFor="email">Email</FormLabel>
-//               <TextField
-//                 error={emailError}
-//                 helperText={emailErrorMessage}
-//                 id="email"
-//                 type="email"
-//                 name="email"
-//                 placeholder="your@email.com"
-//                 autoComplete="email"
-//                 autoFocus
-//                 required
-//                 fullWidth
-//                 variant="outlined"
-//                 color={emailError ? "error" : "primary"}
-//                 value={inpval.email}
-//                 onChange={setVal}
-//               />
-//             </FormControl>
-
-//             <FormControl>
-//               <FormLabel htmlFor="password">Password</FormLabel>
-//               <TextField
-//                 value={inpval.password}
-//                 onChange={handleChange("password")}
-//                 error={inpval.passwordError}
-//                 helperText={inpval.passwordErrorMessage}
-//                 name="password"
-//                 placeholder="••••••"
-//                 type={inpval.showPassword ? "text" : "password"}
-//                 id="password"
-//                 autoComplete="current-password"
-//                 required
-//                 fullWidth
-//                 variant="outlined"
-//                 color={inpval.passwordError ? "error" : "primary"}
-//                 InputProps={{
-//                   endAdornment: (
-//                     <InputAdornment position="end">
-//                       <Fade in={inpval.password.length > 0}>
-//                         <IconButton
-//                           aria-label="toggle password visibility"
-//                           onClick={handleClickShowPassword}
-//                           onMouseDown={handleMouseDownPassword}
-//                           edge="end"
-//                         >
-//                           {inpval.showPassword ? (
-//                             <VisibilityOff />
-//                           ) : (
-//                             <Visibility />
-//                           )}
-//                         </IconButton>
-//                       </Fade>
-//                     </InputAdornment>
-//                   ),
-//                 }}
-//               />
-//             </FormControl>
-
-//             <Button
-//               type="submit"
-//               fullWidth
-//               variant="contained"
-//               onClick={validateInputs}
-//             >
-//               Sign in
-//             </Button>
-//             <Link
-//              component={RouterLink}
-//               to="/client/forgotpass"
-//               variant="body2"
-//               sx={{ alignSelf: "center" }}
-//             >
-//               Forgot your password?
-//             </Link>
-//           </Box>
-//           <Divider>or</Divider>
-//           <Typography sx={{ textAlign: "center" }}>
-//             Don&apos;t have an account?{" "}
-//             <Link
-//               component={RouterLink}
-//               to="/client/signup"
-//               variant="body2"
-//               sx={{ alignSelf: "center" }}
-//             >
-//               Sign up
-//             </Link>
-//           </Typography>
-//         </Card>
-//       </SignInContainer>
-//     </AppTheme>
-//   );
-// }
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -340,6 +137,13 @@ const LoginPage = () => {
 
   const navigate = useNavigate();
 
+   // 🚀 Auto logout check when page loads / refreshes
+  useEffect(() => {
+    const token = sessionStorage.getItem("jwtToken");
+    if (token) {
+      setupAutoLogout(token, () => logoutUser(navigate));
+    }
+  }, [navigate]);
   const validateInputs = () => {
     let valid = true;
 
@@ -364,74 +168,44 @@ const LoginPage = () => {
     return valid;
   };
 
-  // const handleLogin = async (e) => {
-  //   e.preventDefault();
-  //   if (!validateInputs()) return;
+  const handleLogin = async (e) => {
+    e.preventDefault();
 
-  //   try {
-  //     const response = await axios.post(
-  //       "https://www.snptaxes.com/api/auth/login",
-  //       { email, password }
-  //     );
+    if (!validateInputs()) return;
 
-  //     const { token, accounts } = response.data;
+    try {
+      const response = await axios.post(
+        "https://www.snptaxes.com/api/auth/login",
+        { email, password }
+      );
 
-  //     localStorage.setItem("jwtToken", token);
-  //     localStorage.setItem("email", email);
-  //     localStorage.setItem("accounts", JSON.stringify(accounts));
+      const { token, accounts } = response.data;
 
-  //     if (accounts.length > 1) {
-  //       setAccounts(accounts);
-  //     } else if (accounts.length === 1) {
-  //       localStorage.setItem("accountId", accounts[0]._id);
-  //         toast.success("Login Successful");
-  //       navigate("/client/client/home");
-  //     } else {
-  //       alert("No accounts available for this email.");
-  //     }
-  //   } catch (err) {
-  //       // toast.error("Login failed: " + err.response?.data?.message || err.message);
-  //     alert("Login failed: " + err.response?.data?.message || err.message);
-  //   }
-  // };
-const handleLogin = async (e) => {
-  e.preventDefault();
-
-  if (!validateInputs()) return;
-
-  try {
-    const response = await axios.post(
-      "https://www.snptaxes.com/api/auth/login",
-      { email, password }
-    );
-
-    const { token, accounts } = response.data;
-
-    // Store token and email
-    sessionStorage.setItem("jwtToken", token);
-    sessionStorage.setItem("email", email);
-    sessionStorage.setItem("accounts", JSON.stringify(accounts));
-
-    if (accounts.length > 1) {
-      // Multiple accounts found → show selection popup
-      setAccounts(accounts);
-    } else if (accounts.length === 1) {
-      // Single account → redirect to dashboard
-      sessionStorage.setItem("accountId", accounts[0]._id);
-      toast.success("Login Successful");
-      navigate("/client/client/home");
-    } else {
-      alert("No accounts available for this email.");
+      // Store token and email
+      sessionStorage.setItem("jwtToken", token);
+      sessionStorage.setItem("email", email);
+      sessionStorage.setItem("accounts", JSON.stringify(accounts));
+setupAutoLogout(token, () => logoutUser(navigate));
+      if (accounts.length > 1) {
+        // Multiple accounts found → show selection popup
+        setAccounts(accounts);
+      } else if (accounts.length === 1) {
+        // Single account → redirect to dashboard
+        sessionStorage.setItem("accountId", accounts[0]._id);
+        toast.success("Login Successful");
+        navigate("/client/client/home");
+      } else {
+        alert("No accounts available for this email.");
+      }
+    } catch (err) {
+      alert("Login failed: " + (err.response?.data?.message || err.message));
     }
-  } catch (err) {
-    alert("Login failed: " + (err.response?.data?.message || err.message));
-  }
-};
+  };
 
   const handleAccountSelect = () => {
     if (!selectedAccount) return;
     sessionStorage.setItem("accountId", selectedAccount);
-     navigate("/client/client/home");
+    navigate("/client/client/home");
   };
 
   // ✅ Multiple accounts UI (styled)
@@ -472,12 +246,18 @@ const handleLogin = async (e) => {
     <AppTheme>
       <CssBaseline />
       <SignInContainer direction="column" justifyContent="center">
-        <ColorModeSelect sx={{ position: "fixed", top: "1rem", right: "1rem" }} />
+        <ColorModeSelect
+          sx={{ position: "fixed", top: "1rem", right: "1rem" }}
+        />
 
         <Card variant="outlined">
           <Typography variant="h4">Login</Typography>
 
-          <Box component="form" onSubmit={handleLogin} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <Box
+            component="form"
+            onSubmit={handleLogin}
+            sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+          >
             <FormControl>
               <FormLabel>Email</FormLabel>
               <TextField
@@ -504,7 +284,9 @@ const handleLogin = async (e) => {
                   endAdornment: (
                     <InputAdornment position="end">
                       <Fade in={password.length > 0}>
-                        <IconButton onClick={() => setShowPassword(!showPassword)}>
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
                           {showPassword ? <VisibilityOff /> : <Visibility />}
                         </IconButton>
                       </Fade>
@@ -543,11 +325,3 @@ const handleLogin = async (e) => {
 };
 
 export default LoginPage;
-
-
-
-
-
-
-
-

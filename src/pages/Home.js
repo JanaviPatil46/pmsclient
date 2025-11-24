@@ -89,14 +89,18 @@ const Home = () => {
 
    
      const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
+     console.log("accountId from home",accountId)
   const [adminUserId,setAdminUserId]= useState(sessionStorage.getItem("email"))
+  const [accountName,setAccountName]= useState("")
    const fetchAccountDetails = async () => {
     try {
       const res = await axios.get(
         `https://www.snptaxes.com/api/accounts/${accountId}`
       );
       // setAccount(res.data);
-      console.log("result", res.data);
+      console.log("result account", res.data);
+      setAccountName(res.data.accountName)
+      console.log("account name",res.data.accountName)
       // setAdminUserId(res.data.adminUserId)
     } catch (error) {
       console.error("Error fetching account details:", error);
@@ -160,7 +164,7 @@ const Home = () => {
           </Paper>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <QuickLinks accountId={accountId}  />
+          <QuickLinks accountId={accountId}  accountName={accountName}/>
         </Grid>
       </Grid>
     </Box>

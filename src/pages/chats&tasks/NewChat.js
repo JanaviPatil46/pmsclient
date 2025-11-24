@@ -12,8 +12,9 @@ import MenuButton from "../../components/MenuButton";
 import CloseIcon from "@mui/icons-material/Close";
 import { toast } from "material-react-toastify";
 
-function NewChat({ open, close, loginuserid, accId }) {
-
+function NewChat({ open, close, loginuserid, accId,accountName }) {
+console.log("accountName in new chat",accountName)
+console.log("accId in new chat",accId)
      const CHAT_API = process.env.REACT_APP_CHAT_API;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -36,7 +37,7 @@ function NewChat({ open, close, loginuserid, accId }) {
       {
         message: editorContent,
         fromwhome: "client",
-        senderid: loginuserid,
+        senderid: accountName,
         isRead: false,
       },
     ];

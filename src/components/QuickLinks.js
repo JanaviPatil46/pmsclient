@@ -10,8 +10,10 @@ import TelegramIcon from "@mui/icons-material/Telegram";
 import NewChat from "../pages/chats&tasks/NewChat";
 import PhoneAndroidIcon from "@mui/icons-material/PhoneAndroid";
 import LocationPinIcon from "@mui/icons-material/LocationPin";
-const QuickLinks = ({ accountId,  }) => {
+const QuickLinks = ({ accountId, accountName }) => {
   const [open, setOpen] = useState(false);
+  console.log("accountId from quicklinks",accountId)
+  console.log("accountName from quicklinks",accountName)
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   return (
@@ -43,16 +45,7 @@ const QuickLinks = ({ accountId,  }) => {
               </Box>
             </Stack>
           </Grid>
-          {/* <Grid size={{ xs: 12, md: 6 }}>
-                <Stack>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <DriveFolderUploadIcon />
-                    <Typography component="h2" variant="subtitle2" gutterBottom>
-                      Uplaod Folder
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Grid> */}
+          
           <Grid size={{ xs: 12, md: 6 }}>
             <Stack>
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -200,6 +193,7 @@ const QuickLinks = ({ accountId,  }) => {
         open={open}
         close={handleClose}
         accId={accountId}
+        accountName={accountName}
         // loginuserid={loginUserId}
       />
     </>

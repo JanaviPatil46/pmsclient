@@ -27,6 +27,28 @@ const ChatsTasks = () => {
    const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
  
   const [chatList, setChatList] = useState([]);
+
+   const [accountName,setAccountName]= useState("")
+   const fetchAccountDetails = async () => {
+    try {
+      const res = await axios.get(
+        `https://www.snptaxes.com/api/accounts/${accountId}`
+      );
+      // setAccount(res.data);
+      console.log("result account", res.data);
+      setAccountName(res.data.accountName)
+      console.log("account name",res.data.accountName)
+      // setAdminUserId(res.data.adminUserId)
+    } catch (error) {
+      console.error("Error fetching account details:", error);
+    }
+  };
+
+    useEffect(() => {
+    // if (loginUserId) {
+      fetchAccountDetails();
+    // }
+  }, [accountId]);
 console.log("accountid",accountId)
   const accountwiseChatlist = (accountId) => {
     const requestOptions = {
@@ -230,7 +252,7 @@ console.log("accountid",accountId)
             );
           })}
       </Box>
-      <NewChat open={open} close={handleClose} accId={accId} loginuserid={loginuserid}/>
+      <NewChat open={open} close={handleClose} accId={accountId} loginuserid={loginuserid} accountName={accountName}/>
     </Box>
   );
 };

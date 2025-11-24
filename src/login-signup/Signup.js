@@ -277,53 +277,7 @@ console.log("OTP Verification Response:", otpVerify);
     }
   };
 
-// const registerClient = async () => {
-//   try {
 
-//      // Extract just the phone number digits from the phone object
-//    const phoneDigits = formData.phoneNumber.phone.replace(/\D/g, '');
-//     const clientResponse = await fetch(`${LOGIN_API}/admin/clientsignup/`, {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({
-//         email: formData.email,
-//         firstName: formData.firstname,
-//         middleName: formData.middleName,
-//         lastName: formData.lastName,
-//       phoneNumber: {
-//           phone: phoneDigits,
-//           country: formData.phoneNumber.country,
-//           countryCode: formData.phoneNumber.countryCode
-//         },
-//          phoneNumber: phoneDigits,
-//         accountName: formData.accountName,
-//         password: formData.password,
-//         cpassword: formData.cpassword,
-//       }),
-     
-//     });
-//  console.log("dgvfd",clientResponse)
-//     const clientResult = await clientResponse.json();
-
-//     console.log("Client Signup Response:", clientResult);
-
-//     if (!clientResponse.ok) {
-//       throw new Error(clientResult.message || "Client signup failed");
-//     }
-
-//     if (!clientResult.client || !clientResult.client._id) {
-//       throw new Error("Client ID not returned in response");
-//     }
-
-//     setClientIdUpdate(clientResult.client._id);
-
-//     // Proceed to create user account
-//     await createUserAccount(clientResult.client._id);
-//   } catch (error) {
-//     console.error("Client registration error:", error);
-//     throw error;
-//   }
-// };
 const registerClient = async () => {
   try {
     // Extract just the phone number digits from the phone object
