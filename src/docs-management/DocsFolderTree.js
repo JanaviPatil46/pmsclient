@@ -5,7 +5,7 @@ import {
   Box,
   Paper,
   IconButton,
- 
+ Chip,Tooltip
 } from "@mui/material";
 
 
@@ -37,27 +37,11 @@ import FileMenu from "./FileMenu";
 import { FaFilePdf, FaFileWord, FaFileExcel, FaFileImage, FaFileAlt } from "react-icons/fa";
 import { AiFillFileUnknown } from "react-icons/ai";
 const DocsFolderTree = () => {
-   
   const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
-
-   
-
 console.log("acount id for the documentation",accountId)
- 
   const [error, setError] = useState("");
-
- 
- 
-
-
-
-
   const FolderTreeView = ({accountId}) => {
- 
   const [clientEmail, setClientEmail] = useState(sessionStorage.getItem("email")); // store client email
-    // const [approvedFiles, setApprovedFiles] = useState(new Set());
-  
-  
     console.log("folder structure of account is",accountId)
    const [expandedFolders, setExpandedFolders] = useState({});
     const [menuAnchorEl, setMenuAnchorEl] = useState(null);
@@ -117,39 +101,17 @@ console.log("acount id for the documentation",accountId)
       updateStatus(item, "readStatus", newValue);
       // console.log("kujaki janavi", item.path);
     };
-  
     const SIGN_STATUSES = [
       "sendForSignature",
       "pendingSignature",
       "signatureCompleted",
     ];
-  
-   
-    const SIGNATURE_API = process.env.REACT_APP_ESIGNATURE_API;
-      const [token, setToken] = useState("");
-  const [showBuilderFor, setShowBuilderFor] = useState(null);
-    const [openDialog, setOpenDialog] = useState(false); 
-
-
-    
     const APPROVAL_STATUSES = [
       "sendForApproval",
       "pendingApproval",
       "cancledApproval",,
       "approvalCompleted",
     ];
-  
-    
-  
-   
-// 🔹 Step 2: Close dialog
-const handleCloseDialog = () => {
-  setOpenApprovalDialog(false);
-  setDescription("");
-  setSelectedItem(null);
-};
-
-
     // 🔹 Frontend: Update any status (read, sign, approval)
     const updateStatus = async (item, statusType, newValue) => {
       try {
@@ -266,10 +228,6 @@ const handleCloseDialog = () => {
       handleMenuClose();
     };
   
-    const handleMoveFolder = async (folder) => {
-      alert(`Move folder: ${folder.path}`); // implement backend
-      handleMenuClose();
-    };
     const handleFileClick = (fullPath, fileName, meta = {}) => {
     try {
       // 🔒 Prevent opening locked files
@@ -328,14 +286,103 @@ console.log("fileurl",fileUrl)
   }
 };
   
-
+    const approvalStatusTextMap = {
+      sendForApproval: "Send for Approval",
+      pendingApproval: "Waiting for Approval",
+      cancledApproval: "cancledApproval",
+      approvalCompleted: "Approval Completed",
+    };
+    const statusTextMap = {
+      sendForSignature: "Send for Sign",
+      pendingSignature: "Waiting for Signature",
+      signatureCompleted: "Signature Received",
+    };
 const renderTree = (items, level = 0, parentPath = "", isInsideRestricted = false) => {
+  
+  const getStatusChip = (meta) => {
+  const chips = [];
+
+  // ======= SIGNATURE STATUS =======
+  if (SIGN_STATUSES.includes(meta.signStatus)) {
+    let color = "default";
+
+    if (meta.signStatus === "pendingSignature") color = "warning";
+    if (meta.signStatus === "signatureCompleted") color = "success";
+
+    chips.push(
+      <Chip
+        key="signChip"
+        label={statusTextMap[meta.signStatus]}
+        size="small"
+        variant="outlined"
+        color={color}
+      />
+    );
+  }
+
+  // ======= APPROVAL STATUS =======
+  if (APPROVAL_STATUSES.includes(meta.authStatus)) {
+    let color = "default";
+    let chip = (
+      <Chip
+        key="approvalChip"
+        label={approvalStatusTextMap[meta.authStatus]}
+        size="small"
+        variant="outlined"
+        color={color}
+      />
+    );
+
+    if (meta.authStatus === "pendingApproval") color = "warning";
+    if (meta.authStatus === "approvalCompleted") color = "success";
+    if (meta.authStatus === "cancledApproval") color = "error";
+
+    // Handle tooltip only for canceled approval
+    if (meta.authStatus === "cancledApproval" && meta.cancelReason) {
+      chip = (
+        <Tooltip title={meta.cancelReason} placement="top-end" >
+          <Chip
+            key="approvalCanceledChip"
+            label="Approval Canceled"
+            size="small"
+            variant="outlined"
+            color="error"
+            sx={{ cursor: "pointer" }}
+          />
+        </Tooltip>
+      );
+    } else {
+      chip = (
+        <Chip
+          key="approvalChip"
+          label={approvalStatusTextMap[meta.authStatus]}
+          size="small"
+          variant="outlined"
+          color={color}
+        />
+      );
+    }
+
+    chips.push(chip);
+  }
+
+  // ======= SHOW NOTHING IF NO STATUS =======
+  if (chips.length === 0) return null;
+
+  return (
+    <Box sx={{ display: "flex", gap: 1, ml: 1 }}>
+      {chips}
+    </Box>
+  );
+};
+  
   return (
     <Box component="ul" sx={{ listStyle: "none", pl: level * 2, mb: 1 }}>
       {items.map((item) => {
         const fullPath = parentPath ? `${parentPath}/${item.name}` : item.name;
         const meta = item.meta || {};
 
+        
         const isFolder = item.type === "folder";
         const isFile = item.type === "file";
         const isRootFolder = level === 0 && isFolder;
@@ -358,8 +405,7 @@ const renderTree = (items, level = 0, parentPath = "", isInsideRestricted = fals
         const StatusIcons = () => (
           <Box sx={{ display: "flex", gap: 1, alignItems: "center", ml: 1 }}>
             <Eye size={16} color={getColor(meta.readStatus)} />
-            <PenTool size={16} color={getColor(meta.signStatus)} />
-            <Stamp size={16} color={getColor(meta.authStatus)} />
+            
             <Lock size={16} color={meta.readOnly ? "#e53935" : "#9e9e9e"} />
           </Box>
         );
@@ -404,9 +450,6 @@ const renderTree = (items, level = 0, parentPath = "", isInsideRestricted = fals
                   >
                     {item.name}
                   </Typography>
-
-                  {/* Hide StatusIcons inside restricted area */}
-                  {/* {!insideRestricted && <StatusIcons />} */}
                 </Box>
 
                 {!hideMenu && (
@@ -446,8 +489,9 @@ const renderTree = (items, level = 0, parentPath = "", isInsideRestricted = fals
                 >
                   {item.name}
                 </Typography>
-
-                {/* Hide StatusIcons inside restricted area */}
+ <Box> 
+                  {getStatusChip(meta)}</Box>
+               
                 {!insideRestricted && <StatusIcons />}
 
                 {!hideMenu && (
@@ -485,12 +529,7 @@ const renderTree = (items, level = 0, parentPath = "", isInsideRestricted = fals
     </Box>
   );
 };
-
-
-  
-  
   return (
- 
   <Box sx={{ margin: "auto", p: 3 }}>
        
   

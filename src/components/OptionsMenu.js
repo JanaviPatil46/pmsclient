@@ -323,9 +323,9 @@ const [accounts, setAccounts] = useState([]);
           },
         }}
       >
-        <MenuItem onClick={handleClose}>Profile</MenuItem>
-        <MenuItem onClick={handleClose}>My account</MenuItem>
-        <Divider />
+        {/* <MenuItem onClick={handleClose}>Profile</MenuItem> */}
+        {/* <MenuItem onClick={handleClose}>My account</MenuItem> */}
+        {/* <Divider /> */}
      
 <MenuItem
         disabled={accounts.length <= 1}
@@ -333,7 +333,7 @@ const [accounts, setAccounts] = useState([]);
       >
         Switch Account
       </MenuItem>
-        <MenuItem onClick={handleClose}>Settings</MenuItem>
+        {/* <MenuItem onClick={handleClose}>Settings</MenuItem> */}
         <Divider />
         <MenuItem
           onClick={logoutuser}

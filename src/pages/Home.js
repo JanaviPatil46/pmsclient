@@ -90,7 +90,7 @@ const Home = () => {
    
      const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
      console.log("accountId from home",accountId)
-  const [adminUserId,setAdminUserId]= useState(sessionStorage.getItem("email"))
+  const [adminUserId,setAdminUserId]= useState("")
   const [accountName,setAccountName]= useState("")
    const fetchAccountDetails = async () => {
     try {
@@ -101,7 +101,7 @@ const Home = () => {
       console.log("result account", res.data);
       setAccountName(res.data.accountName)
       console.log("account name",res.data.accountName)
-      // setAdminUserId(res.data.adminUserId)
+      setAdminUserId(res.data.adminUserId.email)
     } catch (error) {
       console.error("Error fetching account details:", error);
     }

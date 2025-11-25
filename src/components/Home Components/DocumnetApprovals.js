@@ -49,7 +49,7 @@ const DocumentApprovals = ({ accountId,adminUserId }) => {
     const updateStatus = async (item, statusType, newValue,action,reason = "") => {
       try {
         if (!item?.path) return alert("Invalid item selected");
-  
+  console.log("item path for updating status", item.path)
         const body = {
           targetPath: item.path,
           // status: {
