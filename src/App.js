@@ -23,7 +23,7 @@ const App = () => {
       <BrowserRouter basename="/client">
        {/* <AutoLogoutHandler /> */}
         <Routes>
-            <Route path="/" element={<Navigate to="/client/login" replace />} />
+            {/* <Route path="/" element={<Navigate to="/client/login" replace />} /> */}
           <Route path="/client/login" element={<SignIn />} />
           <Route path="/client/signup" element={<Signup />} />
           <Route path="/client/forgot-password" element={<ForgotPassword />} />

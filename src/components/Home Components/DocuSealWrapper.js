@@ -7,41 +7,6 @@ const DocuSealWrapper = () => {
  const [targetEmail,setTargetEmail]= useState(sessionStorage.getItem("email"))
 //  const { logindata } = useContext(LoginContext);
  const SIGNATURE_API =process.env.REACT_APP_ESIGNATURE_API
-//   const [loginUserId, setLoginUserId] = useState();
-//   console.log("login data", logindata);
-//      const LOGIN_API = process.env.REACT_APP_USER_LOGIN
-//   useEffect(() => {
-//     if (logindata?.user?.id) {
-//       setLoginUserId(logindata.user.id);
-//     }
-//   }, [logindata]);
-//  useEffect(() => {
-//       if (loginUserId) {
-//         fetchUserData(loginUserId);
-//       }
-//     }, [loginUserId]);
-//     const fetchUserData = async (id) => {
-
-//     const requestOptions = {
-//       method: "GET",
-//       redirect: "follow",
-//     };
-
-//     const url = `${LOGIN_API}/common/user/${id}`;
-
-//     try {
-//       const response = await fetch(url, requestOptions);
-//       const result = await response.json();
-//       console.log("users detials", result);
-//       if (result.email) {
-//         setTargetEmail(result.email);
-//       }
-      
-     
-//     } catch (error) {
-//       console.error("Error fetching user data:", error);
-//     }
-//   };
 
     
 useEffect(() => {
@@ -77,3 +42,47 @@ useEffect(() => {
 };
 
 export default DocuSealWrapper;
+
+// import React from 'react'
+// import { Box } from '@mui/material'
+// import { useEffect, useState } from "react";
+// import SignatureList from './SignatureList';
+// const DocuSealWrapper = ({accountId}) => {
+//     const [esignList, setEsignList] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [targetEmail,setTargetEmail]= useState(sessionStorage.getItem("email"))
+//   useEffect(() => {
+//     const fetchEsignList = async () => {
+//       try {
+//         const response = await fetch(
+//           `https://snptaxes.com/signautrelist/${accountId}`,
+//           { method: "GET", redirect: "follow" }
+//         );
+
+//         const data = await response.json();
+//         console.log("Response Data:", data);
+
+//         setEsignList(data);
+//       } catch (error) {
+//         console.error("Error fetching list:", error);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchEsignList();
+//   }, []);
+//   return (
+//    <Box>
+// {esignList && esignList.length > 0 && (
+//   <SignatureList
+//     documentsList={esignList}
+//     targetEmail={targetEmail}
+//   />
+// )}
+
+//    </Box>
+//   )
+// }
+
+// export default DocuSealWrapper

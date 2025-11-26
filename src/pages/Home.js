@@ -159,7 +159,7 @@ const Home = () => {
            
             <ChatsList accountId={accountId} />
             <ProposalsList accountId={accountId} />
-           <DocuSealWrapper/>
+           <DocuSealWrapper accountId={accountId} />
            <DocumnetApprovals accountId={accountId} adminUserId={adminUserId}/>
           </Paper>
         </Grid>
