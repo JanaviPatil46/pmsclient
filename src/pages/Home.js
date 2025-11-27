@@ -15,6 +15,7 @@ import { LoginContext } from "../context/Context";
 import DocuSealWrapper from "../components/Home Components/DocuSealWrapper";
 import DocumnetApprovals from "../components/Home Components/DocumnetApprovals";
 import { set } from "lodash";
+import DocuSealMultiSigner from "../components/Home Components/DocuSealMultiSigner";
 const Home = () => {
   const ACCOUNT_API = process.env.REACT_APP_ACCOUNTS_URL;
   // const { logindata } = useContext(LoginContext);
@@ -160,6 +161,7 @@ const Home = () => {
             <ChatsList accountId={accountId} />
             <ProposalsList accountId={accountId} />
            <DocuSealWrapper accountId={accountId} />
+           <DocuSealMultiSigner accountId={accountId} />
            <DocumnetApprovals accountId={accountId} adminUserId={adminUserId}/>
           </Paper>
         </Grid>

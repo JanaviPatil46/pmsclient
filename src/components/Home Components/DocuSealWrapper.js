@@ -5,37 +5,39 @@ const DocuSealWrapper = () => {
   const [data, setData] = useState(null); // response from backend
   const [loading, setLoading] = useState(true);
  const [targetEmail,setTargetEmail]= useState(sessionStorage.getItem("email"))
-//  const { logindata } = useContext(LoginContext);
- const SIGNATURE_API =process.env.REACT_APP_ESIGNATURE_API
+ const[accountId,setAccountId]= useState(sessionStorage.getItem("accountId"))
 
-    
-useEffect(() => {
-  fetch(`${SIGNATURE_API}/api/submissions`)
-    .then((res) => res.json())
-    .then((responseData) => {
-      // Filter only submissions with status "opened" or "pending"
-      const filtered = responseData.submissions?.filter((sub) =>
-        [ "pending"].includes(sub.status)
-      );
 
-      console.log("Filtered Submissions:", filtered);
+     
 
-      setData({ submissions: filtered }); // update state with filtered data
-      setLoading(false);
-    })
-    .catch((err) => {
-      console.error("Failed to fetch submissions:", err);
-      setLoading(false);
-    });
-}, []);
+  useEffect(() => {
+    const fetchSignatureList = async () => {
+      try {
+        const response = await fetch(
+          `https://snptaxes.com/signautrelist/${accountId}`,
+          { method: "GET", redirect: "follow" }
+        );
+
+        const result = await response.json(); // use .json() if backend returns JSON
+        console.log("result signature",result);
+        setData(result);
+
+      } catch (error) {
+        console.error("Error fetching signature list:", error);
+      }
+    };
+
+    fetchSignatureList();
+  }, []); // empty array → runs only once on mount
+
 
 
   if (loading) return <p></p>;
-  if (!data || !Array.isArray(data.submissions)) return <p></p>;
+  if (!data || !Array.isArray(data)) return <p></p>;
 
   return (
     <DocuSealMultiSigner
-      submissions={data.submissions}
+      submissions={data}
       targetEmail={targetEmail}
     />
   );
