@@ -224,7 +224,7 @@ const ForgotPassword = () => {
     try {
       await axios.post(
         'https://www.snptaxes.com/api/auth/forgot-password',
-        { email }
+        { email:email }
       );
       
       setSuccess('Password reset instructions have been sent to your email.');

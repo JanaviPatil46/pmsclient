@@ -1,19 +1,26 @@
-import React, { useState, useEffect ,useContext} from 'react';
+import React, { useState, useEffect, useContext } from "react";
 import {
   Button,
   Typography,
   Box,
   Paper,
   IconButton,
- Chip,Tooltip
+  Chip,
+  Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
+  TextField,
 } from "@mui/material";
-
-
+import CloseIcon from "@mui/icons-material/Close";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-
-import FileUploadDrawer from "./drawers/FileUploadDrawer"
-import CreteFolderDrawer from "./drawers/CreteFolderDrawer"
-import FolderUploadDrawer from "./drawers/FolderUploadDrawer"
+import DescriptionIcon from "@mui/icons-material/Description";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import FileUploadDrawer from "./drawers/FileUploadDrawer";
+import CreteFolderDrawer from "./drawers/CreteFolderDrawer";
+import FolderUploadDrawer from "./drawers/FolderUploadDrawer";
 import RenameDrawer from "./drawers/RenameDrawer";
 import MoveDrawer from "./drawers/MoveDrawer";
 import {
@@ -34,16 +41,29 @@ import {
 import ParentFolderMenu from "./ParentFolderMenu";
 import FolderMenu from "./FolderMenu";
 import FileMenu from "./FileMenu";
-import { FaFilePdf, FaFileWord, FaFileExcel, FaFileImage, FaFileAlt } from "react-icons/fa";
+import {
+  FaFilePdf,
+  FaFileWord,
+  FaFileExcel,
+  FaFileImage,
+  FaFileAlt,
+} from "react-icons/fa";
+import axios from "axios";
 import { AiFillFileUnknown } from "react-icons/ai";
+import { DocusealForm } from "@docuseal/react";
 const DocsFolderTree = () => {
-  const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
-console.log("acount id for the documentation",accountId)
+  const [accountId, setAccountId] = useState(
+    sessionStorage.getItem("accountId")
+  );
+  const SIGNATURE_API = process.env.REACT_APP_ESIGNATURE_API;
+  console.log("acount id for the documentation", accountId);
   const [error, setError] = useState("");
-  const FolderTreeView = ({accountId}) => {
-  const [clientEmail, setClientEmail] = useState(sessionStorage.getItem("email")); // store client email
-    console.log("folder structure of account is",accountId)
-   const [expandedFolders, setExpandedFolders] = useState({});
+  const FolderTreeView = ({ accountId }) => {
+    const [clientEmail, setClientEmail] = useState(
+      sessionStorage.getItem("email")
+    ); // store client email
+    console.log("folder structure of account is", accountId);
+    const [expandedFolders, setExpandedFolders] = useState({});
     const [menuAnchorEl, setMenuAnchorEl] = useState(null);
     const [selectedFolderForMenu, setSelectedFolderForMenu] = useState(null);
     const [newFolderDrawerOpen, setNewFolderDrawerOpen] = useState(null);
@@ -51,32 +71,104 @@ console.log("acount id for the documentation",accountId)
     const [renameDrawer, SetRenameDrawer] = useState(null);
     const [fileUploadDrawerOpen, setFileUploadDrawerOpen] = useState(null);
     const [moveDrawerOpen, setMoveDrawerOpen] = useState(null);
-    const [description, setDescription] = useState("");
-    const [openApprovalDialog, setOpenApprovalDialog] = useState(false);
-    const [folderTree, setFolderTree] = useState([]);
-   const[selectedItem,setSelectedItem]=useState("")
 
-   // API call to fetch folder tree for a given template ID
-    const fetchFolderTree = async (accountId) => {
+    const [folderTree, setFolderTree] = useState([]);
+    // State for document approval dialog
+    const [openViewer, setOpenViewer] = useState(false);
+    const [selectedDoc, setSelectedDoc] = useState(null);
+    const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+    const [cancelReason, setCancelReason] = useState("");
+    const [adminUserId, setAdminUserId] = useState("");
+    const [accountName, setAccountName] = useState("");
+    const fetchAccountDetails = async () => {
       try {
-        const res = await fetch(`https://www.snptaxes.com/api/accountsdoc/files/list/clientView?folderPath=${accountId}`);
-        console.log("responce",res)
-        const data = await res.json();
-        console.log("janavi patil",data.contents)
-        if (res.ok) {
-          setFolderTree(data.contents);
-        } else {
-          setError('Failed to fetch folder tree');
-        }
-      } catch (err) {
-        setError('Error fetching folder tree');
+        const res = await axios.get(
+          `https://www.snptaxes.com/api/accounts/${accountId}`
+        );
+        // setAccount(res.data);
+        console.log("result account", res.data);
+        setAccountName(res.data.accountName);
+        console.log("account name", res.data.accountName);
+        setAdminUserId(res.data.adminUserId.email);
+      } catch (error) {
+        console.error("Error fetching account details:", error);
       }
     };
+
     useEffect(() => {
-  if (accountId) {
-    fetchFolderTree(accountId);
-  }
-}, [accountId]);
+      // if (loginUserId) {
+      fetchAccountDetails();
+      // }
+    }, [accountId]);
+    // API call to fetch folder tree for a given template ID
+    const fetchFolderTree = async (accountId) => {
+      try {
+        const res = await fetch(
+          `https://www.snptaxes.com/api/accountsdoc/files/list/clientView?folderPath=${accountId}`
+        );
+        console.log("responce", res);
+        const data = await res.json();
+        console.log("janavi patil", data.contents);
+        if (res.ok) {
+          setFolderTree(data.contents);
+          // Check for pending approval documents
+          checkForPendingApprovals(data.contents);
+        } else {
+          setError("Failed to fetch folder tree");
+        }
+      } catch (err) {
+        setError("Error fetching folder tree");
+      }
+    };
+    // Function to check for pending approval documents in the folder tree
+    const checkForPendingApprovals = (treeItems) => {
+      const pendingApprovalFiles = [];
+
+      const traverseTree = (items) => {
+        items.forEach((item) => {
+          const meta = item.meta || {};
+
+          // Check if file has pendingApproval status and approvalId
+          if (
+            item.type === "file" &&
+            meta.authStatus === "pendingApproval" &&
+            meta.approvalId
+          ) {
+            // Construct file URL from the path
+            const fileUrl = `https://www.snptaxes.com/uploads/accounts/${accountId}/${item.path}`;
+
+            pendingApprovalFiles.push({
+              _id: meta.approvalId,
+              filename: item.name,
+              fileUrl: fileUrl,
+              description: meta.description || "",
+              path: item.path,
+            });
+          }
+
+          // Recursively check children
+          if (item.children && item.children.length > 0) {
+            traverseTree(item.children);
+          }
+        });
+      };
+
+      traverseTree(treeItems);
+
+      // If pending approval files found, open the first one
+      if (pendingApprovalFiles.length > 0) {
+        console.log("Found pending approval documents:", pendingApprovalFiles);
+        // You could show a notification or open the first document
+        // handleOpenViewer(pendingApprovalFiles[0]);
+      }
+
+      return pendingApprovalFiles;
+    };
+    useEffect(() => {
+      if (accountId) {
+        fetchFolderTree(accountId);
+      }
+    }, [accountId]);
 
     const toggleFolder = (path, isReadOnly) => {
       if (isReadOnly) return;
@@ -85,17 +177,17 @@ console.log("acount id for the documentation",accountId)
         [path]: !prev[path],
       }));
     };
-  
+
     const handleMenuOpen = (event, folder) => {
       event.stopPropagation();
       setMenuAnchorEl(event.currentTarget);
       setSelectedFolderForMenu(folder);
     };
-  
+
     const handleMenuClose = () => {
       setMenuAnchorEl(null);
     };
-  // Toggle read/unread
+    // Toggle read/unread
     const toggleReadStatus = (item) => {
       const newValue = !(item.meta?.readStatus || false);
       updateStatus(item, "readStatus", newValue);
@@ -109,21 +201,28 @@ console.log("acount id for the documentation",accountId)
     const APPROVAL_STATUSES = [
       "sendForApproval",
       "pendingApproval",
-      "cancledApproval",,
+      "canceledApproval",
       "approvalCompleted",
     ];
     // 🔹 Frontend: Update any status (read, sign, approval)
-    const updateStatus = async (item, statusType, newValue) => {
+    const updateStatus = async (
+      item,
+      statusType,
+      newValue,
+      action,
+      reason = ""
+    ) => {
       try {
         if (!item?.path) return alert("Invalid item selected");
-  
+
         const body = {
           targetPath: item.path,
           status: {
             [statusType]: newValue, // dynamic key
+            ...(action === "cancel" && reason ? { cancelReason: reason } : {}),
           },
         };
-  
+
         const res = await fetch(
           "https://www.snptaxes.com/api/accountsdoc/updateStatus",
           {
@@ -132,9 +231,9 @@ console.log("acount id for the documentation",accountId)
             body: JSON.stringify(body),
           }
         );
-  
+
         const data = await res.json();
-  
+
         if (res.ok) {
           alert(data.message || "Status updated successfully");
           fetchFolderTree(accountId); // refresh folder tree to reflect change
@@ -146,33 +245,33 @@ console.log("acount id for the documentation",accountId)
         alert("Error updating status");
       }
     };
-  
+
     const toggleReadOnly = async (item) => {
       try {
         const newStatus = !item.meta.readOnly;
-  
+
         // 📍 Use correct backend endpoint
         const endpoint =
           item.type === "folder"
             ? "https://www.snptaxes.com/api/accountsdoc/folder/readonly"
             : "https://www.snptaxes.com/api/accountsdoc/file/readonly";
-  
+
         const body =
           item.type === "folder"
             ? { folderPath: item.path, readOnly: newStatus }
             : { filePath: item.path, readOnly: newStatus };
-  
+
         const res = await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
-  
+
         const data = await res.json();
-  
+
         if (res.ok) {
           fetchFolderTree(accountId);
-  
+
           // 🗂️ Collapse folder if it’s locked
           if (item.type === "folder" && newStatus) {
             setExpandedFolders((prev) => {
@@ -181,7 +280,7 @@ console.log("acount id for the documentation",accountId)
               return updated;
             });
           }
-  
+
           handleMenuClose();
           alert(data.message || "Updated successfully");
         } else {
@@ -192,16 +291,16 @@ console.log("acount id for the documentation",accountId)
         alert("Failed to update read-only status");
       }
     };
-  
+
     // 🗑️ Delete File or Folder (Universal)
     const deleteItem = async (item) => {
       if (!item?.path) return alert("Invalid path");
-  
+
       const confirmDelete = window.confirm(
         `Are you sure you want to delete "${item.name}"? This cannot be undone!`
       );
       if (!confirmDelete) return;
-  
+
       try {
         const response = await fetch(
           "https://www.snptaxes.com/api/accountsdoc/delete",
@@ -211,12 +310,12 @@ console.log("acount id for the documentation",accountId)
             body: JSON.stringify({ targetPath: item.path }),
           }
         );
-  
+
         const data = await response.json();
-  
+
         if (response.ok && data.success) {
           alert(data.message);
-           fetchFolderTree(accountId);
+          fetchFolderTree(accountId);
         } else {
           alert(data.message || "Failed to delete");
         }
@@ -224,72 +323,416 @@ console.log("acount id for the documentation",accountId)
         console.error("Error deleting item:", err);
         alert("Error deleting file or folder");
       }
-  
+
       handleMenuClose();
     };
-  
-    const handleFileClick = (fullPath, fileName, meta = {}) => {
-    try {
-      // 🔒 Prevent opening locked files
-      if (meta.readOnly) {
-        alert("This file is locked and cannot be opened.");
-        return;
-      }
+    const DOCS_MANAGMENTS = process.env.REACT_APP_CLIENT_DOCS_MANAGE;
+ const targetEmail = sessionStorage.getItem("email");
+   const [selectedSlug, setSelectedSlug] = useState(null);
+   const [dialogOpen, setDialogOpen] = useState(false);
+   // Function to open the signature dialog
+const openSignatureDialog = (slug) => {
+  setSelectedSlug(slug);
+  setDialogOpen(true);
+};
 
-      // ✅ Construct full file URL
-      const fileUrl = `https://www.snptaxes.com/uploads/accounts/${accountId}/${fullPath}`;
-console.log("fileurl",fileUrl)
-      // ✅ Detect file extension (case-insensitive)
-      const fileExt = fileName.split(".").pop().toLowerCase();
-
-      // ✅ Extensions that can open in browser
-      const viewableExtensions = ["pdf", "jpg", "jpeg", "png", "gif", "txt"];
-
-      if (viewableExtensions.includes(fileExt)) {
-        // Open supported file types in a new tab
-        window.open(fileUrl, "_blank", "noopener,noreferrer");
-      } else {
-        // Force download for unsupported types (e.g., docx, xlsx, zip, etc.)
-        const link = document.createElement("a");
-        link.href = fileUrl;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-    } catch (error) {
-      console.error("Error opening/downloading file:", error);
+// Function to close the dialog
+const handleCloseDialog = () => {
+  setDialogOpen(false);
+  setSelectedSlug(null);
+};
+const handleFileClick = async (fullPath, fileName, meta = {}) => {
+  console.log("file clicked", fullPath, fileName, meta);
+  try {
+    // Check if this is a pending approval document
+    if (meta.authStatus === "pendingApproval" && meta.approvalId) {
+      fetApprovalDetails(meta.approvalId);
+      return;
     }
-  };
-  const getFileIcon = (fileName) => {
-  const ext = fileName.split(".").pop().toLowerCase();
 
-  switch (ext) {
-    case "pdf":
-      return <FaFilePdf color="#d32f2f" size={18} />;
-    case "jpg":
-    case "jpeg":
-    case "png":
-    case "gif":
-      return <FaFileImage color="#1976d2" size={18} />;
-    case "doc":
-    case "docx":
-      return <FaFileWord color="#1565c0" size={18} />;
-    case "xls":
-    case "xlsx":
-      return <FaFileExcel color="#2e7d32" size={18} />;
-    case "txt":
-    case "md":
-      return <FaFileAlt color="#616161" size={18} />;
-    default:
-      return <AiFillFileUnknown color="#757575" size={18} />;
+    // Check if this is a pending e-signature document
+    if (meta.esignRequestId && meta.signStatus === "pendingSignature") {
+      try {
+        const response = await fetch(`https://www.snptaxes.com/signature/byid/${meta.esignRequestId}`, {
+          method: "GET",
+          redirect: "follow"
+        });
+        const result = await response.json();
+        console.log("Signature details:", result);
+        
+        // Assuming result is the full submission object
+        const submission = result;
+        console.log("Full Submission:", submission);
+
+        // Check if submission has submitters array
+        if (!submission.submitters || !Array.isArray(submission.submitters)) {
+          console.error("No submitters array found in response");
+          alert("Error loading signature request: Invalid data structure");
+          return;
+        }
+
+        // Find matching submitters for the current user
+        const matchingSubmitters = submission.submitters
+          .map((s) => ({
+            slug: s.slug,
+            email: s.email,
+            submissionId: s.submission_id,
+            templateName: s.name,
+            createdAt: submission.createdAt,
+            fileUrl: submission.fileUrl,
+            externalId: submission.externalId,
+            submissionData: submission,
+            status: s.status,
+            completed_at: s.completed_at,
+            role: s.role,
+            allCompleted: submission.submitters.every(submitter => 
+              submitter.status === 'completed' || submitter.completed_at !== null
+            )
+          }))
+          .filter((s) => s.email === targetEmail && !s.completed_at);
+
+        console.log("Matching Submitters:", matchingSubmitters);
+
+        // If we found matching submitters, open the dialog with the first one
+        if (matchingSubmitters.length > 0) {
+          // Get the first matching submitter's slug
+          const firstSlug = matchingSubmitters[0].slug;
+          console.log("Opening signature dialog with slug:", firstSlug);
+          openSignatureDialog(firstSlug);
+        } else {
+          // Check why no matches were found
+          const userSubmitters = submission.submitters.filter(s => s.email === targetEmail);
+          if (userSubmitters.length > 0) {
+            // User exists but has already completed
+            const completedSubmitter = userSubmitters[0];
+            if (completedSubmitter.completed_at) {
+              alert("You have already signed this document.");
+              // Open the document after alert
+              setTimeout(() => {
+                openDocument(fullPath, fileName);
+              }, 500);
+            } else {
+              alert("You are not authorized to sign this document at this time.");
+            }
+          } else {
+            alert("You are not listed as a signer for this document.");
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching signature details:", error);
+        alert("Error loading signature request.");
+      }
+      return;
+    }
+    
+    // 🔒 Prevent opening locked files
+    if (meta.readOnly) {
+      alert("This file is locked and cannot be opened.");
+      return;
+    }
+
+    // ✅ Open the document (for non-signature files or if user has already signed)
+    openDocument(fullPath, fileName);
+    
+  } catch (error) {
+    console.error("Error opening/downloading file:", error);
   }
 };
-  
+
+// Helper function to open/download document
+const openDocument = (fullPath, fileName) => {
+  try {
+    // ✅ Construct full file URL
+    const fileUrl = `https://www.snptaxes.com/uploads/accounts/${accountId}/${fullPath}`;
+    console.log("Opening document:", fileUrl);
+    
+    // ✅ Detect file extension (case-insensitive)
+    const fileExt = fileName.split(".").pop().toLowerCase();
+
+    // ✅ Extensions that can open in browser
+    const viewableExtensions = ["pdf", "jpg", "jpeg", "png", "gif", "txt"];
+
+    if (viewableExtensions.includes(fileExt)) {
+      // Open supported file types in a new tab
+      window.open(fileUrl, "_blank", "noopener,noreferrer");
+    } else {
+      // Force download for unsupported types (e.g., docx, xlsx, zip, etc.)
+      const link = document.createElement("a");
+      link.href = fileUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  } catch (error) {
+    console.error("Error opening document:", error);
+    alert("Error opening document. Please try again.");
+  }
+};
+//     const handleFileClick = async (fullPath, fileName, meta = {}) => {
+//       console.log("file clicked", fullPath, fileName, meta);
+//       try {
+//         // Check if this is a pending approval document
+//         if (meta.authStatus === "pendingApproval" && meta.approvalId) {
+//           fetApprovalDetails(meta.approvalId);
+//           return;
+//         }
+ 
+ 
+//  // Check if this is a pending e-signature document
+//     if (meta.esignRequestId && meta.signStatus === "pendingSignature") {
+//       try {
+//         const response = await fetch(`https://www.snptaxes.com/signature/byid/${meta.esignRequestId}`, {
+//           method: "GET",
+//           redirect: "follow"
+//         });
+//         const result = await response.json();
+//         console.log("Signature details:", result);
+        
+//         // Assuming result is the full submission object
+//         const submission = result;
+//         console.log("Full Submission:", submission);
+
+//         // Check if submission has submitters array
+//         if (!submission.submitters || !Array.isArray(submission.submitters)) {
+//           console.error("No submitters array found in response");
+//           alert("Error loading signature request: Invalid data structure");
+//           return;
+//         }
+
+//         // Find matching submitters for the current user
+//         const matchingSubmitters = submission.submitters
+//           .map((s) => ({
+//             slug: s.slug,
+//             email: s.email,
+//             submissionId: s.submission_id,
+//             templateName: s.name,
+//             createdAt: submission.createdAt,
+//             fileUrl: submission.fileUrl,
+//             externalId: submission.externalId,
+//             submissionData: submission,
+//             status: s.status,
+//             completed_at: s.completed_at,
+//             role: s.role,
+//             allCompleted: submission.submitters.every(submitter => 
+//               submitter.status === 'completed' || submitter.completed_at !== null
+//             )
+//           }))
+//           .filter((s) => s.email === targetEmail && !s.completed_at);
+
+//         console.log("Matching Submitters:", matchingSubmitters);
+
+//         // If we found matching submitters, open the dialog with the first one
+//         if (matchingSubmitters.length > 0) {
+//           // Get the first matching submitter's slug
+//           const firstSlug = matchingSubmitters[0].slug;
+//           console.log("Opening signature dialog with slug:", firstSlug);
+//           openSignatureDialog(firstSlug);
+//         } else {
+//           // Check why no matches were found
+//           const userSubmitters = submission.submitters.filter(s => s.email === targetEmail);
+//           if (userSubmitters.length > 0) {
+//             // User exists but has already completed
+//             const completedSubmitter = userSubmitters[0];
+//             if (completedSubmitter.completed_at) {
+//               alert("You have already signed this document.");
+//             } else {
+//               alert("You are not authorized to sign this document at this time.");
+//             }
+//           } else {
+//             alert("You are not listed as a signer for this document.");
+//           }
+//         }
+//       } catch (error) {
+//         console.error("Error fetching signature details:", error);
+//         alert("Error loading signature request.");
+//       }
+//       return;
+//     }
+//         // 🔒 Prevent opening locked files
+//         if (meta.readOnly) {
+//           alert("This file is locked and cannot be opened.");
+//           return;
+//         }
+
+//         // ✅ Construct full file URL
+//         const fileUrl = `https://www.snptaxes.com/uploads/accounts/${accountId}/${fullPath}`;
+//         console.log("fileurl", fileUrl);
+//         // ✅ Detect file extension (case-insensitive)
+//         const fileExt = fileName.split(".").pop().toLowerCase();
+
+//         // ✅ Extensions that can open in browser
+//         const viewableExtensions = ["pdf", "jpg", "jpeg", "png", "gif", "txt"];
+
+//         if (viewableExtensions.includes(fileExt)) {
+//           // Open supported file types in a new tab
+//           window.open(fileUrl, "_blank", "noopener,noreferrer");
+//         } else {
+//           // Force download for unsupported types (e.g., docx, xlsx, zip, etc.)
+//           const link = document.createElement("a");
+//           link.href = fileUrl;
+//           link.download = fileName;
+//           document.body.appendChild(link);
+//           link.click();
+//           document.body.removeChild(link);
+//         }
+//       } catch (error) {
+//         console.error("Error opening/downloading file:", error);
+//       }
+//     };
+    const fetApprovalDetails = async (id) => {
+      try {
+        const response = await fetch(
+          `https://www.snptaxes.com/approvals/approvals/${id}`,
+          {
+            method: "GET",
+            redirect: "follow",
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch approval");
+        }
+
+        const data = await response.json();
+        console.log("Approval Data:", data);
+        // return data;
+        setSelectedDoc(data.approval);
+        setOpenViewer(true);
+      } catch (error) {
+        console.error("Error fetching approval:", error);
+        return null;
+      }
+    };
+
+    // Function to handle approval actions
+    const handleApprovalAction = async (id, action, reason = "") => {
+      try {
+        console.log("Sending approval request:", {
+          id,
+          action,
+          description: reason,
+          accountId,
+          adminUserId,
+        });
+
+        // This is your existing approval endpoint
+        const res = await axios.patch(
+          `${DOCS_MANAGMENTS}/approvals/client-approvals/${id}`,
+          {
+            action,
+            description: reason,
+            accountId,
+            adminUserId,
+          }
+        );
+
+        console.log("✅ Approval response:", res.data);
+
+        // ✅ Extract parent folder path from fileUrl
+        // if (selectedDoc?.fileUrl) {
+        //   // Remove base URL and '/uploads/accounts/'
+        //   let relativePath = selectedDoc.fileUrl.split("/uploads/accounts/")[1];
+
+        //   if (relativePath) {
+        //     // Remove filename from the end
+        //     const parts = relativePath.split("/");
+        //     parts.pop(); // remove the file name
+        //     const parentPath = parts.join("/");
+
+        //     console.log("📁 Extracted parentPath:", parentPath);
+
+        //     // Determine new status
+        //     const newStatus = action === "approve" ? "approvalCompleted" : "canceledApproval";
+
+        //     // Call updateStatus
+        //     await updateStatus(
+        //       { path: parentPath },
+        //       "authStatus",
+        //       newStatus,
+        //       action,
+        //       reason
+        //     );
+        //   }
+        // }
+        let originalPath = "";
+        if (selectedDoc?.fileUrl) {
+          const splitPath = selectedDoc.fileUrl.split("/uploads/accounts/");
+          if (splitPath.length > 1) {
+            originalPath = splitPath[1]; // FULL path including file name
+          }
+          console.log("📌 Original document path:", originalPath);
+        }
+
+        // Status change
+        const newStatus =
+          action === "approve" ? "approvalCompleted" : "canceledApproval";
+
+        // Update status directly using original file path
+        await updateStatus(
+          { path: originalPath },
+          "authStatus",
+          newStatus,
+          action,
+          cancelReason
+        );
+        // Cleanup UI
+        setOpenViewer(false);
+        setCancelDialogOpen(false);
+        setCancelReason("");
+
+        // Refresh the folder tree to update status
+        fetchFolderTree(accountId);
+      } catch (error) {
+        console.error(`❌ Error performing ${action} approval:`, error);
+        if (error.response)
+          console.error("Response data:", error.response.data);
+      }
+    };
+
+    const handleCloseViewer = () => {
+      setOpenViewer(false);
+      setSelectedDoc(null);
+    };
+
+    const handleCancelClick = () => {
+      setCancelDialogOpen(true);
+    };
+
+    const confirmCancel = () => {
+      if (selectedDoc) {
+        handleApprovalAction(selectedDoc._id, "cancel", cancelReason);
+      }
+    };
+    const getFileIcon = (fileName) => {
+      const ext = fileName.split(".").pop().toLowerCase();
+
+      switch (ext) {
+        case "pdf":
+          return <FaFilePdf color="#d32f2f" size={18} />;
+        case "jpg":
+        case "jpeg":
+        case "png":
+        case "gif":
+          return <FaFileImage color="#1976d2" size={18} />;
+        case "doc":
+        case "docx":
+          return <FaFileWord color="#1565c0" size={18} />;
+        case "xls":
+        case "xlsx":
+          return <FaFileExcel color="#2e7d32" size={18} />;
+        case "txt":
+        case "md":
+          return <FaFileAlt color="#616161" size={18} />;
+        default:
+          return <AiFillFileUnknown color="#757575" size={18} />;
+      }
+    };
+
     const approvalStatusTextMap = {
       sendForApproval: "Send for Approval",
       pendingApproval: "Waiting for Approval",
-      cancledApproval: "cancledApproval",
+      canceledApproval: "canceledApproval",
       approvalCompleted: "Approval Completed",
     };
     const statusTextMap = {
@@ -297,242 +740,271 @@ console.log("fileurl",fileUrl)
       pendingSignature: "Waiting for Signature",
       signatureCompleted: "Signature Received",
     };
-const renderTree = (items, level = 0, parentPath = "", isInsideRestricted = false) => {
-  
-  const getStatusChip = (meta) => {
-  const chips = [];
+    const renderTree = (
+      items,
+      level = 0,
+      parentPath = "",
+      isInsideRestricted = false
+    ) => {
+      const getStatusChip = (meta) => {
+        const chips = [];
 
-  // ======= SIGNATURE STATUS =======
-  if (SIGN_STATUSES.includes(meta.signStatus)) {
-    let color = "default";
+        // ======= SIGNATURE STATUS =======
+        if (SIGN_STATUSES.includes(meta.signStatus)) {
+          let color = "default";
 
-    if (meta.signStatus === "pendingSignature") color = "warning";
-    if (meta.signStatus === "signatureCompleted") color = "success";
+          if (meta.signStatus === "pendingSignature") color = "warning";
+          if (meta.signStatus === "signatureCompleted") color = "success";
 
-    chips.push(
-      <Chip
-        key="signChip"
-        label={statusTextMap[meta.signStatus]}
-        size="small"
-        variant="outlined"
-        color={color}
-      />
-    );
-  }
+          chips.push(
+            <Chip
+              key="signChip"
+              label={statusTextMap[meta.signStatus]}
+              size="small"
+              variant="outlined"
+              color={color}
+            />
+          );
+        }
 
-  // ======= APPROVAL STATUS =======
-  if (APPROVAL_STATUSES.includes(meta.authStatus)) {
-    let color = "default";
-    let chip = (
-      <Chip
-        key="approvalChip"
-        label={approvalStatusTextMap[meta.authStatus]}
-        size="small"
-        variant="outlined"
-        color={color}
-      />
-    );
+        // ======= APPROVAL STATUS =======
+        if (APPROVAL_STATUSES.includes(meta.authStatus)) {
+          let color = "default";
+          let chip = (
+            <Chip
+              key="approvalChip"
+              label={approvalStatusTextMap[meta.authStatus]}
+              size="small"
+              variant="outlined"
+              color={color}
+            />
+          );
 
-    if (meta.authStatus === "pendingApproval") color = "warning";
-    if (meta.authStatus === "approvalCompleted") color = "success";
-    if (meta.authStatus === "cancledApproval") color = "error";
+          if (meta.authStatus === "pendingApproval") color = "warning";
+          if (meta.authStatus === "approvalCompleted") color = "success";
+          if (meta.authStatus === "canceledApproval") color = "error";
 
-    // Handle tooltip only for canceled approval
-    if (meta.authStatus === "cancledApproval" && meta.cancelReason) {
-      chip = (
-        <Tooltip title={meta.cancelReason} placement="top-end" >
-          <Chip
-            key="approvalCanceledChip"
-            label="Approval Canceled"
-            size="small"
-            variant="outlined"
-            color="error"
-            sx={{ cursor: "pointer" }}
-          />
-        </Tooltip>
-      );
-    } else {
-      chip = (
-        <Chip
-          key="approvalChip"
-          label={approvalStatusTextMap[meta.authStatus]}
-          size="small"
-          variant="outlined"
-          color={color}
-        />
-      );
-    }
-
-    chips.push(chip);
-  }
-
-  // ======= SHOW NOTHING IF NO STATUS =======
-  if (chips.length === 0) return null;
-
-  return (
-    <Box sx={{ display: "flex", gap: 1, ml: 1 }}>
-      {chips}
-    </Box>
-  );
-};
-  
-  return (
-    <Box component="ul" sx={{ listStyle: "none", pl: level * 2, mb: 1 }}>
-      {items.map((item) => {
-        const fullPath = parentPath ? `${parentPath}/${item.name}` : item.name;
-        const meta = item.meta || {};
-
-        
-        const isFolder = item.type === "folder";
-        const isFile = item.type === "file";
-        const isRootFolder = level === 0 && isFolder;
-
-        // Restricted folder name
-        const restrictedFolderName = "firm documents shared with client";
-
-        // Check if this is the restricted root folder
-        const isFirmDocsRoot =
-          isRootFolder &&
-          item.name?.toLowerCase() === restrictedFolderName.toLowerCase();
-
-        // Track whether we are inside restricted area
-        const insideRestricted = isInsideRestricted || isFirmDocsRoot;
-
-        const hideMenu = insideRestricted;
-
-        const getColor = (status) => (status ? "#1976d2" : "#9e9e9e");
-
-        const StatusIcons = () => (
-          <Box sx={{ display: "flex", gap: 1, alignItems: "center", ml: 1 }}>
-            <Eye size={16} color={getColor(meta.readStatus)} />
-            
-            <Lock size={16} color={meta.readOnly ? "#e53935" : "#9e9e9e"} />
-          </Box>
-        );
-
-        const handleSafeFileClick = () => {
-          if (meta.readOnly) {
-            alert("This file is locked and cannot be opened.");
-            return;
+          // Handle tooltip only for canceled approval
+          if (meta.authStatus === "canceledApproval" && meta.cancelReason) {
+            chip = (
+              <Tooltip title={meta.cancelReason} placement="top-end">
+                <Chip
+                  key="approvalCanceledChip"
+                  label="Approval Canceled"
+                  size="small"
+                  variant="outlined"
+                  color="error"
+                  sx={{ cursor: "pointer" }}
+                />
+              </Tooltip>
+            );
+          } else {
+            chip = (
+              <Chip
+                key="approvalChip"
+                label={approvalStatusTextMap[meta.authStatus]}
+                size="small"
+                variant="outlined"
+                color={color}
+              />
+            );
           }
-          handleFileClick(fullPath, item.name);
-        };
 
-        return (
-          <li key={fullPath} style={{ marginBottom: 8 }}>
-            {isFolder ? (
+          chips.push(chip);
+        }
+
+        // ======= SHOW NOTHING IF NO STATUS =======
+        if (chips.length === 0) return null;
+
+        return <Box sx={{ display: "flex", gap: 1, ml: 1 }}>{chips}</Box>;
+      };
+
+      return (
+        <Box component="ul" sx={{ listStyle: "none", pl: level * 2, mb: 1 }}>
+          {items.map((item) => {
+            const fullPath = parentPath
+              ? `${parentPath}/${item.name}`
+              : item.name;
+            const meta = item.meta || {};
+
+            const isFolder = item.type === "folder";
+            const isFile = item.type === "file";
+            const isRootFolder = level === 0 && isFolder;
+
+            // Restricted folder name
+            const restrictedFolderName = "firm documents shared with client";
+
+            // Check if this is the restricted root folder
+            const isFirmDocsRoot =
+              isRootFolder &&
+              item.name?.toLowerCase() === restrictedFolderName.toLowerCase();
+
+            // Track whether we are inside restricted area
+            const insideRestricted = isInsideRestricted || isFirmDocsRoot;
+
+            const hideMenu = insideRestricted;
+
+            const getColor = (status) => (status ? "#1976d2" : "#9e9e9e");
+
+            const StatusIcons = () => (
               <Box
-                sx={{
-                  p: 1,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  borderRadius: 2,
-                  cursor: "pointer",
-                  backgroundColor: isRootFolder ? "#f0f7ff" : "#fff",
-                  color: "black",
-                  "&:hover": { backgroundColor: "#f5f5f5", color: "black" },
-                  transition: "background-color 0.2s ease-in-out",
-                }}
-                onClick={() => toggleFolder(fullPath, meta.readOnly)}
+                sx={{ display: "flex", gap: 1, alignItems: "center", ml: 1 }}
               >
-                <Box display="flex" alignItems="center" sx={{ flexGrow: 1, gap: 1 }}>
-                  {expandedFolders[fullPath] ? (
-                    <FolderOpenIcon color="#1976d2" size={18} />
-                  ) : (
-                    <FolderClosedIcon color="#757575" size={18} />
-                  )}
+                <Eye size={16} color={getColor(meta.readStatus)} />
 
-                  <Typography
-                    variant="body1"
-                    fontWeight="medium"
-                    sx={{ wordBreak: "break-word" }}
-                  >
-                    {item.name}
-                  </Typography>
-                </Box>
-
-                {!hideMenu && (
-                  <IconButton
-                    size="small"
-                    onClick={(e) =>
-                      handleMenuOpen(e, { ...item, fullPath, isFolder: true })
-                    }
-                  >
-                    <MoreVertIcon size={16} />
-                  </IconButton>
-                )}
+                <Lock size={16} color={meta.readOnly ? "#e53935" : "#9e9e9e"} />
               </Box>
-            ) : (
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  pl: 4,
-                  mb: 1,
-                  borderRadius: 2,
-                  "&:hover .file-menu-icon": { opacity: 1 },
-                }}
-              >
-                <Box sx={{ mr: 1 }}>{getFileIcon(item.name)}</Box>
+            );
 
-                <Typography
-                  variant="body2"
-                  sx={{
-                    flex: 1,
-                    wordBreak: "break-word",
-                    color: meta.readOnly ? "#999" : "#1976d2",
-                    textDecoration: meta.readOnly ? "none" : "underline",
-                    cursor: meta.readOnly ? "not-allowed" : "pointer",
-                  }}
-                  onClick={handleSafeFileClick}
-                >
-                  {item.name}
-                </Typography>
- <Box> 
-                  {getStatusChip(meta)}</Box>
-               
-                {!insideRestricted && <StatusIcons />}
+            const handleSafeFileClick = () => {
+              if (meta.readOnly) {
+                alert("This file is locked and cannot be opened.");
+                return;
+              }
+              handleFileClick(fullPath, item.name, meta);
+            };
 
-                {!hideMenu && (
+            return (
+              <li key={fullPath} style={{ marginBottom: 8 }}>
+                {isFolder ? (
                   <Box
-                    className="file-menu-icon"
                     sx={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: "50%",
-                      backgroundColor: "#1976d2",
-                      opacity: 0,
-                      transition: "opacity 0.2s",
+                      p: 1,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      borderRadius: 2,
                       cursor: "pointer",
-                      mr: 1,
-                      ml: 1,
+                      backgroundColor: isRootFolder ? "#f0f7ff" : "#fff",
+                      color: "black",
+                      "&:hover": { backgroundColor: "#f5f5f5", color: "black" },
+                      transition: "background-color 0.2s ease-in-out",
                     }}
-                    onClick={(e) =>
-                      handleMenuOpen(e, { ...item, fullPath, isFile: true })
-                    }
-                  />
-                )}
-              </Box>
-            )}
+                    onClick={() => toggleFolder(fullPath, meta.readOnly)}
+                  >
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      sx={{ flexGrow: 1, gap: 1 }}
+                    >
+                      {expandedFolders[fullPath] ? (
+                        <FolderOpenIcon color="#1976d2" size={18} />
+                      ) : (
+                        <FolderClosedIcon color="#757575" size={18} />
+                      )}
 
-            {expandedFolders[fullPath] &&
-              item.children &&
-              item.children.length > 0 && (
-                <Box sx={{ ml: 2, mt: 1, borderLeft: "2px dashed #ccc", pl: 2 }}>
-                  {renderTree(item.children, level + 1, fullPath, insideRestricted)}
-                </Box>
-              )}
-          </li>
-        );
-      })}
-    </Box>
-  );
-};
-  return (
-  <Box sx={{ margin: "auto", p: 3 }}>
-       
-  
+                      <Typography
+                        variant="body1"
+                        fontWeight="medium"
+                        sx={{ wordBreak: "break-word" }}
+                      >
+                        {item.name}
+
+                        {meta.readOnly && (
+                          <Typography
+                            variant="caption"
+                            sx={{ color: "red", fontWeight: "bold", ml: 1 }}
+                          >
+                            (Locked)
+                          </Typography>
+                        )}
+                      </Typography>
+                    </Box>
+
+                    {!hideMenu && (
+                      <IconButton
+                        size="small"
+                        onClick={(e) =>
+                          handleMenuOpen(e, {
+                            ...item,
+                            fullPath,
+                            isFolder: true,
+                          })
+                        }
+                      >
+                        <MoreVertIcon size={16} />
+                      </IconButton>
+                    )}
+                  </Box>
+                ) : (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      pl: 4,
+                      mb: 1,
+                      borderRadius: 2,
+                      "&:hover .file-menu-icon": { opacity: 1 },
+                    }}
+                  >
+                    <Box sx={{ mr: 1 }}>{getFileIcon(item.name)}</Box>
+
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        flex: 1,
+                        wordBreak: "break-word",
+                        color: meta.readOnly ? "#999" : "#1976d2",
+                        textDecoration: meta.readOnly ? "none" : "underline",
+                        cursor: meta.readOnly ? "not-allowed" : "pointer",
+                      }}
+                      onClick={handleSafeFileClick}
+                    >
+                      {item.name}
+                    </Typography>
+                    <Box>{getStatusChip(meta)}</Box>
+
+                    {!insideRestricted && <StatusIcons />}
+
+                    {!hideMenu && (
+                      <Box
+                        className="file-menu-icon"
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: "50%",
+                          backgroundColor: "#1976d2",
+                          opacity: 0,
+                          transition: "opacity 0.2s",
+                          cursor: "pointer",
+                          mr: 1,
+                          ml: 1,
+                        }}
+                        onClick={(e) =>
+                          handleMenuOpen(e, { ...item, fullPath, isFile: true })
+                        }
+                      />
+                    )}
+                  </Box>
+                )}
+
+                {expandedFolders[fullPath] &&
+                  item.children &&
+                  item.children.length > 0 && (
+                    <Box
+                      sx={{
+                        ml: 2,
+                        mt: 1,
+                        borderLeft: "2px dashed #ccc",
+                        pl: 2,
+                      }}
+                    >
+                      {renderTree(
+                        item.children,
+                        level + 1,
+                        fullPath,
+                        insideRestricted
+                      )}
+                    </Box>
+                  )}
+              </li>
+            );
+          })}
+        </Box>
+      );
+    };
+    return (
+      <Box sx={{ margin: "auto", p: 3 }}>
         {/* Action Buttons */}
         <Box sx={{ p: 3, maxWidth: "1000px", mx: "auto" }}>
           <Box
@@ -554,60 +1026,59 @@ const renderTree = (items, level = 0, parentPath = "", isInsideRestricted = fals
                 setNewFolderDrawerOpen(true);
                 handleMenuClose();
               }}
-             color="primary"
+              color="primary"
               sx={{
-              backgroundColor: 'text.menu',
-              color: 'primary.contrastText',
-              '&:hover': {
-                backgroundColor: 'menu.dark',
-                boxShadow: 1,
-              },
-              transition: 'background-color 0.2s ease'
-            }}
+                backgroundColor: "text.menu",
+                color: "primary.contrastText",
+                "&:hover": {
+                  backgroundColor: "menu.dark",
+                  boxShadow: 1,
+                },
+                transition: "background-color 0.2s ease",
+              }}
             >
               Create Folder
             </Button>
-  
+
             <Button
               // variant="contained"
               fullWidth
               startIcon={<UploadFileIcon />}
               onClick={() => setFileUploadDrawerOpen(true)}
               color="primary"
-               sx={{
-              backgroundColor: 'text.menu',
-              color: 'primary.contrastText',
-              '&:hover': {
-                backgroundColor: 'menu.dark',
-                boxShadow: 1,
-              },
-              transition: 'background-color 0.2s ease'
-            }}
+              sx={{
+                backgroundColor: "text.menu",
+                color: "primary.contrastText",
+                "&:hover": {
+                  backgroundColor: "menu.dark",
+                  boxShadow: 1,
+                },
+                transition: "background-color 0.2s ease",
+              }}
             >
               Upload File
             </Button>
-  
+
             <Button
               // variant="contained"
               fullWidth
               startIcon={<DriveFolderUploadIcon />}
               onClick={() => setFolderUploaDrawerOpen(true)}
               color="primary"
-               sx={{
-              backgroundColor: 'text.menu',
-              color: 'primary.contrastText',
-              '&:hover': {
-                backgroundColor: 'menu.dark',
-                boxShadow: 1,
-              },
-              transition: 'background-color 0.2s ease'
-            }}
-
+              sx={{
+                backgroundColor: "text.menu",
+                color: "primary.contrastText",
+                "&:hover": {
+                  backgroundColor: "menu.dark",
+                  boxShadow: 1,
+                },
+                transition: "background-color 0.2s ease",
+              }}
             >
               Upload Folder
             </Button>
           </Box>
-  
+
           {/* Drawers */}
           <FileUploadDrawer
             isOpen={fileUploadDrawerOpen}
@@ -616,7 +1087,7 @@ const renderTree = (items, level = 0, parentPath = "", isInsideRestricted = fals
             fetchFolderTree={() => fetchFolderTree(accountId)}
             selectedFolderForMenu={selectedFolderForMenu}
           />
-  
+
           <CreteFolderDrawer
             isOpen={newFolderDrawerOpen}
             onClose={() => {
@@ -627,7 +1098,7 @@ const renderTree = (items, level = 0, parentPath = "", isInsideRestricted = fals
             fetchFolderTree={() => fetchFolderTree(accountId)}
             selectedFolderForMenu={selectedFolderForMenu}
           />
-  
+
           <FolderUploadDrawer
             isOpen={folderUploaDrawerOpen}
             onClose={() => setFolderUploaDrawerOpen(false)}
@@ -635,7 +1106,7 @@ const renderTree = (items, level = 0, parentPath = "", isInsideRestricted = fals
             fetchFolderTree={() => fetchFolderTree(accountId)}
             selectedFolderForMenu={selectedFolderForMenu}
           />
-  
+
           <MoveDrawer
             isOpen={moveDrawerOpen}
             onClose={() => {
@@ -645,7 +1116,7 @@ const renderTree = (items, level = 0, parentPath = "", isInsideRestricted = fals
             fetchFolderTree={() => fetchFolderTree(accountId)}
             selectedFolderForMenu={selectedFolderForMenu}
           />
-  
+
           <RenameDrawer
             isOpen={renameDrawer}
             onClose={() => {
@@ -656,21 +1127,246 @@ const renderTree = (items, level = 0, parentPath = "", isInsideRestricted = fals
             selectedFolderForMenu={selectedFolderForMenu}
           />
         </Box>
-  
+        {openViewer && (
+          <Dialog
+            open={openViewer}
+            onClose={handleCloseViewer}
+            fullWidth
+            maxWidth="md"
+          >
+            <DialogTitle
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                justifyContent: "space-between",
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 2,
+                }}
+              >
+                <DescriptionIcon fontSize="small" sx={{ color: "#f0c000" }} />
+                <Typography
+                  variant="subtitle1"
+                  sx={{ fontWeight: 600, flexGrow: 1 }}
+                  noWrap
+                >
+                  {selectedDoc?.filename || "Document"}
+                </Typography>
+
+                {selectedDoc?.description && (
+                  <Tooltip
+                    title={selectedDoc.description}
+                    arrow
+                    placement="right"
+                  >
+                    <IconButton
+                      size="small"
+                      sx={{ color: "text.secondary" }}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <WarningAmberIcon />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </Box>
+              <Box>
+                <IconButton onClick={handleCloseViewer}>
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+            </DialogTitle>
+
+            <DialogContent dividers sx={{ height: "80vh" }}>
+              {selectedDoc ? (
+                <iframe
+                  src={selectedDoc.fileUrl}
+                  title={selectedDoc.filename}
+                  width="100%"
+                  height="100%"
+                  style={{ border: "none" }}
+                />
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No document selected
+                </Typography>
+              )}
+            </DialogContent>
+
+            {selectedDoc && (
+              <DialogActions sx={{ justifyContent: "center", p: 2 }}>
+                <Button
+                  variant="contained"
+                  color="success"
+                  onClick={() =>
+                    handleApprovalAction(selectedDoc._id, "approve")
+                  }
+                >
+                  Approve
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={handleCancelClick}
+                >
+                  Disapprove
+                </Button>
+              </DialogActions>
+            )}
+          </Dialog>
+        )}
+
+
+
+        {/* Cancel Reason Dialog */}
+        <Dialog
+          open={cancelDialogOpen}
+          onClose={() => setCancelDialogOpen(false)}
+          fullWidth
+          maxWidth="sm"
+        >
+          <DialogTitle>Cancel Document Approval</DialogTitle>
+          <DialogContent>
+            <DialogContentText sx={{ mb: 2 }}>
+              Please provide a reason for cancelling this document approval:
+            </DialogContentText>
+            <Typography gutterBottom>Description</Typography>
+            <TextField
+              autoFocus
+              fullWidth
+              multiline
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setCancelDialogOpen(false)}>Close</Button>
+            <Button
+              variant="contained"
+              color="error"
+              disabled={!cancelReason.trim()}
+              onClick={confirmCancel}
+            >
+              Submit
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+         <Dialog open={dialogOpen} onClose={handleCloseDialog} fullWidth maxWidth="lg">
+      <DialogTitle>
+        Signing Form
+        <IconButton
+          aria-label="close"
+          onClick={handleCloseDialog}
+          sx={{
+            position: "absolute",
+            right: 8,
+            top: 8,
+            color: (theme) => theme.palette.grey[500],
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+
+      <DialogContent dividers>
+        {selectedSlug && (
+          <DocusealForm
+            src={`https://docuseal.com/s/${selectedSlug}`}
+            email={targetEmail}
+            onComplete={async (data) => {
+              console.log("Post-sign data:", data);
+
+              try {
+                // 1️⃣ Update this specific submitter's status and replace document
+                const updateSubmitterRes = await fetch(
+                  `${SIGNATURE_API}/signautrelist/update-submitter/${data.template.external_id}`,
+                  {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      submitterEmail: targetEmail,
+                      submissionId: data.submission_id,
+                    }),
+                  }
+                );
+
+                const updateData = await updateSubmitterRes.json();
+
+                if (updateData.success) {
+                  console.log("✅ Document replaced with latest signature");
+                  
+                  // 2️⃣ Check if ALL submitters have now completed
+                  if (updateData.allCompleted) {
+                    console.log("🎉 All submitters have completed signing!");
+                    
+                    // Extract parent folder path
+                    const fullPath = decodeURIComponent(
+                      updateData.esignRecord.fileUrl.split("/uploads/accounts/")[1]
+                    );
+                    const parentFolderPath = fullPath
+                      .split("/")
+                      .slice(0, -1)
+                      .join("/");
+
+                    // 3️⃣ Update the final status only when ALL have signed
+                    await updateStatus(
+                      { path: parentFolderPath },
+                      "signStatus",
+                      "signatureCompleted"
+                    );
+
+                    // 4️⃣ Notify admin
+                    await fetch(`${SIGNATURE_API}/notify-admin`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        clientName: targetEmail,
+                        documentName: selectedSlug,
+                        message: "All parties have completed signing"
+                      }),
+                    });
+
+                    alert("All signatures completed! Document has been fully executed.");
+                  } else {
+                    console.log(`✅ You have signed. Document updated. Waiting for ${updateData.pendingCount} more signer(s).`);
+                    alert(`Thank you for signing! Document has been updated. Waiting for ${updateData.pendingCount} more signer(s) to complete.`);
+                  }
+                } else {
+                  alert("Error updating signature status.");
+                }
+
+              } catch (err) {
+                console.error("Error handling post-sign actions", err);
+                alert("Error while updating sign status.");
+              }
+
+              handleCloseDialog();
+              // Refresh the data
+              window.location.reload();
+            }}
+          />
+        )}
+      </DialogContent>
+    </Dialog>
         {/* Folder Explorer */}
         <Paper elevation={3} sx={{ p: 2 }}>
           <Typography variant="h6" gutterBottom>
             📜 Folder Explorer
           </Typography>
           {folderTree ? (
-            (renderTree(folderTree))
+            renderTree(folderTree)
           ) : (
             <Typography>Loading folder data...</Typography>
           )}
         </Paper>
-  
 
- {selectedFolderForMenu ? (
+        {selectedFolderForMenu ? (
           selectedFolderForMenu.isParent ? (
             // 📁 Parent Folder Menu
             <ParentFolderMenu
@@ -712,23 +1408,14 @@ const renderTree = (items, level = 0, parentPath = "", isInsideRestricted = fals
             />
           )
         ) : null}
-
-       
-
       </Box>
     );
   };
   return (
-  
     <Box sx={{ p: 3 }}>
-   
-
-      
-
-
       <FolderTreeView accountId={accountId} />
     </Box>
-  )
-}
+  );
+};
 
-export default DocsFolderTree
+export default DocsFolderTree;

@@ -58,7 +58,7 @@ const DocumentApprovals = ({ accountId,adminUserId }) => {
            status: {
         [statusType]: newValue,
         ...(action === "cancel" && reason ? { cancelReason: reason } : {})
-      }
+      },
         };
   
         const res = await fetch(
@@ -112,35 +112,57 @@ const DocumentApprovals = ({ accountId,adminUserId }) => {
     console.log("✅ Approval response:", res.data);
 
  // ✅ Extract parent folder path from fileUrl
+//     if (selectedDoc?.fileUrl) {
+//       // Remove base URL and '/uploads/accounts/'
+//       let relativePath = selectedDoc.fileUrl.split("/uploads/accounts/")[1];
+
+//       if (relativePath) {
+//         // Remove filename from the end
+//         const parts = relativePath.split("/");
+//         parts.pop(); // remove the file name (Invoice_14.pdf)
+//         const parentPath = parts.join("/");
+
+//         console.log("📁 Extracted parentPath:", parentPath);
+
+//         // Determine new status
+//         const newStatus = action === "approve" ? "approvalCompleted" : "cancledApproval";
+
+//         // Call updateStatus
+//         // await updateStatus({ path: parentPath }, "authStatus", newStatus,action);
+//         await updateStatus(
+//   { path: parentPath },
+//   "authStatus",
+//   newStatus,
+//   action,
+//   cancelReason
+// );
+
+//       } else {
+//         console.warn("⚠️ Could not extract parentPath from fileUrl:", selectedDoc.fileUrl);
+//       }
+//     }
+  // Extract FULL original path
+    let originalPath = "";
     if (selectedDoc?.fileUrl) {
-      // Remove base URL and '/uploads/accounts/'
-      let relativePath = selectedDoc.fileUrl.split("/uploads/accounts/")[1];
-
-      if (relativePath) {
-        // Remove filename from the end
-        const parts = relativePath.split("/");
-        parts.pop(); // remove the file name (Invoice_14.pdf)
-        const parentPath = parts.join("/");
-
-        console.log("📁 Extracted parentPath:", parentPath);
-
-        // Determine new status
-        const newStatus = action === "approve" ? "approvalCompleted" : "cancledApproval";
-
-        // Call updateStatus
-        // await updateStatus({ path: parentPath }, "authStatus", newStatus,action);
-        await updateStatus(
-  { path: parentPath },
-  "authStatus",
-  newStatus,
-  action,
-  cancelReason
-);
-
-      } else {
-        console.warn("⚠️ Could not extract parentPath from fileUrl:", selectedDoc.fileUrl);
+      const splitPath = selectedDoc.fileUrl.split("/uploads/accounts/");
+      if (splitPath.length > 1) {
+        originalPath = splitPath[1]; // FULL path including file name
       }
+      console.log("📌 Original document path:", originalPath);
     }
+
+    // Status change
+    const newStatus =
+      action === "approve" ? "approvalCompleted" : "canceledApproval";
+
+    // Update status directly using original file path
+    await updateStatus(
+      { path: originalPath },
+      "authStatus",
+      newStatus,
+      action,
+      cancelReason
+    );
     // Cleanup UI
     setOpenViewer(false);
     setCancelDialogOpen(false);
