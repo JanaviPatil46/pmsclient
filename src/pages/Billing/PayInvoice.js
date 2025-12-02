@@ -28,7 +28,7 @@ const PayInvoice = () => {
   ];
   const location = useLocation();
   const { selectedInvoices = [], accountName = "" } = location.state || {};
-
+console.log("Selected Invoices:", selectedInvoices);
   const [routingNumber,setRoutingNumber]=useState("000000013")
   const [accountNumber,setAccountNumber]=useState("1100000005")
   const [selectedAccountHolderType, setSelectedAccountHolderType] = useState(accountHolderTypeOptions[0]);
