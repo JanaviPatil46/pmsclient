@@ -68,7 +68,7 @@ accId,
         <DriveFileMoveIcon fontSize="small" sx={{ mr: 0.5 }} />
         Download
       </MenuItem> */}
-<MenuItem
+{/* <MenuItem
         onClick={() => {
           if (selectedItem) {
             onDownload(
@@ -83,7 +83,7 @@ accId,
       >
         <DownloadIcon fontSize="small" sx={{ mr: 0.5 }} />
         Download
-      </MenuItem>
+      </MenuItem> */}
       <MenuItem
         disabled={isLocked}
         onClick={() => {

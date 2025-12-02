@@ -12,7 +12,7 @@ import {
   DialogContent,
   DialogActions,
   DialogContentText,
-  TextField,
+  TextField,Table,TableBody,TableCell,TableContainer,TableHead,TableRow
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -37,6 +37,7 @@ import {
   Folder as FolderClosedIcon,
   FolderOpen as FolderOpenIcon,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import ParentFolderMenu from "./ParentFolderMenu";
 import FolderMenu from "./FolderMenu";
@@ -63,6 +64,9 @@ const DocsFolderTree = () => {
       sessionStorage.getItem("email")
     ); // store client email
     console.log("folder structure of account is", accountId);
+    const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
+const [selectedInvoiceFile, setSelectedInvoiceFile] = useState(null);
+
     const [expandedFolders, setExpandedFolders] = useState({});
     const [menuAnchorEl, setMenuAnchorEl] = useState(null);
     const [selectedFolderForMenu, setSelectedFolderForMenu] = useState(null);
@@ -341,9 +345,112 @@ const handleCloseDialog = () => {
   setDialogOpen(false);
   setSelectedSlug(null);
 };
+const INVOICE_NEW = process.env.REACT_APP_INVOICES_URL;
+const fetchInvoicesByIds = async (ids = []) => {
+  try {
+    if (!ids.length) return [];
+
+    // Create an array of fetch promises
+    const fetchPromises = ids.map((id) => {
+      const url = `${INVOICE_NEW}/workflow/invoices/invoice/invoicelist/invoicelistbyid/${id}`;
+      return fetch(url, { method: "GET", redirect: "follow" }).then((res) => res.json());
+    });
+
+    // Wait for all invoices to be fetched
+    const results = await Promise.all(fetchPromises);
+
+    // Filter only valid invoices and transform them
+    const invoices = results
+      .filter((result) => result?.invoice)
+      .map((result) => {
+        const inv = result.invoice;
+
+        const lineItems = inv.lineItems.map((item) => ({
+          productName: item.productorService || "",
+          description: item.description || "",
+          rate: String(item.rate || "0.00"),
+          qty: String(item.quantity || "1"),
+          amount: String(item.amount || "0.00"),
+          tax: item.tax || false,
+          isDiscount: item.isDiscount || false,
+        }));
+
+        return {
+          _id: inv._id,
+          invoicenumber: inv.invoicenumber,
+          invoicedate: inv.invoicedate,
+          account: inv.account ? { value: inv.account._id, label: inv.account.accountName } : null,
+          invoicetemplate: inv.invoicetemplate
+            ? { value: inv.invoicetemplate._id, label: inv.invoicetemplate.templatename }
+            : null,
+          paymentMethod: { value: inv.paymentMethod, label: inv.paymentMethod },
+          teammember: inv.teammember
+            ? { value: inv.teammember._id, label: inv.teammember.username }
+            : null,
+          description: inv.description,
+          emailToClient: inv.emailinvoicetoclient,
+          scheduledInvoice: inv.scheduleinvoice,
+          payInvoiceWithCredits: inv.payInvoicewithcredits,
+          isEmailInvoice: inv.emailinvoicetoclient,
+          reminders: inv.reminders,
+          lineItems,
+          summary: inv.summary || {},
+        };
+      });
+
+    return invoices;
+  } catch (error) {
+    console.error("Error fetching invoices:", error);
+    return [];
+  }
+};
+const navigate = useNavigate();
+
+const handlePayInvoice = () => {
+  if (!selectedInvoiceFile?.meta?.invoices?.length) return;
+
+  navigate("/client/payinvoice", {
+    state: {
+      selectedInvoices: selectedInvoiceFile.meta.invoices,
+      accountName: accountName, // Replace with dynamic account name if available
+    },
+  });
+};
 const handleFileClick = async (fullPath, fileName, meta = {}) => {
   console.log("file clicked", fullPath, fileName, meta);
   try {
+
+      // 🔒 Check if invoice lock exists
+    // if (meta.invoiceLock) {
+
+     
+    //   setSelectedInvoiceFile({ path: fullPath, name: fileName, meta });
+    //   setInvoiceDialogOpen(true);
+    //   return;
+    // }
+      // 🔒 Handle locked invoices
+    if (meta.invoiceLock?.length) {
+      // Fetch full invoices by IDs
+      const invoices = await fetchInvoicesByIds(meta.invoiceLock);
+
+      if (!invoices.length) {
+        alert("Failed to fetch invoice details.");
+        return;
+      }
+
+      // Save for dialog
+      setSelectedInvoiceFile({
+        path: fullPath,
+        name: fileName,
+        meta: {
+          ...meta,
+          invoices // Attach the full invoice objects here
+        }
+      });
+
+      setInvoiceDialogOpen(true);
+      return;
+    }
     // Check if this is a pending approval document
     if (meta.authStatus === "pendingApproval" && meta.approvalId) {
       fetApprovalDetails(meta.approvalId);
@@ -1354,6 +1461,103 @@ const openDocument = (fullPath, fileName) => {
         )}
       </DialogContent>
     </Dialog>
+
+ {/* <Dialog
+  open={invoiceDialogOpen}
+  onClose={() => setInvoiceDialogOpen(false)}
+  fullWidth
+  maxWidth="sm"
+>
+  <DialogTitle>Invoice Details</DialogTitle>
+  <DialogContent>
+    {selectedInvoiceFile?.meta?.invoices?.length ? (
+      selectedInvoiceFile.meta.invoices.map((invoice) => (
+        <Box
+          key={invoice._id}
+          sx={{ mb: 2, p: 2, border: "1px solid #ccc", borderRadius: 1, bgcolor: "#f9f9f9" }}
+        >
+          <Typography variant="subtitle1">
+            {invoice.invoicenumber ? `Invoice #${invoice.invoicenumber}` : invoice._id}
+          </Typography>
+          <Typography variant="body2">{invoice.description || "No description"}</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Date: {invoice.invoicedate ? new Date(invoice.invoicedate).toLocaleDateString() : "N/A"}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Amount: ${invoice.summary.total|| ""}
+          </Typography>
+
+        </Box>
+      ))
+    ) : (
+      <Typography>No invoices available for this file.</Typography>
+    )}
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={() => setInvoiceDialogOpen(false)}>Close</Button>
+    {selectedInvoiceFile?.meta?.invoices?.length > 0 && (
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => {
+          setInvoiceDialogOpen(false);
+          window.location.href = `/payinvoice?file=${encodeURIComponent(selectedInvoiceFile.path)}`;
+        }}
+      >
+        Pay
+      </Button>
+    )}
+  </DialogActions>
+</Dialog> */}
+<Dialog
+  open={invoiceDialogOpen}
+  onClose={() => setInvoiceDialogOpen(false)}
+  fullWidth
+  maxWidth="sm"
+>
+  <DialogTitle>Invoice Details</DialogTitle>
+  <DialogContent>
+    {selectedInvoiceFile?.meta?.invoices?.length ? (
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell>Invoice Number</TableCell>
+            <TableCell>Description</TableCell>
+            <TableCell align="right">Amount</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {selectedInvoiceFile.meta.invoices.map((invoice) => (
+            <TableRow key={invoice._id}>
+              <TableCell>
+                {invoice.invoicenumber}
+              </TableCell>
+              <TableCell>{invoice.description || "No description"}</TableCell>
+              <TableCell align="right">${invoice.summary?.total?.toFixed(2) || "0.00"}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    ) : (
+      <Typography>No invoices available for this file.</Typography>
+    )}
+  </DialogContent>
+ <DialogActions>
+  <Button onClick={() => setInvoiceDialogOpen(false)}>Close</Button>
+  {selectedInvoiceFile?.meta?.invoices?.length > 0 && (
+    <Button
+      variant="contained"
+      color="primary"
+      onClick={handlePayInvoice}
+    >
+      Pay
+    </Button>
+  )}
+</DialogActions>
+
+</Dialog>
+
+
         {/* Folder Explorer */}
         <Paper elevation={3} sx={{ p: 2 }}>
           <Typography variant="h6" gutterBottom>
