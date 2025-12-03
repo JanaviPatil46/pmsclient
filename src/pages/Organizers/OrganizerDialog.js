@@ -2370,7 +2370,8 @@ const OrganizerDialog = ({ open, handleClose, organizer }) => {
 
     const data = {
       sections: sectionsData,
-      status: finalSubmit ? "Completed" : "In Progress",
+      // status: finalSubmit ? "Completed" : "In Progress",
+       status: finalSubmit ? "Completed" : (organizer?.status === "Completed" ? "Completed" : "In Progress"), // Preserve Completed status
       completedby: accountName,
       active: true,
       repeatedSections: repeatedSections,
@@ -2388,7 +2389,7 @@ const OrganizerDialog = ({ open, handleClose, organizer }) => {
     }
   }, [
     open,
-    organizer?._id,
+    organizer?._id,  organizer?.status, 
     inputValues,
     radioValues,
     checkboxValues,

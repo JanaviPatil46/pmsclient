@@ -83,18 +83,7 @@ const [chatTemplate, setChatTemplate]=useState("")
       console.error("Error fetching data:", error);
     }
   };
-  // const handleCheckboxChange = (index) => {
-  //   setTasks((prevTasks) => {
-  //     const updatedTasks = prevTasks.map((task, i) =>
-  //       i === index
-  //         ? { ...task, checked: task.checked === "true" ? "false" : "true" }
-  //         : task
-  //     );
-
-  //     updateClientTask(updatedTasks);
-  //     return updatedTasks;
-  //   });
-  // };
+ 
 const handleCheckboxChange = (index) => {
   setTasks((prevTasks) => {
     const updatedTasks = prevTasks.map((task, i) =>
@@ -245,8 +234,7 @@ const updateChatDescription = (message = "") => {
       return response.json();
     })
     .then((data) => {
-      // toast.success("Message sent & email triggered");
-      // getsChatDetails(); // Reload chat details
+      
        // Only update UI after successful backend storage
         setChatDescriptions(prev => [
           ...prev,
