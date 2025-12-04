@@ -835,7 +835,15 @@ const openDocument = (fullPath, fileName) => {
           return <AiFillFileUnknown color="#757575" size={18} />;
       }
     };
+  const INVOICE_LOCK_STATUSES = [
+  "pendingpayment",
+  "paymentcompleted",
+];
 
+const invoiceStatusTextMap = {
+  pendingpayment: "Pending Payment",
+  paymentcompleted: "Payment Completed",
+};
     const approvalStatusTextMap = {
       sendForApproval: "Send for Approval",
       pendingApproval: "Waiting for Approval",
@@ -919,7 +927,22 @@ const openDocument = (fullPath, fileName) => {
 
           chips.push(chip);
         }
+// ⭐ NEW — INVOICE LOCK STATUS
+  if (INVOICE_LOCK_STATUSES.includes(meta.lockInvoiceStatus)) {
+    let color = "default";
+    if (meta.lockInvoiceStatus === "pendingpayment") color = "warning";
+    if (meta.lockInvoiceStatus === "paymentcompleted") color = "success";
 
+    chips.push(
+      <Chip
+        key="invoiceLockChip"
+        label={invoiceStatusTextMap[meta.lockInvoiceStatus]}
+        size="small"
+        variant="outlined"
+        color={color}
+      />
+    );
+  }
         // ======= SHOW NOTHING IF NO STATUS =======
         if (chips.length === 0) return null;
 
