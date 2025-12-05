@@ -3407,7 +3407,7 @@ const OrganizerDialog = ({ open, handleClose, organizer }) => {
                       )}
                     </Typography>
                     <DatePicker
-                      format="DD/MM/YYYY"
+                      format="MM/DD/YYYY"
                       sx={{
                         width: "100%",
                         backgroundColor: "#fff",

@@ -111,36 +111,7 @@ const DocumentApprovals = ({ accountId,adminUserId }) => {
 
     console.log("✅ Approval response:", res.data);
 
- // ✅ Extract parent folder path from fileUrl
-//     if (selectedDoc?.fileUrl) {
-//       // Remove base URL and '/uploads/accounts/'
-//       let relativePath = selectedDoc.fileUrl.split("/uploads/accounts/")[1];
-
-//       if (relativePath) {
-//         // Remove filename from the end
-//         const parts = relativePath.split("/");
-//         parts.pop(); // remove the file name (Invoice_14.pdf)
-//         const parentPath = parts.join("/");
-
-//         console.log("📁 Extracted parentPath:", parentPath);
-
-//         // Determine new status
-//         const newStatus = action === "approve" ? "approvalCompleted" : "cancledApproval";
-
-//         // Call updateStatus
-//         // await updateStatus({ path: parentPath }, "authStatus", newStatus,action);
-//         await updateStatus(
-//   { path: parentPath },
-//   "authStatus",
-//   newStatus,
-//   action,
-//   cancelReason
-// );
-
-//       } else {
-//         console.warn("⚠️ Could not extract parentPath from fileUrl:", selectedDoc.fileUrl);
-//       }
-//     }
+ 
   // Extract FULL original path
     let originalPath = "";
     if (selectedDoc?.fileUrl) {
@@ -319,7 +290,7 @@ const DocumentApprovals = ({ accountId,adminUserId }) => {
               variant="outlined"
               color="error"
               onClick={handleCancelClick}
-              // onClick={() => handleAction(selectedDoc._id, "cancel")}
+             
             >
               Disapprove
             </Button>
