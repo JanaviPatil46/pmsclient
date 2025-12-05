@@ -96,7 +96,16 @@ const handleCheckboxChange = (index) => {
     return updatedTasks;
   });
 };
+const handleTaskToggle = (id) => {
+    setTasks((prevTasks) => {
+      const updated = prevTasks.map((task) =>
+        task.id === id ? { ...task, checked: !task.checked } : task
+      );
 
+      updateClientTask(updated);
+      return updated;
+    });
+  };
   const updateClientTask = (updatedTasks) => {
     const myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
@@ -127,6 +136,7 @@ const handleCheckboxChange = (index) => {
       .then((response) => response.json())
       .then((result) => {
         console.log("Backend response:", result);
+       
         const allChecked = updatedTasks.every(
           (task) => task.checked === true 
         );
@@ -554,7 +564,7 @@ const updateChatDescription = (message = "") => {
             </Typography>
             <Divider sx={{ mb: 2 }} />
 
-            <Box display="flex" flexDirection="column" gap={2}>
+            {/* <Box display="flex" flexDirection="column" gap={2}>
               {tasks.length > 0 ? (
                 tasks.map((task, index) => (
                   <Box key={index} display="flex" alignItems="center" gap={1}>
@@ -578,7 +588,41 @@ const updateChatDescription = (message = "") => {
                   No task is assigned
                 </Typography>
               )}
-            </Box>
+            </Box> */}
+            <Box display="flex" flexDirection="column" gap={2}>
+  {tasks.length > 0 ? (
+    tasks.map((task, index) => (
+      <Box
+        key={task.id}
+        display="flex"
+        alignItems="center"
+        gap={1}
+      >
+        <Checkbox
+          checked={task.checked}
+          onChange={() => handleTaskToggle(task.id)}
+        />
+
+       <Box
+                      sx={{
+                        p: 1,
+                        width: "100%",
+                      textDecoration: task.checked ? "line-through" : "none",
+                      }}
+                    >
+                      <Typography variant="body1">{task.text}</Typography>
+                    </Box>
+
+       
+      </Box>
+    ))
+  ) : (
+    <Typography variant="body2" color="text.secondary">
+      No task is assigned
+    </Typography>
+  )}
+</Box>
+
           </Box>
         </Grid>
       </Grid>
