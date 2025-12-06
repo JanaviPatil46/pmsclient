@@ -1,7 +1,7 @@
 
 
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useRef } from "react";
 import {
   Drawer,
   Box,
@@ -20,7 +20,8 @@ import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import { toast } from "material-react-toastify";
-
+import JSZip from "jszip";
+import axios from "axios";
 const FolderUploadDrawer = ({
   isOpen,
   onClose,
@@ -32,6 +33,11 @@ const FolderUploadDrawer = ({
   const [message, setMessage] = useState("");
   const [folderName, setFolderName] = useState("my-uploaded-folder");
   const [files, setFiles] = useState([]);
+ const hiddenFileInput = useRef(null);
+  // open hidden input
+  const handleClick = () => {
+    hiddenFileInput.current.click();
+  };
 
   useEffect(() => {
     if (isOpen && selectedFolderForMenu) {
@@ -47,75 +53,137 @@ const FolderUploadDrawer = ({
 
   const handleFolderSelect = (path) => setSelectedFolder(path);
 
-  const handleUploadFolderSelect = (e) => {
+  // const handleUploadFolderSelect = (e) => {
+  //   const selectedFiles = Array.from(e.target.files);
+  //   if (selectedFiles.length === 0) return;
+
+  //   // ✅ Calculate total folder size
+  //   const totalSize = selectedFiles.reduce((sum, file) => sum + file.size, 0);
+  //   const maxFolderSize = 100 * 1024 * 1024; // 100 MB
+
+  //   // 🚫 Restrict folder if total exceeds limit
+  //   if (totalSize > maxFolderSize) {
+  //     alert(
+  //       `❌ Folder size exceeds 100 MB limit.\nSelected folder size: ${(
+  //         totalSize /
+  //         (1024 * 1024)
+  //       ).toFixed(2)} MB`
+  //     );
+  //     e.target.value = null; // reset input
+  //     setFiles([]); // clear files state
+  //     return;
+  //   }
+
+  //   // ✅ Normal processing (unchanged)
+  //   setFiles(selectedFiles);
+
+  //   const firstPath = selectedFiles[0].webkitRelativePath;
+  //   const topLevelFolder = firstPath.split("/")[0];
+  //   setFolderName(topLevelFolder);
+  // };
+ const handleUploadFolderSelect = (e) => {
     const selectedFiles = Array.from(e.target.files);
-    if (selectedFiles.length === 0) return;
-
-    // ✅ Calculate total folder size
-    const totalSize = selectedFiles.reduce((sum, file) => sum + file.size, 0);
-    const maxFolderSize = 100 * 1024 * 1024; // 100 MB
-
-    // 🚫 Restrict folder if total exceeds limit
-    if (totalSize > maxFolderSize) {
-      alert(
-        `❌ Folder size exceeds 100 MB limit.\nSelected folder size: ${(
-          totalSize /
-          (1024 * 1024)
-        ).toFixed(2)} MB`
-      );
-      e.target.value = null; // reset input
-      setFiles([]); // clear files state
-      return;
-    }
-
-    // ✅ Normal processing (unchanged)
     setFiles(selectedFiles);
 
-    const firstPath = selectedFiles[0].webkitRelativePath;
-    const topLevelFolder = firstPath.split("/")[0];
-    setFolderName(topLevelFolder);
+    if (selectedFiles.length > 0) {
+      const firstPath = selectedFiles[0].webkitRelativePath;
+      const topLevelFolder = firstPath.split("/")[0];
+      setFolderName(topLevelFolder);
+    }
   };
+  // const handleUpload = async () => {
+  //   if (files.length === 0) {
+  //     setMessage("Please select a folder first");
+  //     return;
+  //   }
 
-  const handleUpload = async () => {
-    if (files.length === 0) {
-      setMessage("Please select a folder first");
+  //   let targetFolderPath = selectedFolder
+  //     ? `${selectedFolder}/${folderName}`
+  //     : folderName;
+
+  //   targetFolderPath = targetFolderPath.replace(/\/+/g, "/");
+
+  //   const formData = new FormData();
+  //   files.forEach((file) => {
+  //     formData.append("files", file, file.webkitRelativePath);
+  //   });
+
+  //   try {
+  //     const res = await fetch(
+  //       `https://www.snptaxes.com/api/accountsdoc/folder/upload?folderPath=${encodeURIComponent(
+  //         targetFolderPath
+  //       )}`,
+  //       { method: "POST", body: formData }
+  //     );
+  //     const data = await res.json();
+  //     if (res.ok) {
+  //       setMessage(`✅ Folder uploaded successfully: ${data.files.length} files`);
+  //        toast.success(`Folder uploaded successfully: ${data.files.length} files`)
+  //       fetchFolderTree();
+  //       onClose()
+  //       setFiles([]);
+  //     } else {
+  //       setMessage(`❌ Error: ${data.error}`);
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //     setMessage("Upload failed");
+  //   }
+  // };
+const handleUpload = async () => {
+    if (!files.length) {
+      alert("Please select a folder first!");
+      return;
+    }
+    // ⭐ Check target folder not selected
+    if (!selectedFolder || selectedFolder.trim() === "") {
+      alert("Please select target path first!");
       return;
     }
 
+    // ------------------------------
+    // ⭐ Use targetFolderPath logic
+    // ------------------------------
     let targetFolderPath = selectedFolder
       ? `${selectedFolder}/${folderName}`
       : folderName;
 
     targetFolderPath = targetFolderPath.replace(/\/+/g, "/");
+    console.log("Target Folder Path:", targetFolderPath);
+    setMessage("Zipping folder...");
 
-    const formData = new FormData();
+    const zip = new JSZip();
     files.forEach((file) => {
-      formData.append("files", file, file.webkitRelativePath);
+      zip.file(file.webkitRelativePath, file);
     });
 
+    const zipBlob = await zip.generateAsync({ type: "blob" });
+
+    const formData = new FormData();
+    formData.append("folderZip", zipBlob, `${folderName}.zip`);
+    formData.append("folderName", folderName);
+    formData.append("folderPath", targetFolderPath);
+
+    setMessage("Uploading...");
+
     try {
-      const res = await fetch(
-        `https://www.snptaxes.com/api/accountsdoc/folder/upload?folderPath=${encodeURIComponent(
-          targetFolderPath
-        )}`,
-        { method: "POST", body: formData }
+      const res = await axios.post(
+        "https://snptaxes.com/api/accountsdoc/upload-folder",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
       );
-      const data = await res.json();
-      if (res.ok) {
-        setMessage(`✅ Folder uploaded successfully: ${data.files.length} files`);
-         toast.success(`Folder uploaded successfully: ${data.files.length} files`)
-        fetchFolderTree();
-        onClose()
-        setFiles([]);
-      } else {
-        setMessage(`❌ Error: ${data.error}`);
-      }
+      setMessage(res.data.message || "Uploaded successfully!");
+      console.log(res.data.message);
+      toast.success(`Folder uploaded successfully`);
+      fetchFolderTree();
+      onClose();
     } catch (err) {
       console.error(err);
-      setMessage("Upload failed");
+      setMessage("Upload failed!");
     }
   };
-
   return (
     <Drawer anchor="right" open={isOpen} onClose={onClose}>
       <Box sx={{ width: 400, p: 3,  height: "100%" }}>
@@ -125,7 +193,7 @@ const FolderUploadDrawer = ({
 
         
 
-        <Button
+        {/* <Button
           variant="outlined"
           component="label"
           fullWidth
@@ -140,8 +208,27 @@ const FolderUploadDrawer = ({
             hidden
             onChange={handleUploadFolderSelect}
           />
+        </Button> */}
+ {/* MUI Button instead of File Input */}
+        <Button
+          variant="outlined"
+          color="primary"
+          onClick={handleClick}
+          sx={{ mb: 2 }}
+        >
+          Select Folder
         </Button>
 
+        {/* Hidden File Input */}
+        <input
+          type="file"
+          ref={hiddenFileInput}
+          onChange={handleUploadFolderSelect}
+          style={{ display: "none" }}
+          webkitdirectory="true"
+          directory="true"
+          multiple
+        />
         <Button
           // variant="contained"
           color="primary"

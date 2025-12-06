@@ -136,7 +136,7 @@ const handleTaskToggle = (id) => {
       .then((response) => response.json())
       .then((result) => {
         console.log("Backend response:", result);
-       
+        toast.success("Task updated");
         const allChecked = updatedTasks.every(
           (task) => task.checked === true 
         );
