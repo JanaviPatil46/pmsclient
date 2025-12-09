@@ -11,15 +11,45 @@ import SideMenu from "./components/SideMenu";
 import AppTheme from "./shared-theme/AppTheme";
 import { Outlet, useNavigate } from "react-router-dom";
 import { LoginContext } from "./context/Context";
-
+import api from "./utils/api"; 
+import axios from "axios";
 export default function Dashboard(props) {
   const navigate = useNavigate();
   const { setLoginData } = useContext(LoginContext);
-
-  const [data, setData] = useState(false);
+const [loading, setLoading] = useState(true);
+  // const [data, setData] = useState(false);
   const [sideMenuCollapsed, setSideMenuCollapsed] = useState(false);
 
-  
+   useEffect(() => {
+    validateSession();
+  }, []);
+
+  const validateSession = async () => {
+    try {
+      const token = sessionStorage.getItem("jwtToken");
+      const accountId = sessionStorage.getItem("accountId");
+
+      if (!token || !accountId) {
+        sessionStorage.clear();
+        return navigate("/client/login");
+      }
+
+      const res = await api.get("/api/client/dashboard", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          accountId: accountId
+        }
+      });
+
+      setLoginData(res.data.user);
+      setLoading(false);
+    } catch (error) {
+      // 401/403 auto-logout is already handled by interceptor
+      setLoading(false);
+    }
+  };
+
+  if (loading) return <div style={{ padding: 40 }}>Checking session...</div>;
 
   return (
     <AppTheme {...props}>

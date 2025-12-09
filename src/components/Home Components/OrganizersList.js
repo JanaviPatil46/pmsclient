@@ -39,6 +39,7 @@ const OrganizersList = ({ accountId }) => {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedOrganizer(null);
+   fetchOrganizers();
   };
   return (
     <>
