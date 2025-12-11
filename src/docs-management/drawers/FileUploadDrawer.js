@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from "react";
 import {
   Drawer,
@@ -20,7 +18,13 @@ import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import axios from "axios";
 import { toast } from "material-react-toastify";
-import { FaFilePdf, FaFileWord, FaFileExcel, FaFileImage, FaFileAlt } from "react-icons/fa";
+import {
+  FaFilePdf,
+  FaFileWord,
+  FaFileExcel,
+  FaFileImage,
+  FaFileAlt,
+} from "react-icons/fa";
 import { AiFillFileUnknown } from "react-icons/ai";
 const FileUploadDrawer = ({
   isOpen,
@@ -32,7 +36,7 @@ const FileUploadDrawer = ({
   const [file, setFile] = useState(null);
   const [selectedFolder, setSelectedFolder] = useState("");
   const [message, setMessage] = useState("");
-   const [files, setFiles] = useState([]);
+  const [files, setFiles] = useState([]);
   useEffect(() => {
     if (isOpen && selectedFolderForMenu) {
       setSelectedFolder(selectedFolderForMenu.path);
@@ -44,7 +48,7 @@ const FileUploadDrawer = ({
   }, [isOpen, selectedFolderForMenu]);
 
   // const handleFileChange = (e) => setFile(e.target.files[0]);
-    const handleFileChange = (e) => {
+  const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
     const maxSize = 50 * 1024 * 1024; // 50 MB
     const forbiddenTypes = ["video/", "audio/"];
@@ -65,7 +69,6 @@ const FileUploadDrawer = ({
   };
   const handleFolderSelect = (path) => setSelectedFolder(path);
 
-  
   const handleUpload = async () => {
     if (files.length === 0 || !selectedFolder) {
       setMessage("Please select files and a folder.");
@@ -73,11 +76,13 @@ const FileUploadDrawer = ({
     }
 
     try {
+      const accountId = sessionStorage.getItem("accountId");
       const formData = new FormData();
       files.forEach((file) => formData.append("files", file));
+      formData.append("accountId", accountId);
 
       const res = await axios.post(
-              `https://www.snptaxes.com/api/accountsdoc/file/upload?folderPath=${encodeURIComponent(
+        `https://www.snptaxes.com/api/accountsdoc/file/upload?folderPath=${encodeURIComponent(
           selectedFolder
         )}`,
         formData,
@@ -85,54 +90,58 @@ const FileUploadDrawer = ({
       );
 
       setMessage(`✅ ${res.data.message || "Files uploaded successfully"}`);
-      toast.success(`✅ ${res.data.message || "Files uploaded successfully"}`)
+      toast.success(`✅ ${res.data.message || "Files uploaded successfully"}`);
       setFiles([]);
       onClose();
-     fetchFolderTree();
+      fetchFolderTree();
     } catch (err) {
       console.error(err);
       setMessage("❌ Error uploading files");
     }
   };
   return (
-    <Drawer anchor="right" open={isOpen} onClose={onClose}  ModalProps={{
-          keepMounted: true // Improves performance on mobile
-        }}
-        sx={{
-          zIndex: (theme) => theme.zIndex.modal + 1, // ensure above dialog
-          width: 600,
-        }}>
-      <Box sx={{ width: 400, p: 3,  height: "100%" }}>
+    <Drawer
+      anchor="right"
+      open={isOpen}
+      onClose={onClose}
+      ModalProps={{
+        keepMounted: true, // Improves performance on mobile
+      }}
+      sx={{
+        zIndex: (theme) => theme.zIndex.modal + 1, // ensure above dialog
+        width: 600,
+      }}
+    >
+      <Box sx={{ width: 400, p: 3, height: "100%" }}>
         <Typography variant="h6" gutterBottom>
           📄 Upload File
         </Typography>
 
-     
-<Button
-                  variant="outlined"
-                  component="label"
-                  fullWidth
-                  sx={{ mt: 1, mb: 2 }}
-                >
-                  {files.length > 0
-                    ? `${files.length} file(s) selected`
-                    : "Select Files"}
-                  <input type="file" hidden multiple onChange={handleFileChange} />
-                </Button>
+        <Button
+          variant="outlined"
+          component="label"
+          fullWidth
+          sx={{ mt: 1, mb: 2 }}
+        >
+          {files.length > 0
+            ? `${files.length} file(s) selected`
+            : "Select Files"}
+          <input type="file" hidden multiple onChange={handleFileChange} />
+        </Button>
         <Button
           // variant="contained"
           color="primary"
           fullWidth
           onClick={handleUpload}
-           sx={{
-              backgroundColor: 'text.menu',
-              color: 'primary.contrastText',
-              '&:hover': {
-                backgroundColor: 'menu.dark',
-                boxShadow: 1,
-              },
-              transition: 'background-color 0.2s ease'
-            }}
+          sx={{
+            backgroundColor: "text.menu",
+            color: "primary.contrastText",
+            "&:hover": {
+              backgroundColor: "menu.dark",
+              boxShadow: 1,
+            },
+            transition: "background-color 0.2s ease",
+          }}
         >
           Upload
         </Button>
@@ -160,44 +169,44 @@ const FileUploadDrawer = ({
   );
 };
 
-
 const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
   const [expanded, setExpanded] = useState({});
 
   const toggleExpand = (path) => {
     setExpanded((prev) => ({ ...prev, [path]: !prev[path] }));
   };
-const getFileIcon = (fileName) => {
-  const ext = fileName.split(".").pop().toLowerCase();
+  const getFileIcon = (fileName) => {
+    const ext = fileName.split(".").pop().toLowerCase();
 
-  switch (ext) {
-    case "pdf":
-      return <FaFilePdf color="#d32f2f" size={18} />;
-    case "jpg":
-    case "jpeg":
-    case "png":
-    case "gif":
-      return <FaFileImage color="#1976d2" size={18} />;
-    case "doc":
-    case "docx":
-      return <FaFileWord color="#1565c0" size={18} />;
-    case "xls":
-    case "xlsx":
-      return <FaFileExcel color="#2e7d32" size={18} />;
-    case "txt":
-    case "md":
-      return <FaFileAlt color="#616161" size={18} />;
-    default:
-      return <AiFillFileUnknown color="#757575" size={18} />;
-  }
-};
+    switch (ext) {
+      case "pdf":
+        return <FaFilePdf color="#d32f2f" size={18} />;
+      case "jpg":
+      case "jpeg":
+      case "png":
+      case "gif":
+        return <FaFileImage color="#1976d2" size={18} />;
+      case "doc":
+      case "docx":
+        return <FaFileWord color="#1565c0" size={18} />;
+      case "xls":
+      case "xlsx":
+        return <FaFileExcel color="#2e7d32" size={18} />;
+      case "txt":
+      case "md":
+        return <FaFileAlt color="#616161" size={18} />;
+      default:
+        return <AiFillFileUnknown color="#757575" size={18} />;
+    }
+  };
   return (
     <List disablePadding>
       {items?.map((item) => {
         if (item.type !== "folder") return null;
 
         // ⛔ Skip displaying this folder completely
-        if (item.name?.toLowerCase() === "firm documents shared with client") return null;
+        if (item.name?.toLowerCase() === "firm documents shared with client")
+          return null;
 
         const isSelected = selectedFolder === item.path;
         const isExpanded = expanded[item.path];
@@ -260,25 +269,22 @@ const getFileIcon = (fileName) => {
                   selectedFolder={selectedFolder}
                   level={level + 1}
                 />
-                 {item.meta?.files?.length > 0 && (
-                <List sx={{ pl: 4 }}>
-                  {item.meta.files.map((file) => (
-                    <ListItem
-                      key={file.name}
-                      sx={{ pl: 2 }}
-                    >
-                      <ListItemIcon>
-                        <Box sx={{ mr: 1 }}>{getFileIcon(file.name)}</Box>
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={`${file.name}${
-                          file.readOnly ? " (Read Only)" : ""
-                        }`}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              )}
+                {item.meta?.files?.length > 0 && (
+                  <List sx={{ pl: 4 }}>
+                    {item.meta.files.map((file) => (
+                      <ListItem key={file.name} sx={{ pl: 2 }}>
+                        <ListItemIcon>
+                          <Box sx={{ mr: 1 }}>{getFileIcon(file.name)}</Box>
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={`${file.name}${
+                            file.readOnly ? " (Read Only)" : ""
+                          }`}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                )}
               </Collapse>
             )}
           </React.Fragment>
@@ -288,6 +294,4 @@ const getFileIcon = (fileName) => {
   );
 };
 
-
 export default FileUploadDrawer;
-

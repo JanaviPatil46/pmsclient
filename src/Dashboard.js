@@ -49,7 +49,7 @@ const [loading, setLoading] = useState(true);
     }
   };
 
-  if (loading) return <div style={{ padding: 40 }}>Checking session...</div>;
+  if (loading) return <div style={{ padding: 40 }}></div>;
 
   return (
     <AppTheme {...props}>
