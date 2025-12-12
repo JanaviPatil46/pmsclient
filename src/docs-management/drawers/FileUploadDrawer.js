@@ -88,7 +88,7 @@ const FileUploadDrawer = ({
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
-
+ console.log("Upload Response:", res.data); 
       setMessage(`✅ ${res.data.message || "Files uploaded successfully"}`);
       toast.success(`✅ ${res.data.message || "Files uploaded successfully"}`);
       setFiles([]);
