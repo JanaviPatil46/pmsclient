@@ -1258,7 +1258,7 @@ const OrganizerDialog = ({ open, handleClose, organizer }) => {
 
       const data = prepareSubmitData(true);
       const isFinalSubmission = data.status === "Completed";
-
+console.log("data",data)
       if (isFinalSubmission) {
         data.issealed = true;
       }

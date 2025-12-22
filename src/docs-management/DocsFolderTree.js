@@ -12,7 +12,13 @@ import {
   DialogContent,
   DialogActions,
   DialogContentText,
-  TextField,Table,TableBody,TableCell,TableContainer,TableHead,TableRow
+  TextField,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,Checkbox,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -52,6 +58,10 @@ import {
 import axios from "axios";
 import { AiFillFileUnknown } from "react-icons/ai";
 import { DocusealForm } from "@docuseal/react";
+import { toast } from "material-react-toastify";
+import CancelIcon from "@mui/icons-material/Cancel";
+import DownloadIcon from "@mui/icons-material/Download";
+import DeleteIcon from "@mui/icons-material/Delete";
 const DocsFolderTree = () => {
   const [accountId, setAccountId] = useState(
     sessionStorage.getItem("accountId")
@@ -65,7 +75,7 @@ const DocsFolderTree = () => {
     ); // store client email
     console.log("folder structure of account is", accountId);
     const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
-const [selectedInvoiceFile, setSelectedInvoiceFile] = useState(null);
+    const [selectedInvoiceFile, setSelectedInvoiceFile] = useState(null);
 
     const [expandedFolders, setExpandedFolders] = useState({});
     const [menuAnchorEl, setMenuAnchorEl] = useState(null);
@@ -84,6 +94,81 @@ const [selectedInvoiceFile, setSelectedInvoiceFile] = useState(null);
     const [cancelReason, setCancelReason] = useState("");
     const [adminUserId, setAdminUserId] = useState("");
     const [accountName, setAccountName] = useState("");
+
+     // console.log("hgjhg",data)
+    const [selectedItems, setSelectedItems] = useState(new Set());
+    const [selectAll, setSelectAll] = useState(false);
+
+     // State for bulk operations
+    const [bulkMoveDrawerOpen, setBulkMoveDrawerOpen] = useState(false);
+    const [bulkLockDialogOpen, setBulkLockDialogOpen] = useState(false);
+    const [bulkOperationLoading, setBulkOperationLoading] = useState(false);
+    const getAllChildrenPaths = (item) => {
+  const paths = [item.path];
+  if (item.children && item.children.length > 0) {
+    item.children.forEach((child) => {
+      paths.push(...getAllChildrenPaths(child));
+    });
+  }
+  return paths;
+};
+
+    const handleSelectItem = (path) => {
+      setSelectedItems((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(path)) {
+          newSet.delete(path);
+        } else {
+          newSet.add(path);
+        }
+        return newSet;
+      });
+    };
+// Update handleFolderSelect
+const handleFolderSelect = (item) => {
+  const allChildPaths = getAllChildrenPaths(item);
+
+  setSelectedItems((prev) => {
+    const newSet = new Set(prev);
+    const allSelected = allChildPaths.every((path) => newSet.has(path));
+
+    if (allSelected) {
+      allChildPaths.forEach((path) => newSet.delete(path));
+    } else {
+      allChildPaths.forEach((path) => newSet.add(path));
+    }
+    return newSet;
+  });
+};
+
+// Update isFolderPartiallySelected
+const isFolderPartiallySelected = (item) => {
+  const allChildPaths = getAllChildrenPaths(item);
+  const selectedCount = allChildPaths.filter((path) =>
+    selectedItems.has(path)
+  ).length;
+  return selectedCount > 0 && selectedCount < allChildPaths.length;
+};
+// Update handleSelectAll
+const handleSelectAll = () => {
+  if (selectAll) {
+    setSelectedItems(new Set());
+  } else {
+    const allPaths = new Set();
+    const collectPaths = (items) => {
+      items.forEach((item) => {
+        allPaths.add(item.path);
+        if (item.children && item.children.length > 0) {
+          collectPaths(item.children);
+        }
+      });
+    };
+    collectPaths(folderTree);
+    setSelectedItems(allPaths);
+  }
+  setSelectAll(!selectAll);
+};
+
     const fetchAccountDetails = async () => {
       try {
         const res = await axios.get(
@@ -295,7 +380,99 @@ const [selectedInvoiceFile, setSelectedInvoiceFile] = useState(null);
         alert("Failed to update read-only status");
       }
     };
+const handleBulkDelete = async () => {
+  if (selectedItems.size === 0) {
+    toast.warning("Please select items to delete");
+    return;
+  }
 
+  const confirmDelete = window.confirm(
+    `Are you sure you want to delete ${selectedItems.size} item(s)? This cannot be undone!`
+  );
+  if (!confirmDelete) return;
+
+  setBulkOperationLoading(true);
+  try {
+    const paths = Array.from(selectedItems);
+    
+    console.log("Deleting paths:", paths); // Debug log
+    
+    const response = await fetch(
+      "https://www.snptaxes.com/api/accountsdoc/bulk-delete",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paths }),
+      }
+    );
+
+    const data = await response.json();
+    console.log("Bulk delete response:", data); // Debug log
+    
+    if (response.ok) {
+      if (data.success) {
+        toast.success(`${data.summary.success} item(s) deleted successfully`);
+        if (data.errors && data.errors.length > 0) {
+          toast.warning(`${data.errors.length} item(s) failed to delete`);
+          console.log("Failed deletions:", data.errors);
+        }
+      } else {
+        toast.error(data.message || "Failed to delete some items");
+      }
+      
+      // Clear selection regardless of partial success
+      setSelectedItems(new Set());
+      fetchFolderTree(accountId);
+    } else {
+      toast.error(data.message || "Failed to delete items");
+    }
+  } catch (err) {
+    console.error("Bulk delete error:", err);
+    toast.error("Error deleting items: " + err.message);
+  } finally {
+    setBulkOperationLoading(false);
+  }
+};
+   const handleBulkDownload = async () => {
+      if (selectedItems.size === 0) {
+        toast.warning("Please select items to download");
+        return;
+      }
+
+      setBulkOperationLoading(true);
+      try {
+        const paths = Array.from(selectedItems);
+        const res = await fetch(
+          "https://www.snptaxes.com/api/accountsdoc/download",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ paths }),
+          }
+        );
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Download failed");
+        }
+
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `selected_items_${new Date().getTime()}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        toast.success("Download started");
+      } catch (err) {
+        console.error("Bulk download error:", err);
+        toast.error("Failed to download items");
+      } finally {
+        setBulkOperationLoading(false);
+      }
+    };
     // 🗑️ Delete File or Folder (Universal)
     const deleteItem = async (item) => {
       if (!item?.path) return alert("Invalid path");
@@ -331,362 +508,265 @@ const [selectedInvoiceFile, setSelectedInvoiceFile] = useState(null);
       handleMenuClose();
     };
     const DOCS_MANAGMENTS = process.env.REACT_APP_CLIENT_DOCS_MANAGE;
- const targetEmail = sessionStorage.getItem("email");
-   const [selectedSlug, setSelectedSlug] = useState(null);
-   const [dialogOpen, setDialogOpen] = useState(false);
-   // Function to open the signature dialog
-const openSignatureDialog = (slug) => {
-  setSelectedSlug(slug);
-  setDialogOpen(true);
-};
+    const targetEmail = sessionStorage.getItem("email");
+    const [selectedSlug, setSelectedSlug] = useState(null);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    // Function to open the signature dialog
+    const openSignatureDialog = (slug) => {
+      setSelectedSlug(slug);
+      setDialogOpen(true);
+    };
 
-// Function to close the dialog
-const handleCloseDialog = () => {
-  setDialogOpen(false);
-  setSelectedSlug(null);
-};
-const INVOICE_NEW = process.env.REACT_APP_INVOICES_URL;
-const fetchInvoicesByIds = async (ids = []) => {
-  try {
-    if (!ids.length) return [];
-
-    // Create an array of fetch promises
-    const fetchPromises = ids.map((id) => {
-      const url = `${INVOICE_NEW}/workflow/invoices/invoice/invoicelist/invoicelistbyid/${id}`;
-      return fetch(url, { method: "GET", redirect: "follow" }).then((res) => res.json());
-    });
-
-    // Wait for all invoices to be fetched
-    const results = await Promise.all(fetchPromises);
-
-    // Filter only valid invoices and transform them
-    const invoices = results
-      .filter((result) => result?.invoice)
-      .map((result) => {
-        const inv = result.invoice;
-
-        const lineItems = inv.lineItems.map((item) => ({
-          productName: item.productorService || "",
-          description: item.description || "",
-          rate: String(item.rate || "0.00"),
-          qty: String(item.quantity || "1"),
-          amount: String(item.amount || "0.00"),
-          tax: item.tax || false,
-          isDiscount: item.isDiscount || false,
-        }));
-
-        return {
-          _id: inv._id,
-          invoicenumber: inv.invoicenumber,
-          invoicedate: inv.invoicedate,
-          account: inv.account ? { value: inv.account._id, label: inv.account.accountName } : null,
-          invoicetemplate: inv.invoicetemplate
-            ? { value: inv.invoicetemplate._id, label: inv.invoicetemplate.templatename }
-            : null,
-          paymentMethod: { value: inv.paymentMethod, label: inv.paymentMethod },
-          teammember: inv.teammember
-            ? { value: inv.teammember._id, label: inv.teammember.username }
-            : null,
-          description: inv.description,
-          emailToClient: inv.emailinvoicetoclient,
-          scheduledInvoice: inv.scheduleinvoice,
-          payInvoiceWithCredits: inv.payInvoicewithcredits,
-          isEmailInvoice: inv.emailinvoicetoclient,
-          reminders: inv.reminders,
-          lineItems,
-          summary: inv.summary || {},
-        };
-      });
-
-    return invoices;
-  } catch (error) {
-    console.error("Error fetching invoices:", error);
-    return [];
-  }
-};
-const navigate = useNavigate();
-
-const handlePayInvoice = () => {
-  if (!selectedInvoiceFile?.meta?.invoices?.length) return;
-
-  navigate("/client/payinvoice", {
-    state: {
-      selectedInvoices: selectedInvoiceFile.meta.invoices,
-      accountName: accountName, // Replace with dynamic account name if available
-    },
-  });
-};
-const handleFileClick = async (fullPath, fileName, meta = {}) => {
-  console.log("file clicked", fullPath, fileName, meta);
-  try {
-
-      // 🔒 Check if invoice lock exists
-    // if (meta.invoiceLock) {
-
-     
-    //   setSelectedInvoiceFile({ path: fullPath, name: fileName, meta });
-    //   setInvoiceDialogOpen(true);
-    //   return;
-    // }
-      // 🔒 Handle locked invoices
-    if (meta.invoiceLock?.length) {
-      // Fetch full invoices by IDs
-      const invoices = await fetchInvoicesByIds(meta.invoiceLock);
-
-      if (!invoices.length) {
-        alert("Failed to fetch invoice details.");
-        return;
-      }
-
-      // Save for dialog
-      setSelectedInvoiceFile({
-        path: fullPath,
-        name: fileName,
-        meta: {
-          ...meta,
-          invoices // Attach the full invoice objects here
-        }
-      });
-
-      setInvoiceDialogOpen(true);
-      return;
-    }
-    // Check if this is a pending approval document
-    if (meta.authStatus === "pendingApproval" && meta.approvalId) {
-      fetApprovalDetails(meta.approvalId);
-      return;
-    }
-
-    // Check if this is a pending e-signature document
-    if (meta.esignRequestId && meta.signStatus === "pendingSignature") {
+    // Function to close the dialog
+    const handleCloseDialog = () => {
+      setDialogOpen(false);
+      setSelectedSlug(null);
+    };
+    const INVOICE_NEW = process.env.REACT_APP_INVOICES_URL;
+    const fetchInvoicesByIds = async (ids = []) => {
       try {
-        const response = await fetch(`https://www.snptaxes.com/signature/byid/${meta.esignRequestId}`, {
-          method: "GET",
-          redirect: "follow"
-        });
-        const result = await response.json();
-        console.log("Signature details:", result);
-        
-        // Assuming result is the full submission object
-        const submission = result;
-        console.log("Full Submission:", submission);
+        if (!ids.length) return [];
 
-        // Check if submission has submitters array
-        if (!submission.submitters || !Array.isArray(submission.submitters)) {
-          console.error("No submitters array found in response");
-          alert("Error loading signature request: Invalid data structure");
+        // Create an array of fetch promises
+        const fetchPromises = ids.map((id) => {
+          const url = `${INVOICE_NEW}/workflow/invoices/invoice/invoicelist/invoicelistbyid/${id}`;
+          return fetch(url, { method: "GET", redirect: "follow" }).then((res) =>
+            res.json()
+          );
+        });
+
+        // Wait for all invoices to be fetched
+        const results = await Promise.all(fetchPromises);
+
+        // Filter only valid invoices and transform them
+        const invoices = results
+          .filter((result) => result?.invoice)
+          .map((result) => {
+            const inv = result.invoice;
+
+            const lineItems = inv.lineItems.map((item) => ({
+              productName: item.productorService || "",
+              description: item.description || "",
+              rate: String(item.rate || "0.00"),
+              qty: String(item.quantity || "1"),
+              amount: String(item.amount || "0.00"),
+              tax: item.tax || false,
+              isDiscount: item.isDiscount || false,
+            }));
+
+            return {
+              _id: inv._id,
+              invoicenumber: inv.invoicenumber,
+              invoicedate: inv.invoicedate,
+              account: inv.account
+                ? { value: inv.account._id, label: inv.account.accountName }
+                : null,
+              invoicetemplate: inv.invoicetemplate
+                ? {
+                    value: inv.invoicetemplate._id,
+                    label: inv.invoicetemplate.templatename,
+                  }
+                : null,
+              paymentMethod: {
+                value: inv.paymentMethod,
+                label: inv.paymentMethod,
+              },
+              teammember: inv.teammember
+                ? { value: inv.teammember._id, label: inv.teammember.username }
+                : null,
+              description: inv.description,
+              emailToClient: inv.emailinvoicetoclient,
+              scheduledInvoice: inv.scheduleinvoice,
+              payInvoiceWithCredits: inv.payInvoicewithcredits,
+              isEmailInvoice: inv.emailinvoicetoclient,
+              reminders: inv.reminders,
+              lineItems,
+              summary: inv.summary || {},
+            };
+          });
+
+        return invoices;
+      } catch (error) {
+        console.error("Error fetching invoices:", error);
+        return [];
+      }
+    };
+    const navigate = useNavigate();
+
+    const handlePayInvoice = () => {
+      if (!selectedInvoiceFile?.meta?.invoices?.length) return;
+
+      navigate("/client/payinvoice", {
+        state: {
+          selectedInvoices: selectedInvoiceFile.meta.invoices,
+          accountName: accountName, // Replace with dynamic account name if available
+        },
+      });
+    };
+    const handleFileClick = async (fullPath, fileName, meta = {}) => {
+      console.log("file clicked", fullPath, fileName, meta);
+      try {
+       
+        // 🔒 Handle locked invoices
+        if (meta.invoiceLock?.length) {
+          // Fetch full invoices by IDs
+          const invoices = await fetchInvoicesByIds(meta.invoiceLock);
+
+          if (!invoices.length) {
+            alert("Failed to fetch invoice details.");
+            return;
+          }
+
+          // Save for dialog
+          setSelectedInvoiceFile({
+            path: fullPath,
+            name: fileName,
+            meta: {
+              ...meta,
+              invoices, // Attach the full invoice objects here
+            },
+          });
+
+          setInvoiceDialogOpen(true);
+          return;
+        }
+        // Check if this is a pending approval document
+        if (meta.authStatus === "pendingApproval" && meta.approvalId) {
+          fetApprovalDetails(meta.approvalId);
           return;
         }
 
-        // Find matching submitters for the current user
-        const matchingSubmitters = submission.submitters
-          .map((s) => ({
-            slug: s.slug,
-            email: s.email,
-            submissionId: s.submission_id,
-            templateName: s.name,
-            createdAt: submission.createdAt,
-            fileUrl: submission.fileUrl,
-            externalId: submission.externalId,
-            submissionData: submission,
-            status: s.status,
-            completed_at: s.completed_at,
-            role: s.role,
-            allCompleted: submission.submitters.every(submitter => 
-              submitter.status === 'completed' || submitter.completed_at !== null
-            )
-          }))
-          .filter((s) => s.email === targetEmail && !s.completed_at);
+        // Check if this is a pending e-signature document
+        if (meta.esignRequestId && meta.signStatus === "pendingSignature") {
+          try {
+            const response = await fetch(
+              `https://www.snptaxes.com/signature/byid/${meta.esignRequestId}`,
+              {
+                method: "GET",
+                redirect: "follow",
+              }
+            );
+            const result = await response.json();
+            console.log("Signature details:", result);
 
-        console.log("Matching Submitters:", matchingSubmitters);
+            // Assuming result is the full submission object
+            const submission = result;
+            console.log("Full Submission:", submission);
 
-        // If we found matching submitters, open the dialog with the first one
-        if (matchingSubmitters.length > 0) {
-          // Get the first matching submitter's slug
-          const firstSlug = matchingSubmitters[0].slug;
-          console.log("Opening signature dialog with slug:", firstSlug);
-          openSignatureDialog(firstSlug);
-        } else {
-          // Check why no matches were found
-          const userSubmitters = submission.submitters.filter(s => s.email === targetEmail);
-          if (userSubmitters.length > 0) {
-            // User exists but has already completed
-            const completedSubmitter = userSubmitters[0];
-            if (completedSubmitter.completed_at) {
-              alert("You have already signed this document.");
-              // Open the document after alert
-              setTimeout(() => {
-                openDocument(fullPath, fileName);
-              }, 500);
-            } else {
-              alert("You are not authorized to sign this document at this time.");
+            // Check if submission has submitters array
+            if (
+              !submission.submitters ||
+              !Array.isArray(submission.submitters)
+            ) {
+              console.error("No submitters array found in response");
+              alert("Error loading signature request: Invalid data structure");
+              return;
             }
-          } else {
-            alert("You are not listed as a signer for this document.");
+
+            // Find matching submitters for the current user
+            const matchingSubmitters = submission.submitters
+              .map((s) => ({
+                slug: s.slug,
+                email: s.email,
+                submissionId: s.submission_id,
+                templateName: s.name,
+                createdAt: submission.createdAt,
+                fileUrl: submission.fileUrl,
+                externalId: submission.externalId,
+                submissionData: submission,
+                status: s.status,
+                completed_at: s.completed_at,
+                role: s.role,
+                allCompleted: submission.submitters.every(
+                  (submitter) =>
+                    submitter.status === "completed" ||
+                    submitter.completed_at !== null
+                ),
+              }))
+              .filter((s) => s.email === targetEmail && !s.completed_at);
+
+            console.log("Matching Submitters:", matchingSubmitters);
+
+            // If we found matching submitters, open the dialog with the first one
+            if (matchingSubmitters.length > 0) {
+              // Get the first matching submitter's slug
+              const firstSlug = matchingSubmitters[0].slug;
+              console.log("Opening signature dialog with slug:", firstSlug);
+              openSignatureDialog(firstSlug);
+            } else {
+              // Check why no matches were found
+              const userSubmitters = submission.submitters.filter(
+                (s) => s.email === targetEmail
+              );
+              if (userSubmitters.length > 0) {
+                // User exists but has already completed
+                const completedSubmitter = userSubmitters[0];
+                if (completedSubmitter.completed_at) {
+                  alert("You have already signed this document.");
+                  // Open the document after alert
+                  setTimeout(() => {
+                    openDocument(fullPath, fileName);
+                  }, 500);
+                } else {
+                  alert(
+                    "You are not authorized to sign this document at this time."
+                  );
+                }
+              } else {
+                alert("You are not listed as a signer for this document.");
+              }
+            }
+          } catch (error) {
+            console.error("Error fetching signature details:", error);
+            alert("Error loading signature request.");
           }
+          return;
+        }
+
+        // 🔒 Prevent opening locked files
+        if (meta.readOnly) {
+          alert("This file is locked and cannot be opened.");
+          return;
+        }
+
+        // ✅ Open the document (for non-signature files or if user has already signed)
+        openDocument(fullPath, fileName);
+      } catch (error) {
+        console.error("Error opening/downloading file:", error);
+      }
+    };
+
+    // Helper function to open/download document
+    const openDocument = (fullPath, fileName) => {
+      try {
+        // ✅ Construct full file URL
+        const fileUrl = `https://www.snptaxes.com/uploads/accounts/${accountId}/${fullPath}`;
+        console.log("Opening document:", fileUrl);
+
+        // ✅ Detect file extension (case-insensitive)
+        const fileExt = fileName.split(".").pop().toLowerCase();
+
+        // ✅ Extensions that can open in browser
+        const viewableExtensions = ["pdf", "jpg", "jpeg", "png", "gif", "txt"];
+
+        if (viewableExtensions.includes(fileExt)) {
+          // Open supported file types in a new tab
+          window.open(fileUrl, "_blank", "noopener,noreferrer");
+        } else {
+          // Force download for unsupported types (e.g., docx, xlsx, zip, etc.)
+          const link = document.createElement("a");
+          link.href = fileUrl;
+          link.download = fileName;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
         }
       } catch (error) {
-        console.error("Error fetching signature details:", error);
-        alert("Error loading signature request.");
+        console.error("Error opening document:", error);
+        alert("Error opening document. Please try again.");
       }
-      return;
-    }
-    
-    // 🔒 Prevent opening locked files
-    if (meta.readOnly) {
-      alert("This file is locked and cannot be opened.");
-      return;
-    }
+    };
 
-    // ✅ Open the document (for non-signature files or if user has already signed)
-    openDocument(fullPath, fileName);
-    
-  } catch (error) {
-    console.error("Error opening/downloading file:", error);
-  }
-};
-
-// Helper function to open/download document
-const openDocument = (fullPath, fileName) => {
-  try {
-    // ✅ Construct full file URL
-    const fileUrl = `https://www.snptaxes.com/uploads/accounts/${accountId}/${fullPath}`;
-    console.log("Opening document:", fileUrl);
-    
-    // ✅ Detect file extension (case-insensitive)
-    const fileExt = fileName.split(".").pop().toLowerCase();
-
-    // ✅ Extensions that can open in browser
-    const viewableExtensions = ["pdf", "jpg", "jpeg", "png", "gif", "txt"];
-
-    if (viewableExtensions.includes(fileExt)) {
-      // Open supported file types in a new tab
-      window.open(fileUrl, "_blank", "noopener,noreferrer");
-    } else {
-      // Force download for unsupported types (e.g., docx, xlsx, zip, etc.)
-      const link = document.createElement("a");
-      link.href = fileUrl;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  } catch (error) {
-    console.error("Error opening document:", error);
-    alert("Error opening document. Please try again.");
-  }
-};
-//     const handleFileClick = async (fullPath, fileName, meta = {}) => {
-//       console.log("file clicked", fullPath, fileName, meta);
-//       try {
-//         // Check if this is a pending approval document
-//         if (meta.authStatus === "pendingApproval" && meta.approvalId) {
-//           fetApprovalDetails(meta.approvalId);
-//           return;
-//         }
- 
- 
-//  // Check if this is a pending e-signature document
-//     if (meta.esignRequestId && meta.signStatus === "pendingSignature") {
-//       try {
-//         const response = await fetch(`https://www.snptaxes.com/signature/byid/${meta.esignRequestId}`, {
-//           method: "GET",
-//           redirect: "follow"
-//         });
-//         const result = await response.json();
-//         console.log("Signature details:", result);
-        
-//         // Assuming result is the full submission object
-//         const submission = result;
-//         console.log("Full Submission:", submission);
-
-//         // Check if submission has submitters array
-//         if (!submission.submitters || !Array.isArray(submission.submitters)) {
-//           console.error("No submitters array found in response");
-//           alert("Error loading signature request: Invalid data structure");
-//           return;
-//         }
-
-//         // Find matching submitters for the current user
-//         const matchingSubmitters = submission.submitters
-//           .map((s) => ({
-//             slug: s.slug,
-//             email: s.email,
-//             submissionId: s.submission_id,
-//             templateName: s.name,
-//             createdAt: submission.createdAt,
-//             fileUrl: submission.fileUrl,
-//             externalId: submission.externalId,
-//             submissionData: submission,
-//             status: s.status,
-//             completed_at: s.completed_at,
-//             role: s.role,
-//             allCompleted: submission.submitters.every(submitter => 
-//               submitter.status === 'completed' || submitter.completed_at !== null
-//             )
-//           }))
-//           .filter((s) => s.email === targetEmail && !s.completed_at);
-
-//         console.log("Matching Submitters:", matchingSubmitters);
-
-//         // If we found matching submitters, open the dialog with the first one
-//         if (matchingSubmitters.length > 0) {
-//           // Get the first matching submitter's slug
-//           const firstSlug = matchingSubmitters[0].slug;
-//           console.log("Opening signature dialog with slug:", firstSlug);
-//           openSignatureDialog(firstSlug);
-//         } else {
-//           // Check why no matches were found
-//           const userSubmitters = submission.submitters.filter(s => s.email === targetEmail);
-//           if (userSubmitters.length > 0) {
-//             // User exists but has already completed
-//             const completedSubmitter = userSubmitters[0];
-//             if (completedSubmitter.completed_at) {
-//               alert("You have already signed this document.");
-//             } else {
-//               alert("You are not authorized to sign this document at this time.");
-//             }
-//           } else {
-//             alert("You are not listed as a signer for this document.");
-//           }
-//         }
-//       } catch (error) {
-//         console.error("Error fetching signature details:", error);
-//         alert("Error loading signature request.");
-//       }
-//       return;
-//     }
-//         // 🔒 Prevent opening locked files
-//         if (meta.readOnly) {
-//           alert("This file is locked and cannot be opened.");
-//           return;
-//         }
-
-//         // ✅ Construct full file URL
-//         const fileUrl = `https://www.snptaxes.com/uploads/accounts/${accountId}/${fullPath}`;
-//         console.log("fileurl", fileUrl);
-//         // ✅ Detect file extension (case-insensitive)
-//         const fileExt = fileName.split(".").pop().toLowerCase();
-
-//         // ✅ Extensions that can open in browser
-//         const viewableExtensions = ["pdf", "jpg", "jpeg", "png", "gif", "txt"];
-
-//         if (viewableExtensions.includes(fileExt)) {
-//           // Open supported file types in a new tab
-//           window.open(fileUrl, "_blank", "noopener,noreferrer");
-//         } else {
-//           // Force download for unsupported types (e.g., docx, xlsx, zip, etc.)
-//           const link = document.createElement("a");
-//           link.href = fileUrl;
-//           link.download = fileName;
-//           document.body.appendChild(link);
-//           link.click();
-//           document.body.removeChild(link);
-//         }
-//       } catch (error) {
-//         console.error("Error opening/downloading file:", error);
-//       }
-//     };
     const fetApprovalDetails = async (id) => {
       try {
         const response = await fetch(
@@ -736,32 +816,6 @@ const openDocument = (fullPath, fileName) => {
 
         console.log("✅ Approval response:", res.data);
 
-        // ✅ Extract parent folder path from fileUrl
-        // if (selectedDoc?.fileUrl) {
-        //   // Remove base URL and '/uploads/accounts/'
-        //   let relativePath = selectedDoc.fileUrl.split("/uploads/accounts/")[1];
-
-        //   if (relativePath) {
-        //     // Remove filename from the end
-        //     const parts = relativePath.split("/");
-        //     parts.pop(); // remove the file name
-        //     const parentPath = parts.join("/");
-
-        //     console.log("📁 Extracted parentPath:", parentPath);
-
-        //     // Determine new status
-        //     const newStatus = action === "approve" ? "approvalCompleted" : "canceledApproval";
-
-        //     // Call updateStatus
-        //     await updateStatus(
-        //       { path: parentPath },
-        //       "authStatus",
-        //       newStatus,
-        //       action,
-        //       reason
-        //     );
-        //   }
-        // }
         let originalPath = "";
         if (selectedDoc?.fileUrl) {
           const splitPath = selectedDoc.fileUrl.split("/uploads/accounts/");
@@ -835,15 +889,12 @@ const openDocument = (fullPath, fileName) => {
           return <AiFillFileUnknown color="#757575" size={18} />;
       }
     };
-  const INVOICE_LOCK_STATUSES = [
-  "pendingpayment",
-  "paymentcompleted",
-];
+    const INVOICE_LOCK_STATUSES = ["pendingpayment", "paymentcompleted"];
 
-const invoiceStatusTextMap = {
-  pendingpayment: "Pending Payment",
-  paymentcompleted: "Payment Completed",
-};
+    const invoiceStatusTextMap = {
+      pendingpayment: "Pending Payment",
+      paymentcompleted: "Payment Completed",
+    };
     const approvalStatusTextMap = {
       sendForApproval: "Send for Approval",
       pendingApproval: "Waiting for Approval",
@@ -855,37 +906,95 @@ const invoiceStatusTextMap = {
       pendingSignature: "Waiting for Signature",
       signatureCompleted: "Signature Received",
     };
-    const renderTree = (
-      items,
-      level = 0,
-      parentPath = "",
-      isInsideRestricted = false
-    ) => {
-      const getStatusChip = (meta) => {
-        const chips = [];
 
-        // ======= SIGNATURE STATUS =======
-        if (SIGN_STATUSES.includes(meta.signStatus)) {
-          let color = "default";
+  const formatUploadedAt = (dateValue) => {
+  if (!dateValue) return "";
 
-          if (meta.signStatus === "pendingSignature") color = "warning";
-          if (meta.signStatus === "signatureCompleted") color = "success";
+  // If already in "DEC-19 2025" format
+  if (typeof dateValue === "string" && /^[A-Z]{3}-\d{2} \d{4}$/.test(dateValue)) {
+    return dateValue;
+  }
 
-          chips.push(
-            <Chip
-              key="signChip"
-              label={statusTextMap[meta.signStatus]}
-              size="small"
-              variant="outlined"
-              color={color}
-            />
+  const date = new Date(dateValue);
+  if (isNaN(date)) return dateValue;
+
+  return date
+    .toLocaleDateString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+    })
+    .toUpperCase()
+    .replace(",", "")      // remove comma
+    .replace(" ", "-");    // replace first space with dash
+};
+
+const UploadedInfo = ({ meta }) => {
+  if (!meta?.uploadedAt) return null;
+
+  return (
+    <Typography variant="caption" sx={{ fontWeight: "bold" }}>
+      {formatUploadedAt(meta.uploadedAt)}
+    </Typography>
+  );
+};
+    //     const UploadedInfo = ({ meta }) => {
+    //   if (!meta) return null;
+
+    //   return (
+    //     <Typography variant="caption" sx={{ fontWeight: "bold" }}>
+    //       {meta.uploadedAt}
+    //     </Typography>
+    //   );
+    // };
+    const getStatusChip = (meta, isFolder) => {
+      // Return null for folders - don't show status chips for folders
+      if (isFolder) return null;
+
+      const chips = [];
+
+      // ======= SIGNATURE STATUS =======
+      if (SIGN_STATUSES.includes(meta.signStatus)) {
+        let color = "default";
+
+        if (meta.signStatus === "pendingSignature") color = "warning";
+        if (meta.signStatus === "signatureCompleted") color = "success";
+
+        chips.push(
+          <Chip
+            key="signChip"
+            label={statusTextMap[meta.signStatus]}
+            size="small"
+            variant="outlined"
+            color={color}
+          />
+        );
+      }
+
+      // ======= APPROVAL STATUS =======
+      if (APPROVAL_STATUSES.includes(meta.authStatus)) {
+        let color = "default";
+        let chip;
+
+        if (meta.authStatus === "pendingApproval") color = "warning";
+        if (meta.authStatus === "approvalCompleted") color = "success";
+        if (meta.authStatus === "canceledApproval") color = "error";
+
+        if (meta.authStatus === "canceledApproval" && meta.cancelReason) {
+          chip = (
+            <Tooltip title={meta.cancelReason} placement="top-end">
+              <Chip
+                key="approvalCanceledChip"
+                label="Approval Canceled"
+                size="small"
+                variant="outlined"
+                color="error"
+                sx={{ cursor: "pointer" }}
+              />
+            </Tooltip>
           );
-        }
-
-        // ======= APPROVAL STATUS =======
-        if (APPROVAL_STATUSES.includes(meta.authStatus)) {
-          let color = "default";
-          let chip = (
+        } else {
+          chip = (
             <Chip
               key="approvalChip"
               label={approvalStatusTextMap[meta.authStatus]}
@@ -894,245 +1003,463 @@ const invoiceStatusTextMap = {
               color={color}
             />
           );
-
-          if (meta.authStatus === "pendingApproval") color = "warning";
-          if (meta.authStatus === "approvalCompleted") color = "success";
-          if (meta.authStatus === "canceledApproval") color = "error";
-
-          // Handle tooltip only for canceled approval
-          if (meta.authStatus === "canceledApproval" && meta.cancelReason) {
-            chip = (
-              <Tooltip title={meta.cancelReason} placement="top-end">
-                <Chip
-                  key="approvalCanceledChip"
-                  label="Approval Canceled"
-                  size="small"
-                  variant="outlined"
-                  color="error"
-                  sx={{ cursor: "pointer" }}
-                />
-              </Tooltip>
-            );
-          } else {
-            chip = (
-              <Chip
-                key="approvalChip"
-                label={approvalStatusTextMap[meta.authStatus]}
-                size="small"
-                variant="outlined"
-                color={color}
-              />
-            );
-          }
-
-          chips.push(chip);
         }
-// ⭐ NEW — INVOICE LOCK STATUS
-  if (INVOICE_LOCK_STATUSES.includes(meta.lockInvoiceStatus)) {
-    let color = "default";
-    if (meta.lockInvoiceStatus === "pendingpayment") color = "warning";
-    if (meta.lockInvoiceStatus === "paymentcompleted") color = "success";
 
-    chips.push(
-      <Chip
-        key="invoiceLockChip"
-        label={invoiceStatusTextMap[meta.lockInvoiceStatus]}
-        size="small"
-        variant="outlined"
-        color={color}
-      />
-    );
-  }
-        // ======= SHOW NOTHING IF NO STATUS =======
-        if (chips.length === 0) return null;
+        chips.push(chip);
+      }
 
-        return <Box sx={{ display: "flex", gap: 1, ml: 1 }}>{chips}</Box>;
-      };
+      // ======= INVOICE LOCK STATUS =======
+      if (INVOICE_LOCK_STATUSES.includes(meta.lockInvoiceStatus)) {
+        let color = "default";
+        if (meta.lockInvoiceStatus === "pendingpayment") color = "warning";
+        if (meta.lockInvoiceStatus === "paymentcompleted") color = "success";
 
-      return (
-        <Box component="ul" sx={{ listStyle: "none", pl: level * 2, mb: 1 }}>
-          {items.map((item) => {
-            const fullPath = parentPath
-              ? `${parentPath}/${item.name}`
-              : item.name;
-            const meta = item.meta || {};
+        chips.push(
+          <Chip
+            key="invoiceLockChip"
+            label={invoiceStatusTextMap[meta.lockInvoiceStatus]}
+            size="small"
+            variant="outlined"
+            color={color}
+          />
+        );
+      }
 
-            const isFolder = item.type === "folder";
-            const isFile = item.type === "file";
-            const isRootFolder = level === 0 && isFolder;
+      // ======= SHOW NOTHING IF NO STATUS =======
+      if (chips.length === 0) return null;
 
-            // Restricted folder name
-            const restrictedFolderName = "firm documents shared with client";
+      return <Box sx={{ display: "flex", gap: 1 }}>{chips}</Box>;
+    };
 
-            // Check if this is the restricted root folder
-            const isFirmDocsRoot =
-              isRootFolder &&
-              item.name?.toLowerCase() === restrictedFolderName.toLowerCase();
+    const renderTableRows = (items, level = 0, parentPath = "") => {
+      return items.map((item) => {
+        console.log("itemlist",item)
+        // const fullPath = parentPath ? `${parentPath}/${item.name}` : item.name;
+         const fullPath = item.path;
+        const meta = item.meta || {};
+        const isFolder = item.type === "folder";
+        const isSelected = selectedItems.has(fullPath);
+         // Update the helper function to use item.path for children
+    const getAllChildrenPaths = (item) => {
+      const paths = [item.path];
+      if (item.children && item.children.length > 0) {
+        item.children.forEach((child) => {
+          paths.push(...getAllChildrenPaths(child));
+        });
+      }
+      return paths;
+    };
 
-            // Track whether we are inside restricted area
-            const insideRestricted = isInsideRestricted || isFirmDocsRoot;
+    // Update isFolderPartiallySelected to use item.path
+    const isPartiallySelected = isFolder
+      ? isFolderPartiallySelected(item)
+      : false;
+        const handleSafeFileClick = () => {
+          if (meta.readOnly) {
+            alert("This file is locked and cannot be opened.");
+            return;
+          }
+          if (!isFolder) {
+            handleFileClick(fullPath, item.name);
+          }
+        };
 
-            const hideMenu = insideRestricted;
-
-            const getColor = (status) => (status ? "#1976d2" : "#9e9e9e");
-
-            const StatusIcons = () => (
-              <Box
-                sx={{ display: "flex", gap: 1, alignItems: "center", ml: 1 }}
-              >
-                <Eye size={16} color={getColor(meta.readStatus)} />
-
-                <Lock size={16} color={meta.readOnly ? "#e53935" : "#9e9e9e"} />
-              </Box>
-            );
-
-            const handleSafeFileClick = () => {
-              if (meta.readOnly) {
-                alert("This file is locked and cannot be opened.");
-                return;
-              }
-              handleFileClick(fullPath, item.name, meta);
-            };
-
-            return (
-              <li key={fullPath} style={{ marginBottom: 8 }}>
+        return (
+          <React.Fragment key={fullPath}>
+            <TableRow
+              sx={{
+                backgroundColor: level % 2 === 0 ? "#fafafa" : "white",
+                "&:hover": { backgroundColor: "#f5f5f5" },
+              }}
+            >
+              {/* Checkbox Column - Only checkboxes here */}
+              <TableCell sx={{ width: "50px", paddingLeft: 2 }}>
                 {isFolder ? (
-                  <Box
-                    sx={{
-                      p: 1,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      borderRadius: 2,
-                      cursor: "pointer",
-                      backgroundColor: isRootFolder ? "#f0f7ff" : "#fff",
-                      color: "black",
-                      "&:hover": { backgroundColor: "#f5f5f5", color: "black" },
-                      transition: "background-color 0.2s ease-in-out",
-                    }}
-                    onClick={() => toggleFolder(fullPath, meta.readOnly)}
-                  >
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      sx={{ flexGrow: 1, gap: 1 }}
-                    >
-                      {expandedFolders[fullPath] ? (
-                        <FolderOpenIcon color="#1976d2" size={18} />
-                      ) : (
-                        <FolderClosedIcon color="#757575" size={18} />
-                      )}
+                  <Checkbox
+                    size="small"
+                    checked={isSelected}
+                    indeterminate={isPartiallySelected}
+                    onChange={() => handleFolderSelect(item)}
+                  />
+                ) : (
+                  <Checkbox
+                    size="small"
+                    checked={isSelected}
+                    onChange={() => handleSelectItem(fullPath)}
+                  />
+                )}
+              </TableCell>
 
+              {/* Name Column with indentation */}
+              <TableCell sx={{ paddingLeft: level * 4 + 2 }}>
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  {isFolder ? (
+                    <>
+                      <IconButton
+                        size="small"
+                        onClick={() => toggleFolder(fullPath, meta.readOnly)}
+                        disabled={meta.readOnly}
+                        sx={{ mr: 0.5 }}
+                      >
+                        {expandedFolders[fullPath] ? (
+                          <FolderOpenIcon color="#1976d2" />
+                        ) : (
+                          <FolderClosedIcon color="#757575" />
+                        )}
+                      </IconButton>
                       <Typography
-                        variant="body1"
-                        fontWeight="medium"
-                        sx={{ wordBreak: "break-word" }}
+                        variant="body2"
+                        sx={{
+                          ml: 0.5,
+                          fontWeight: "medium",
+                          color: meta.readOnly ? "#999" : "inherit",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => toggleFolder(fullPath, meta.readOnly)}
                       >
                         {item.name}
-
                         {meta.readOnly && (
                           <Typography
+                            component="span"
                             variant="caption"
-                            sx={{ color: "red", fontWeight: "bold", ml: 1 }}
+                            sx={{ color: "error.main", ml: 1 }}
                           >
                             (Locked)
                           </Typography>
                         )}
                       </Typography>
-                    </Box>
-
-                    {!hideMenu && (
-                      <IconButton
-                        size="small"
-                        onClick={(e) =>
-                          handleMenuOpen(e, {
-                            ...item,
-                            fullPath,
-                            isFolder: true,
-                          })
-                        }
-                      >
-                        <MoreVertIcon size={16} />
-                      </IconButton>
-                    )}
-                  </Box>
-                ) : (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      pl: 4,
-                      mb: 1,
-                      borderRadius: 2,
-                      "&:hover .file-menu-icon": { opacity: 1 },
-                    }}
-                  >
-                    <Box sx={{ mr: 1 }}>{getFileIcon(item.name)}</Box>
-
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        flex: 1,
-                        wordBreak: "break-word",
-                        color: meta.readOnly ? "#999" : "#1976d2",
-                        textDecoration: meta.readOnly ? "none" : "underline",
-                        cursor: meta.readOnly ? "not-allowed" : "pointer",
-                      }}
-                      onClick={handleSafeFileClick}
-                    >
-                      {item.name}
-                    </Typography>
-                    <Box>{getStatusChip(meta)}</Box>
-
-                    {!insideRestricted && <StatusIcons />}
-
-                    {!hideMenu && (
-                      <Box
-                        className="file-menu-icon"
-                        sx={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: "50%",
-                          backgroundColor: "#1976d2",
-                          opacity: 0,
-                          transition: "opacity 0.2s",
-                          cursor: "pointer",
-                          mr: 1,
-                          ml: 1,
-                        }}
-                        onClick={(e) =>
-                          handleMenuOpen(e, { ...item, fullPath, isFile: true })
-                        }
-                      />
-                    )}
-                  </Box>
-                )}
-
-                {expandedFolders[fullPath] &&
-                  item.children &&
-                  item.children.length > 0 && (
-                    <Box
-                      sx={{
-                        ml: 2,
-                        mt: 1,
-                        borderLeft: "2px dashed #ccc",
-                        pl: 2,
-                      }}
-                    >
-                      {renderTree(
-                        item.children,
-                        level + 1,
-                        fullPath,
-                        insideRestricted
-                      )}
-                    </Box>
+                    </>
+                  ) : (
+                    <>
+                      <Box sx={{ mr: 1 }}>{getFileIcon(item.name)}</Box>
+                      <Box sx={{ display: "flex", flexDirection: "column" }}>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: meta.readOnly ? "#999" : "#1976d2",
+                            textDecoration: meta.readOnly
+                              ? "none"
+                              : "underline",
+                            cursor: meta.readOnly ? "not-allowed" : "pointer",
+                          }}
+                          onClick={handleSafeFileClick}
+                        >
+                          {item.name}
+                        </Typography>
+                        {/* Status chips for files only */}
+                      </Box>
+                    </>
                   )}
-              </li>
-            );
-          })}
-        </Box>
-      );
+                </Box>
+              </TableCell>
+              <TableCell>
+                <Box sx={{ mt: 0.5 }}>{getStatusChip(meta, isFolder)}</Box>
+              </TableCell>
+
+              {/* Last Modified Column */}
+              <TableCell>
+                <UploadedInfo meta={meta} />
+              </TableCell>
+
+              {/* Actions Column */}
+              <TableCell align="right">
+                <IconButton
+                  size="small"
+                  onClick={(e) => handleMenuOpen(e, { ...item, fullPath })}
+                >
+                  <MoreVertIcon />
+                </IconButton>
+              </TableCell>
+            </TableRow>
+
+            {/* Render children if folder is expanded */}
+            {isFolder &&
+              expandedFolders[fullPath] &&
+              item.children &&
+              item.children.length > 0 &&
+              renderTableRows(item.children, level + 1, fullPath)}
+          </React.Fragment>
+        );
+      });
     };
+    // const renderTree = (
+    //   items,
+    //   level = 0,
+    //   parentPath = "",
+    //   isInsideRestricted = false
+    // ) => {
+    //   const getStatusChip = (meta) => {
+    //     const chips = [];
+
+    //     // ======= SIGNATURE STATUS =======
+    //     if (SIGN_STATUSES.includes(meta.signStatus)) {
+    //       let color = "default";
+
+    //       if (meta.signStatus === "pendingSignature") color = "warning";
+    //       if (meta.signStatus === "signatureCompleted") color = "success";
+
+    //       chips.push(
+    //         <Chip
+    //           key="signChip"
+    //           label={statusTextMap[meta.signStatus]}
+    //           size="small"
+    //           variant="outlined"
+    //           color={color}
+    //         />
+    //       );
+    //     }
+
+    //     // ======= APPROVAL STATUS =======
+    //     if (APPROVAL_STATUSES.includes(meta.authStatus)) {
+    //       let color = "default";
+    //       let chip = (
+    //         <Chip
+    //           key="approvalChip"
+    //           label={approvalStatusTextMap[meta.authStatus]}
+    //           size="small"
+    //           variant="outlined"
+    //           color={color}
+    //         />
+    //       );
+
+    //       if (meta.authStatus === "pendingApproval") color = "warning";
+    //       if (meta.authStatus === "approvalCompleted") color = "success";
+    //       if (meta.authStatus === "canceledApproval") color = "error";
+
+    //       // Handle tooltip only for canceled approval
+    //       if (meta.authStatus === "canceledApproval" && meta.cancelReason) {
+    //         chip = (
+    //           <Tooltip title={meta.cancelReason} placement="top-end">
+    //             <Chip
+    //               key="approvalCanceledChip"
+    //               label="Approval Canceled"
+    //               size="small"
+    //               variant="outlined"
+    //               color="error"
+    //               sx={{ cursor: "pointer" }}
+    //             />
+    //           </Tooltip>
+    //         );
+    //       } else {
+    //         chip = (
+    //           <Chip
+    //             key="approvalChip"
+    //             label={approvalStatusTextMap[meta.authStatus]}
+    //             size="small"
+    //             variant="outlined"
+    //             color={color}
+    //           />
+    //         );
+    //       }
+
+    //       chips.push(chip);
+    //     }
+    //     // ⭐ NEW — INVOICE LOCK STATUS
+    //     if (INVOICE_LOCK_STATUSES.includes(meta.lockInvoiceStatus)) {
+    //       let color = "default";
+    //       if (meta.lockInvoiceStatus === "pendingpayment") color = "warning";
+    //       if (meta.lockInvoiceStatus === "paymentcompleted") color = "success";
+
+    //       chips.push(
+    //         <Chip
+    //           key="invoiceLockChip"
+    //           label={invoiceStatusTextMap[meta.lockInvoiceStatus]}
+    //           size="small"
+    //           variant="outlined"
+    //           color={color}
+    //         />
+    //       );
+    //     }
+    //     // ======= SHOW NOTHING IF NO STATUS =======
+    //     if (chips.length === 0) return null;
+
+    //     return <Box sx={{ display: "flex", gap: 1, ml: 1 }}>{chips}</Box>;
+    //   };
+
+    //   return (
+    //     <Box component="ul" sx={{ listStyle: "none", pl: level * 2, mb: 1 }}>
+    //       {items.map((item) => {
+    //         const fullPath = parentPath
+    //           ? `${parentPath}/${item.name}`
+    //           : item.name;
+    //         const meta = item.meta || {};
+
+    //         const isFolder = item.type === "folder";
+    //         const isFile = item.type === "file";
+    //         const isRootFolder = level === 0 && isFolder;
+
+    //         // Restricted folder name
+    //         const restrictedFolderName = "firm documents shared with client";
+
+    //         // Check if this is the restricted root folder
+    //         const isFirmDocsRoot =
+    //           isRootFolder &&
+    //           item.name?.toLowerCase() === restrictedFolderName.toLowerCase();
+
+    //         // Track whether we are inside restricted area
+    //         const insideRestricted = isInsideRestricted || isFirmDocsRoot;
+
+    //         const hideMenu = insideRestricted;
+
+    //         const getColor = (status) => (status ? "#1976d2" : "#9e9e9e");
+
+    //         const StatusIcons = () => (
+    //           <Box
+    //             sx={{ display: "flex", gap: 1, alignItems: "center", ml: 1 }}
+    //           >
+    //             <Eye size={16} color={getColor(meta.readStatus)} />
+
+    //             <Lock size={16} color={meta.readOnly ? "#e53935" : "#9e9e9e"} />
+    //           </Box>
+    //         );
+
+    //         const handleSafeFileClick = () => {
+    //           if (meta.readOnly) {
+    //             alert("This file is locked and cannot be opened.");
+    //             return;
+    //           }
+    //           handleFileClick(fullPath, item.name, meta);
+    //         };
+
+    //         return (
+    //           <li key={fullPath} style={{ marginBottom: 8 }}>
+    //             {isFolder ? (
+    //               <Box
+    //                 sx={{
+    //                   p: 1,
+    //                   display: "flex",
+    //                   alignItems: "center",
+    //                   justifyContent: "space-between",
+    //                   borderRadius: 2,
+    //                   cursor: "pointer",
+    //                   backgroundColor: isRootFolder ? "#f0f7ff" : "#fff",
+    //                   color: "black",
+    //                   "&:hover": { backgroundColor: "#f5f5f5", color: "black" },
+    //                   transition: "background-color 0.2s ease-in-out",
+    //                 }}
+    //                 onClick={() => toggleFolder(fullPath, meta.readOnly)}
+    //               >
+    //                 <Box
+    //                   display="flex"
+    //                   alignItems="center"
+    //                   sx={{ flexGrow: 1, gap: 1 }}
+    //                 >
+    //                   {expandedFolders[fullPath] ? (
+    //                     <FolderOpenIcon color="#1976d2" size={18} />
+    //                   ) : (
+    //                     <FolderClosedIcon color="#757575" size={18} />
+    //                   )}
+
+    //                   <Typography
+    //                     variant="body1"
+    //                     fontWeight="medium"
+    //                     sx={{ wordBreak: "break-word" }}
+    //                   >
+    //                     {item.name}
+
+    //                     {meta.readOnly && (
+    //                       <Typography
+    //                         variant="caption"
+    //                         sx={{ color: "red", fontWeight: "bold", ml: 1 }}
+    //                       >
+    //                         (Locked)
+    //                       </Typography>
+    //                     )}
+    //                   </Typography>
+    //                 </Box>
+
+    //                 {!hideMenu && (
+    //                   <IconButton
+    //                     size="small"
+    //                     onClick={(e) =>
+    //                       handleMenuOpen(e, {
+    //                         ...item,
+    //                         fullPath,
+    //                         isFolder: true,
+    //                       })
+    //                     }
+    //                   >
+    //                     <MoreVertIcon size={16} />
+    //                   </IconButton>
+    //                 )}
+    //               </Box>
+    //             ) : (
+    //               <Box
+    //                 sx={{
+    //                   display: "flex",
+    //                   alignItems: "center",
+    //                   pl: 4,
+    //                   mb: 1,
+    //                   borderRadius: 2,
+    //                   "&:hover .file-menu-icon": { opacity: 1 },
+    //                 }}
+    //               >
+    //                 <Box sx={{ mr: 1 }}>{getFileIcon(item.name)}</Box>
+
+    //                 <Typography
+    //                   variant="body2"
+    //                   sx={{
+    //                     flex: 1,
+    //                     wordBreak: "break-word",
+    //                     color: meta.readOnly ? "#999" : "#1976d2",
+    //                     textDecoration: meta.readOnly ? "none" : "underline",
+    //                     cursor: meta.readOnly ? "not-allowed" : "pointer",
+    //                   }}
+    //                   onClick={handleSafeFileClick}
+    //                 >
+    //                   {item.name}
+    //                 </Typography>
+    //                 <Box>{getStatusChip(meta)}</Box>
+
+    //                 {!insideRestricted && <StatusIcons />}
+
+    //                 {!hideMenu && (
+    //                   <Box
+    //                     className="file-menu-icon"
+    //                     sx={{
+    //                       width: 8,
+    //                       height: 8,
+    //                       borderRadius: "50%",
+    //                       backgroundColor: "#1976d2",
+    //                       opacity: 0,
+    //                       transition: "opacity 0.2s",
+    //                       cursor: "pointer",
+    //                       mr: 1,
+    //                       ml: 1,
+    //                     }}
+    //                     onClick={(e) =>
+    //                       handleMenuOpen(e, { ...item, fullPath, isFile: true })
+    //                     }
+    //                   />
+    //                 )}
+    //               </Box>
+    //             )}
+
+    //             {expandedFolders[fullPath] &&
+    //               item.children &&
+    //               item.children.length > 0 && (
+    //                 <Box
+    //                   sx={{
+    //                     ml: 2,
+    //                     mt: 1,
+    //                     borderLeft: "2px dashed #ccc",
+    //                     pl: 2,
+    //                   }}
+    //                 >
+    //                   {renderTree(
+    //                     item.children,
+    //                     level + 1,
+    //                     fullPath,
+    //                     insideRestricted
+    //                   )}
+    //                 </Box>
+    //               )}
+    //           </li>
+    //         );
+    //       })}
+    //     </Box>
+    //   );
+    // };
     return (
       <Box sx={{ margin: "auto", p: 3 }}>
         {/* Action Buttons */}
@@ -1208,6 +1535,80 @@ const invoiceStatusTextMap = {
               Upload Folder
             </Button>
           </Box>
+
+             {selectedItems.size > 0 && (
+            <Paper 
+              elevation={2} 
+              sx={{ 
+                p: 2, 
+                mb: 3, 
+                bgcolor: "#e3f2fd",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: 1
+              }}
+            >
+              <Typography variant="subtitle1" fontWeight="bold">
+                {selectedItems.size} item(s) selected
+              </Typography>
+              
+              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                {/* <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<DriveFileMoveIcon />}
+                  onClick={() => setBulkMoveDrawerOpen(true)}
+                  disabled={bulkOperationLoading}
+                >
+                  Move
+                </Button>
+                
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<LockIcon />}
+                  onClick={() => setBulkLockDialogOpen(true)}
+                  disabled={bulkOperationLoading}
+                >
+                  Lock/Unlock
+                </Button> */}
+                
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  size="small"
+                  startIcon={<DeleteIcon />}
+                  onClick={handleBulkDelete}
+                  disabled={bulkOperationLoading}
+                >
+                  Delete
+                </Button>
+                
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  startIcon={<DownloadIcon />}
+                  onClick={handleBulkDownload}
+                  disabled={bulkOperationLoading}
+                >
+                  Download
+                </Button>
+                
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setSelectedItems(new Set())}
+                  disabled={bulkOperationLoading}
+                >
+                  Clear Selection
+                </Button>
+              </Box>
+            </Paper>
+          )}
+
 
           {/* Drawers */}
           <FileUploadDrawer
@@ -1351,8 +1752,6 @@ const invoiceStatusTextMap = {
           </Dialog>
         )}
 
-
-
         {/* Cancel Reason Dialog */}
         <Dialog
           open={cancelDialogOpen}
@@ -1387,209 +1786,214 @@ const invoiceStatusTextMap = {
           </DialogActions>
         </Dialog>
 
-         <Dialog open={dialogOpen} onClose={handleCloseDialog} fullWidth maxWidth="lg">
-      <DialogTitle>
-        Signing Form
-        <IconButton
-          aria-label="close"
-          onClick={handleCloseDialog}
-          sx={{
-            position: "absolute",
-            right: 8,
-            top: 8,
-            color: (theme) => theme.palette.grey[500],
-          }}
+        <Dialog
+          open={dialogOpen}
+          onClose={handleCloseDialog}
+          fullWidth
+          maxWidth="lg"
         >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
+          <DialogTitle>
+            Signing Form
+            <IconButton
+              aria-label="close"
+              onClick={handleCloseDialog}
+              sx={{
+                position: "absolute",
+                right: 8,
+                top: 8,
+                color: (theme) => theme.palette.grey[500],
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
 
-      <DialogContent dividers>
-        {selectedSlug && (
-          <DocusealForm
-            src={`https://docuseal.com/s/${selectedSlug}`}
-            email={targetEmail}
-            onComplete={async (data) => {
-              console.log("Post-sign data:", data);
+          <DialogContent dividers>
+            {selectedSlug && (
+              <DocusealForm
+                src={`https://docuseal.com/s/${selectedSlug}`}
+                email={targetEmail}
+                onComplete={async (data) => {
+                  console.log("Post-sign data:", data);
 
-              try {
-                // 1️⃣ Update this specific submitter's status and replace document
-                const updateSubmitterRes = await fetch(
-                  `${SIGNATURE_API}/signautrelist/update-submitter/${data.template.external_id}`,
-                  {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      submitterEmail: targetEmail,
-                      submissionId: data.submission_id,
-                    }),
-                  }
-                );
-
-                const updateData = await updateSubmitterRes.json();
-
-                if (updateData.success) {
-                  console.log("✅ Document replaced with latest signature");
-                  
-                  // 2️⃣ Check if ALL submitters have now completed
-                  if (updateData.allCompleted) {
-                    console.log("🎉 All submitters have completed signing!");
-                    
-                    // Extract parent folder path
-                    const fullPath = decodeURIComponent(
-                      updateData.esignRecord.fileUrl.split("/uploads/accounts/")[1]
-                    );
-                    const parentFolderPath = fullPath
-                      .split("/")
-                      .slice(0, -1)
-                      .join("/");
-
-                    // 3️⃣ Update the final status only when ALL have signed
-                    await updateStatus(
-                      { path: parentFolderPath },
-                      "signStatus",
-                      "signatureCompleted"
+                  try {
+                    // 1️⃣ Update this specific submitter's status and replace document
+                    const updateSubmitterRes = await fetch(
+                      `${SIGNATURE_API}/signautrelist/update-submitter/${data.template.external_id}`,
+                      {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          submitterEmail: targetEmail,
+                          submissionId: data.submission_id,
+                        }),
+                      }
                     );
 
-                    // 4️⃣ Notify admin
-                    await fetch(`${SIGNATURE_API}/notify-admin`, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        clientName: targetEmail,
-                        documentName: selectedSlug,
-                        message: "All parties have completed signing"
-                      }),
-                    });
+                    const updateData = await updateSubmitterRes.json();
 
-                    alert("All signatures completed! Document has been fully executed.");
-                  } else {
-                    console.log(`✅ You have signed. Document updated. Waiting for ${updateData.pendingCount} more signer(s).`);
-                    alert(`Thank you for signing! Document has been updated. Waiting for ${updateData.pendingCount} more signer(s) to complete.`);
+                    if (updateData.success) {
+                      console.log("✅ Document replaced with latest signature");
+
+                      // 2️⃣ Check if ALL submitters have now completed
+                      if (updateData.allCompleted) {
+                        console.log(
+                          "🎉 All submitters have completed signing!"
+                        );
+
+                        // Extract parent folder path
+                        const fullPath = decodeURIComponent(
+                          updateData.esignRecord.fileUrl.split(
+                            "/uploads/accounts/"
+                          )[1]
+                        );
+                        const parentFolderPath = fullPath
+                          .split("/")
+                          .slice(0, -1)
+                          .join("/");
+
+                        // 3️⃣ Update the final status only when ALL have signed
+                        await updateStatus(
+                          { path: parentFolderPath },
+                          "signStatus",
+                          "signatureCompleted"
+                        );
+
+                        // 4️⃣ Notify admin
+                        await fetch(`${SIGNATURE_API}/notify-admin`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            clientName: targetEmail,
+                            documentName: selectedSlug,
+                            message: "All parties have completed signing",
+                          }),
+                        });
+
+                        alert(
+                          "All signatures completed! Document has been fully executed."
+                        );
+                      } else {
+                        console.log(
+                          `✅ You have signed. Document updated. Waiting for ${updateData.pendingCount} more signer(s).`
+                        );
+                        alert(
+                          `Thank you for signing! Document has been updated. Waiting for ${updateData.pendingCount} more signer(s) to complete.`
+                        );
+                      }
+                    } else {
+                      alert("Error updating signature status.");
+                    }
+                  } catch (err) {
+                    console.error("Error handling post-sign actions", err);
+                    alert("Error while updating sign status.");
                   }
-                } else {
-                  alert("Error updating signature status.");
-                }
 
-              } catch (err) {
-                console.error("Error handling post-sign actions", err);
-                alert("Error while updating sign status.");
-              }
+                  handleCloseDialog();
+                  // Refresh the data
+                  window.location.reload();
+                }}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
 
-              handleCloseDialog();
-              // Refresh the data
-              window.location.reload();
-            }}
-          />
-        )}
-      </DialogContent>
-    </Dialog>
-
- {/* <Dialog
-  open={invoiceDialogOpen}
-  onClose={() => setInvoiceDialogOpen(false)}
-  fullWidth
-  maxWidth="sm"
->
-  <DialogTitle>Invoice Details</DialogTitle>
-  <DialogContent>
-    {selectedInvoiceFile?.meta?.invoices?.length ? (
-      selectedInvoiceFile.meta.invoices.map((invoice) => (
-        <Box
-          key={invoice._id}
-          sx={{ mb: 2, p: 2, border: "1px solid #ccc", borderRadius: 1, bgcolor: "#f9f9f9" }}
+        
+        <Dialog
+          open={invoiceDialogOpen}
+          onClose={() => setInvoiceDialogOpen(false)}
+          fullWidth
+          maxWidth="sm"
         >
-          <Typography variant="subtitle1">
-            {invoice.invoicenumber ? `Invoice #${invoice.invoicenumber}` : invoice._id}
-          </Typography>
-          <Typography variant="body2">{invoice.description || "No description"}</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Date: {invoice.invoicedate ? new Date(invoice.invoicedate).toLocaleDateString() : "N/A"}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Amount: ${invoice.summary.total|| ""}
-          </Typography>
-
-        </Box>
-      ))
-    ) : (
-      <Typography>No invoices available for this file.</Typography>
-    )}
-  </DialogContent>
-  <DialogActions>
-    <Button onClick={() => setInvoiceDialogOpen(false)}>Close</Button>
-    {selectedInvoiceFile?.meta?.invoices?.length > 0 && (
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={() => {
-          setInvoiceDialogOpen(false);
-          window.location.href = `/payinvoice?file=${encodeURIComponent(selectedInvoiceFile.path)}`;
-        }}
-      >
-        Pay
-      </Button>
-    )}
-  </DialogActions>
-</Dialog> */}
-<Dialog
-  open={invoiceDialogOpen}
-  onClose={() => setInvoiceDialogOpen(false)}
-  fullWidth
-  maxWidth="sm"
->
-  <DialogTitle>Invoice Details</DialogTitle>
-  <DialogContent>
-    {selectedInvoiceFile?.meta?.invoices?.length ? (
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>Invoice Number</TableCell>
-            <TableCell>Description</TableCell>
-            <TableCell align="right">Amount</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {selectedInvoiceFile.meta.invoices.map((invoice) => (
-            <TableRow key={invoice._id}>
-              <TableCell>
-                {invoice.invoicenumber}
-              </TableCell>
-              <TableCell>{invoice.description || "No description"}</TableCell>
-              <TableCell align="right">${invoice.summary?.total?.toFixed(2) || "0.00"}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    ) : (
-      <Typography>No invoices available for this file.</Typography>
-    )}
-  </DialogContent>
- <DialogActions>
-  <Button onClick={() => setInvoiceDialogOpen(false)}>Close</Button>
-  {selectedInvoiceFile?.meta?.invoices?.length > 0 && (
-    <Button
-      variant="contained"
-      color="primary"
-      onClick={handlePayInvoice}
-    >
-      Pay
-    </Button>
-  )}
-</DialogActions>
-
-</Dialog>
-
+          <DialogTitle>Invoice Details</DialogTitle>
+          <DialogContent>
+            {selectedInvoiceFile?.meta?.invoices?.length ? (
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Invoice Number</TableCell>
+                    <TableCell>Description</TableCell>
+                    <TableCell align="right">Amount</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {selectedInvoiceFile.meta.invoices.map((invoice) => (
+                    <TableRow key={invoice._id}>
+                      <TableCell>{invoice.invoicenumber}</TableCell>
+                      <TableCell>
+                        {invoice.description || "No description"}
+                      </TableCell>
+                      <TableCell align="right">
+                        ${invoice.summary?.total?.toFixed(2) || "0.00"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <Typography>No invoices available for this file.</Typography>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setInvoiceDialogOpen(false)}>Close</Button>
+            {selectedInvoiceFile?.meta?.invoices?.length > 0 && (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handlePayInvoice}
+              >
+                Pay
+              </Button>
+            )}
+          </DialogActions>
+        </Dialog>
 
         {/* Folder Explorer */}
         <Paper elevation={3} sx={{ p: 2 }}>
           <Typography variant="h6" gutterBottom>
             📜 Folder Explorer
           </Typography>
-          {folderTree ? (
+          {/* {folderTree ? (
             renderTree(folderTree)
           ) : (
             <Typography>Loading folder data...</Typography>
+          )} */}
+           {folderTree && folderTree.length > 0 ? (
+            <>
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ width: "50px" }}>
+                        <Checkbox
+                          checked={selectAll}
+                          indeterminate={selectedItems.size > 0 && !selectAll}
+                          onChange={handleSelectAll}
+                        />
+                      </TableCell>
+                      <TableCell>Name</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Uploaded</TableCell>
+                      <TableCell align="right">Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>{renderTableRows(folderTree)}</TableBody>
+                </Table>
+              </TableContainer>
+
+              {/* Selected Items Summary */}
+              {selectedItems.size > 0 && (
+                <Paper elevation={1} sx={{ p: 2, mt: 2, bgcolor: "#e3f2fd" }}>
+                  <Typography variant="body2">
+                    {selectedItems.size} item(s) selected
+                  </Typography>
+                </Paper>
+              )}
+            </>
+          ) : (
+            <Typography sx={{ p: 2, textAlign: "center" }}>
+              Loading folder data...
+            </Typography>
           )}
         </Paper>
 

@@ -112,7 +112,7 @@ const ProposalPreviewDialog = ({ open, handleClose, proposal }) => {
     <Dialog open={open} onClose={handleClose} fullScreen>
       <DialogTitle sx={{ display: "flex", justifyContent: "space-between" }}>
         {proposal?.general?.proposalName || "Proposal"}
-        <CloseIcon sx={{ cursor: "pointer" }} onClick={handleClose} />
+        <CloseIcon sx={{ cursor: "pointer",color:'red' }} onClick={handleClose} />
       </DialogTitle>
 
       <DialogContent sx={{ display: "flex", height: "75vh", p: 0 }}>
