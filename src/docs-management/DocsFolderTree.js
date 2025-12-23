@@ -325,7 +325,7 @@ const handleSelectAll = () => {
 
         if (res.ok) {
           alert(data.message || "Status updated successfully");
-          fetchFolderTree(accountId); // refresh folder tree to reflect change
+          // fetchFolderTree(accountId); // refresh folder tree to reflect change
         } else {
           alert(data.error || "Failed to update status");
         }
@@ -740,7 +740,7 @@ const handleBulkDelete = async () => {
     const openDocument = (fullPath, fileName) => {
       try {
         // ✅ Construct full file URL
-        const fileUrl = `https://www.snptaxes.com/uploads/accounts/${accountId}/${fullPath}`;
+        const fileUrl = `https://www.snptaxes.com/uploads/accounts/${fullPath}`;
         console.log("Opening document:", fileUrl);
 
         // ✅ Detect file extension (case-insensitive)
@@ -1060,7 +1060,7 @@ const UploadedInfo = ({ meta }) => {
             return;
           }
           if (!isFolder) {
-            handleFileClick(fullPath, item.name);
+            handleFileClick(fullPath, item.name,meta);
           }
         };
 
@@ -1847,14 +1847,15 @@ const UploadedInfo = ({ meta }) => {
                             "/uploads/accounts/"
                           )[1]
                         );
+                        console.log("Full file path:", fullPath);
                         const parentFolderPath = fullPath
                           .split("/")
                           .slice(0, -1)
                           .join("/");
-
+console.log("Parent folder path:", parentFolderPath);
                         // 3️⃣ Update the final status only when ALL have signed
                         await updateStatus(
-                          { path: parentFolderPath },
+                          { path: fullPath },
                           "signStatus",
                           "signatureCompleted"
                         );
@@ -1891,7 +1892,7 @@ const UploadedInfo = ({ meta }) => {
 
                   handleCloseDialog();
                   // Refresh the data
-                  window.location.reload();
+                  // window.location.reload();
                 }}
               />
             )}
