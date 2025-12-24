@@ -1031,7 +1031,7 @@ const UploadedInfo = ({ meta }) => {
       return <Box sx={{ display: "flex", gap: 1 }}>{chips}</Box>;
     };
 
-    const renderTableRows = (items, level = 0, parentPath = "") => {
+    const renderTableRows = (items, level = 0, parentPath = "", isInsideRestricted = false) => {
       return items.map((item) => {
         console.log("itemlist",item)
         // const fullPath = parentPath ? `${parentPath}/${item.name}` : item.name;
@@ -1039,6 +1039,19 @@ const UploadedInfo = ({ meta }) => {
         const meta = item.meta || {};
         const isFolder = item.type === "folder";
         const isSelected = selectedItems.has(fullPath);
+
+        const restrictedFolderName = "firm documents shared with client";
+
+const isRootFolder = level === 0 && isFolder;
+
+const isFirmDocsRoot =
+  isRootFolder &&
+  item.name?.toLowerCase() === restrictedFolderName.toLowerCase();
+
+const insideRestricted = isInsideRestricted || isFirmDocsRoot;
+
+// same meaning as renderTree
+const hideMenu = insideRestricted;
          // Update the helper function to use item.path for children
     const getAllChildrenPaths = (item) => {
       const paths = [item.path];
@@ -1079,13 +1092,23 @@ const UploadedInfo = ({ meta }) => {
                     size="small"
                     checked={isSelected}
                     indeterminate={isPartiallySelected}
-                    onChange={() => handleFolderSelect(item)}
+                    // onChange={() => handleFolderSelect(item)}
+                     disabled={insideRestricted}   // ✅ disable
+      onChange={() => {
+        if (insideRestricted) return; // ✅ block selection
+        handleFolderSelect(item);
+      }}
                   />
                 ) : (
                   <Checkbox
                     size="small"
                     checked={isSelected}
-                    onChange={() => handleSelectItem(fullPath)}
+                    // onChange={() => handleSelectItem(fullPath)}
+                     disabled={insideRestricted}   // ✅ disable
+      onChange={() => {
+        if (insideRestricted) return; // ✅ block selection
+        handleSelectItem(fullPath);
+      }}
                   />
                 )}
               </TableCell>
@@ -1162,14 +1185,25 @@ const UploadedInfo = ({ meta }) => {
               </TableCell>
 
               {/* Actions Column */}
-              <TableCell align="right">
+              {/* <TableCell align="right">
                 <IconButton
                   size="small"
                   onClick={(e) => handleMenuOpen(e, { ...item, fullPath })}
                 >
                   <MoreVertIcon />
                 </IconButton>
-              </TableCell>
+              </TableCell> */}
+              <TableCell align="right">
+  {!hideMenu && (
+    <IconButton
+      size="small"
+      onClick={(e) => handleMenuOpen(e, { ...item, fullPath })}
+    >
+      <MoreVertIcon />
+    </IconButton>
+  )}
+</TableCell>
+
             </TableRow>
 
             {/* Render children if folder is expanded */}
@@ -1177,11 +1211,12 @@ const UploadedInfo = ({ meta }) => {
               expandedFolders[fullPath] &&
               item.children &&
               item.children.length > 0 &&
-              renderTableRows(item.children, level + 1, fullPath)}
+              renderTableRows(item.children, level + 1, fullPath, insideRestricted)}
           </React.Fragment>
         );
       });
     };
+    
     // const renderTree = (
     //   items,
     //   level = 0,
@@ -1966,11 +2001,11 @@ console.log("Parent folder path:", parentFolderPath);
                   <TableHead>
                     <TableRow>
                       <TableCell sx={{ width: "50px" }}>
-                        <Checkbox
+                        {/* <Checkbox
                           checked={selectAll}
                           indeterminate={selectedItems.size > 0 && !selectAll}
                           onChange={handleSelectAll}
-                        />
+                        /> */}
                       </TableCell>
                       <TableCell>Name</TableCell>
                       <TableCell>Status</TableCell>
