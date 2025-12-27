@@ -18,7 +18,8 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow,Checkbox,
+  TableRow,
+  Checkbox,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -95,23 +96,23 @@ const DocsFolderTree = () => {
     const [adminUserId, setAdminUserId] = useState("");
     const [accountName, setAccountName] = useState("");
 
-     // console.log("hgjhg",data)
+    // console.log("hgjhg",data)
     const [selectedItems, setSelectedItems] = useState(new Set());
     const [selectAll, setSelectAll] = useState(false);
 
-     // State for bulk operations
+    // State for bulk operations
     const [bulkMoveDrawerOpen, setBulkMoveDrawerOpen] = useState(false);
     const [bulkLockDialogOpen, setBulkLockDialogOpen] = useState(false);
     const [bulkOperationLoading, setBulkOperationLoading] = useState(false);
     const getAllChildrenPaths = (item) => {
-  const paths = [item.path];
-  if (item.children && item.children.length > 0) {
-    item.children.forEach((child) => {
-      paths.push(...getAllChildrenPaths(child));
-    });
-  }
-  return paths;
-};
+      const paths = [item.path];
+      if (item.children && item.children.length > 0) {
+        item.children.forEach((child) => {
+          paths.push(...getAllChildrenPaths(child));
+        });
+      }
+      return paths;
+    };
 
     const handleSelectItem = (path) => {
       setSelectedItems((prev) => {
@@ -124,50 +125,50 @@ const DocsFolderTree = () => {
         return newSet;
       });
     };
-// Update handleFolderSelect
-const handleFolderSelect = (item) => {
-  const allChildPaths = getAllChildrenPaths(item);
+    // Update handleFolderSelect
+    const handleFolderSelect = (item) => {
+      const allChildPaths = getAllChildrenPaths(item);
 
-  setSelectedItems((prev) => {
-    const newSet = new Set(prev);
-    const allSelected = allChildPaths.every((path) => newSet.has(path));
+      setSelectedItems((prev) => {
+        const newSet = new Set(prev);
+        const allSelected = allChildPaths.every((path) => newSet.has(path));
 
-    if (allSelected) {
-      allChildPaths.forEach((path) => newSet.delete(path));
-    } else {
-      allChildPaths.forEach((path) => newSet.add(path));
-    }
-    return newSet;
-  });
-};
-
-// Update isFolderPartiallySelected
-const isFolderPartiallySelected = (item) => {
-  const allChildPaths = getAllChildrenPaths(item);
-  const selectedCount = allChildPaths.filter((path) =>
-    selectedItems.has(path)
-  ).length;
-  return selectedCount > 0 && selectedCount < allChildPaths.length;
-};
-// Update handleSelectAll
-const handleSelectAll = () => {
-  if (selectAll) {
-    setSelectedItems(new Set());
-  } else {
-    const allPaths = new Set();
-    const collectPaths = (items) => {
-      items.forEach((item) => {
-        allPaths.add(item.path);
-        if (item.children && item.children.length > 0) {
-          collectPaths(item.children);
+        if (allSelected) {
+          allChildPaths.forEach((path) => newSet.delete(path));
+        } else {
+          allChildPaths.forEach((path) => newSet.add(path));
         }
+        return newSet;
       });
     };
-    collectPaths(folderTree);
-    setSelectedItems(allPaths);
-  }
-  setSelectAll(!selectAll);
-};
+
+    // Update isFolderPartiallySelected
+    const isFolderPartiallySelected = (item) => {
+      const allChildPaths = getAllChildrenPaths(item);
+      const selectedCount = allChildPaths.filter((path) =>
+        selectedItems.has(path)
+      ).length;
+      return selectedCount > 0 && selectedCount < allChildPaths.length;
+    };
+    // Update handleSelectAll
+    const handleSelectAll = () => {
+      if (selectAll) {
+        setSelectedItems(new Set());
+      } else {
+        const allPaths = new Set();
+        const collectPaths = (items) => {
+          items.forEach((item) => {
+            allPaths.add(item.path);
+            if (item.children && item.children.length > 0) {
+              collectPaths(item.children);
+            }
+          });
+        };
+        collectPaths(folderTree);
+        setSelectedItems(allPaths);
+      }
+      setSelectAll(!selectAll);
+    };
 
     const fetchAccountDetails = async () => {
       try {
@@ -380,60 +381,62 @@ const handleSelectAll = () => {
         alert("Failed to update read-only status");
       }
     };
-const handleBulkDelete = async () => {
-  if (selectedItems.size === 0) {
-    toast.warning("Please select items to delete");
-    return;
-  }
-
-  const confirmDelete = window.confirm(
-    `Are you sure you want to delete ${selectedItems.size} item(s)? This cannot be undone!`
-  );
-  if (!confirmDelete) return;
-
-  setBulkOperationLoading(true);
-  try {
-    const paths = Array.from(selectedItems);
-    
-    console.log("Deleting paths:", paths); // Debug log
-    
-    const response = await fetch(
-      "https://www.snptaxes.com/api/accountsdoc/bulk-delete",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paths }),
+    const handleBulkDelete = async () => {
+      if (selectedItems.size === 0) {
+        toast.warning("Please select items to delete");
+        return;
       }
-    );
 
-    const data = await response.json();
-    console.log("Bulk delete response:", data); // Debug log
-    
-    if (response.ok) {
-      if (data.success) {
-        toast.success(`${data.summary.success} item(s) deleted successfully`);
-        if (data.errors && data.errors.length > 0) {
-          toast.warning(`${data.errors.length} item(s) failed to delete`);
-          console.log("Failed deletions:", data.errors);
+      const confirmDelete = window.confirm(
+        `Are you sure you want to delete ${selectedItems.size} item(s)? This cannot be undone!`
+      );
+      if (!confirmDelete) return;
+
+      setBulkOperationLoading(true);
+      try {
+        const paths = Array.from(selectedItems);
+
+        console.log("Deleting paths:", paths); // Debug log
+
+        const response = await fetch(
+          "https://www.snptaxes.com/api/accountsdoc/bulk-delete",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ paths }),
+          }
+        );
+
+        const data = await response.json();
+        console.log("Bulk delete response:", data); // Debug log
+
+        if (response.ok) {
+          if (data.success) {
+            toast.success(
+              `${data.summary.success} item(s) deleted successfully`
+            );
+            if (data.errors && data.errors.length > 0) {
+              toast.warning(`${data.errors.length} item(s) failed to delete`);
+              console.log("Failed deletions:", data.errors);
+            }
+          } else {
+            toast.error(data.message || "Failed to delete some items");
+          }
+
+          // Clear selection regardless of partial success
+          setSelectedItems(new Set());
+          fetchFolderTree(accountId);
+        } else {
+          toast.error(data.message || "Failed to delete items");
         }
-      } else {
-        toast.error(data.message || "Failed to delete some items");
+      } catch (err) {
+        console.error("Bulk delete error:", err);
+        toast.error("Error deleting items: " + err.message);
+      } finally {
+        setBulkOperationLoading(false);
       }
-      
-      // Clear selection regardless of partial success
-      setSelectedItems(new Set());
-      fetchFolderTree(accountId);
-    } else {
-      toast.error(data.message || "Failed to delete items");
-    }
-  } catch (err) {
-    console.error("Bulk delete error:", err);
-    toast.error("Error deleting items: " + err.message);
-  } finally {
-    setBulkOperationLoading(false);
-  }
-};
-   const handleBulkDownload = async () => {
+    };
+    const handleBulkDownload = async () => {
       if (selectedItems.size === 0) {
         toast.warning("Please select items to download");
         return;
@@ -606,7 +609,6 @@ const handleBulkDelete = async () => {
     const handleFileClick = async (fullPath, fileName, meta = {}) => {
       console.log("file clicked", fullPath, fileName, meta);
       try {
-       
         // 🔒 Handle locked invoices
         if (meta.invoiceLock?.length) {
           // Fetch full invoices by IDs
@@ -907,37 +909,40 @@ const handleBulkDelete = async () => {
       signatureCompleted: "Signature Received",
     };
 
-  const formatUploadedAt = (dateValue) => {
-  if (!dateValue) return "";
+    const formatUploadedAt = (dateValue) => {
+      if (!dateValue) return "";
 
-  // If already in "DEC-19 2025" format
-  if (typeof dateValue === "string" && /^[A-Z]{3}-\d{2} \d{4}$/.test(dateValue)) {
-    return dateValue;
-  }
+      // If already in "DEC-19 2025" format
+      if (
+        typeof dateValue === "string" &&
+        /^[A-Z]{3}-\d{2} \d{4}$/.test(dateValue)
+      ) {
+        return dateValue;
+      }
 
-  const date = new Date(dateValue);
-  if (isNaN(date)) return dateValue;
+      const date = new Date(dateValue);
+      if (isNaN(date)) return dateValue;
 
-  return date
-    .toLocaleDateString("en-US", {
-      month: "short",
-      day: "2-digit",
-      year: "numeric",
-    })
-    .toUpperCase()
-    .replace(",", "")      // remove comma
-    .replace(" ", "-");    // replace first space with dash
-};
+      return date
+        .toLocaleDateString("en-US", {
+          month: "short",
+          day: "2-digit",
+          year: "numeric",
+        })
+        .toUpperCase()
+        .replace(",", "") // remove comma
+        .replace(" ", "-"); // replace first space with dash
+    };
 
-const UploadedInfo = ({ meta }) => {
-  if (!meta?.uploadedAt) return null;
+    const UploadedInfo = ({ meta }) => {
+      if (!meta?.uploadedAt) return null;
 
-  return (
-    <Typography variant="caption" sx={{ fontWeight: "bold" }}>
-      {formatUploadedAt(meta.uploadedAt)}
-    </Typography>
-  );
-};
+      return (
+        <Typography variant="caption" sx={{ fontWeight: "bold" }}>
+          {formatUploadedAt(meta.uploadedAt)}
+        </Typography>
+      );
+    };
     //     const UploadedInfo = ({ meta }) => {
     //   if (!meta) return null;
 
@@ -1031,59 +1036,76 @@ const UploadedInfo = ({ meta }) => {
       return <Box sx={{ display: "flex", gap: 1 }}>{chips}</Box>;
     };
 
-    const renderTableRows = (items, level = 0, parentPath = "", isInsideRestricted = false) => {
+    const renderTableRows = (
+      items,
+      level = 0,
+      parentPath = "",
+      isInsideRestricted = false
+    ) => {
       return items.map((item) => {
-        console.log("itemlist",item)
+        console.log("itemlist", item);
         // const fullPath = parentPath ? `${parentPath}/${item.name}` : item.name;
-         const fullPath = item.path;
+        const fullPath = item.path;
         const meta = item.meta || {};
         const isFolder = item.type === "folder";
         const isSelected = selectedItems.has(fullPath);
 
         const restrictedFolderName = "firm documents shared with client";
 
-const isRootFolder = level === 0 && isFolder;
+        const isRootFolder = level === 0 && isFolder;
 
-const isFirmDocsRoot =
-  isRootFolder &&
-  item.name?.toLowerCase() === restrictedFolderName.toLowerCase();
+        const isFirmDocsRoot =
+          isRootFolder &&
+          item.name?.toLowerCase() === restrictedFolderName.toLowerCase();
 
-const insideRestricted = isInsideRestricted || isFirmDocsRoot;
+        const insideRestricted = isInsideRestricted || isFirmDocsRoot;
 
-// same meaning as renderTree
-const hideMenu = insideRestricted;
-         // Update the helper function to use item.path for children
-    const getAllChildrenPaths = (item) => {
-      const paths = [item.path];
-      if (item.children && item.children.length > 0) {
-        item.children.forEach((child) => {
-          paths.push(...getAllChildrenPaths(child));
-        });
-      }
-      return paths;
-    };
+        // same meaning as renderTree
+        const hideMenu = insideRestricted;
+        // Update the helper function to use item.path for children
+        const getAllChildrenPaths = (item) => {
+          const paths = [item.path];
+          if (item.children && item.children.length > 0) {
+            item.children.forEach((child) => {
+              paths.push(...getAllChildrenPaths(child));
+            });
+          }
+          return paths;
+        };
 
-    // Update isFolderPartiallySelected to use item.path
-    const isPartiallySelected = isFolder
-      ? isFolderPartiallySelected(item)
-      : false;
+        // Update isFolderPartiallySelected to use item.path
+        const isPartiallySelected = isFolder
+          ? isFolderPartiallySelected(item)
+          : false;
         const handleSafeFileClick = () => {
           if (meta.readOnly) {
             alert("This file is locked and cannot be opened.");
             return;
           }
           if (!isFolder) {
-            handleFileClick(fullPath, item.name,meta);
+            handleFileClick(fullPath, item.name, meta);
           }
         };
 
         return (
           <React.Fragment key={fullPath}>
             <TableRow
-              sx={{
-                backgroundColor: level % 2 === 0 ? "#fafafa" : "white",
-                "&:hover": { backgroundColor: "#f5f5f5" },
-              }}
+              className={isFolder ? "folder-row" : ""}
+  sx={{
+    bgcolor: isSelected ? "#b2d8ff" : "transparent",
+    borderRadius: 1,
+    mb: 0.5,
+    cursor: item.meta?.readOnly ? "not-allowed" : "pointer",
+
+    "&:hover": {
+      bgcolor: "#dbefff",
+    },
+
+    /* 🔥 hover text color ONLY for folders */
+    "&.folder-row:hover *": {
+      color: "black !important",
+    },
+  }}
             >
               {/* Checkbox Column - Only checkboxes here */}
               <TableCell sx={{ width: "50px", paddingLeft: 2 }}>
@@ -1093,22 +1115,22 @@ const hideMenu = insideRestricted;
                     checked={isSelected}
                     indeterminate={isPartiallySelected}
                     // onChange={() => handleFolderSelect(item)}
-                     disabled={insideRestricted}   // ✅ disable
-      onChange={() => {
-        if (insideRestricted) return; // ✅ block selection
-        handleFolderSelect(item);
-      }}
+                    disabled={insideRestricted} // ✅ disable
+                    onChange={() => {
+                      if (insideRestricted) return; // ✅ block selection
+                      handleFolderSelect(item);
+                    }}
                   />
                 ) : (
                   <Checkbox
                     size="small"
                     checked={isSelected}
                     // onChange={() => handleSelectItem(fullPath)}
-                     disabled={insideRestricted}   // ✅ disable
-      onChange={() => {
-        if (insideRestricted) return; // ✅ block selection
-        handleSelectItem(fullPath);
-      }}
+                    disabled={insideRestricted} // ✅ disable
+                    onChange={() => {
+                      if (insideRestricted) return; // ✅ block selection
+                      handleSelectItem(fullPath);
+                    }}
                   />
                 )}
               </TableCell>
@@ -1183,7 +1205,11 @@ const hideMenu = insideRestricted;
               <TableCell>
                 <UploadedInfo meta={meta} />
               </TableCell>
-
+              <TableCell>
+                <Typography variant="caption" sx={{ fontWeight: "bold" }}>
+                  {meta.uploadedBy}
+                </Typography>
+              </TableCell>
               {/* Actions Column */}
               {/* <TableCell align="right">
                 <IconButton
@@ -1194,16 +1220,15 @@ const hideMenu = insideRestricted;
                 </IconButton>
               </TableCell> */}
               <TableCell align="right">
-  {!hideMenu && (
-    <IconButton
-      size="small"
-      onClick={(e) => handleMenuOpen(e, { ...item, fullPath })}
-    >
-      <MoreVertIcon />
-    </IconButton>
-  )}
-</TableCell>
-
+                {!hideMenu && (
+                  <IconButton
+                    size="small"
+                    onClick={(e) => handleMenuOpen(e, { ...item, fullPath })}
+                  >
+                    <MoreVertIcon />
+                  </IconButton>
+                )}
+              </TableCell>
             </TableRow>
 
             {/* Render children if folder is expanded */}
@@ -1211,12 +1236,17 @@ const hideMenu = insideRestricted;
               expandedFolders[fullPath] &&
               item.children &&
               item.children.length > 0 &&
-              renderTableRows(item.children, level + 1, fullPath, insideRestricted)}
+              renderTableRows(
+                item.children,
+                level + 1,
+                fullPath,
+                insideRestricted
+              )}
           </React.Fragment>
         );
       });
     };
-    
+
     // const renderTree = (
     //   items,
     //   level = 0,
@@ -1571,24 +1601,24 @@ const hideMenu = insideRestricted;
             </Button>
           </Box>
 
-             {selectedItems.size > 0 && (
-            <Paper 
-              elevation={2} 
-              sx={{ 
-                p: 2, 
-                mb: 3, 
-                bgcolor: "#e3f2fd",
+          {selectedItems.size > 0 && (
+            <Paper
+              elevation={2}
+              sx={{
+                p: 2,
+                mb: 3,
+                // bgcolor: "#e3f2fd",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
                 flexWrap: "wrap",
-                gap: 1
+                gap: 1,
               }}
             >
               <Typography variant="subtitle1" fontWeight="bold">
                 {selectedItems.size} item(s) selected
               </Typography>
-              
+
               <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
                 {/* <Button
                   variant="contained"
@@ -1609,7 +1639,7 @@ const hideMenu = insideRestricted;
                 >
                   Lock/Unlock
                 </Button> */}
-                
+
                 <Button
                   variant="contained"
                   color="secondary"
@@ -1620,7 +1650,7 @@ const hideMenu = insideRestricted;
                 >
                   Delete
                 </Button>
-                
+
                 <Button
                   variant="contained"
                   color="primary"
@@ -1631,7 +1661,7 @@ const hideMenu = insideRestricted;
                 >
                   Download
                 </Button>
-                
+
                 <Button
                   variant="outlined"
                   size="small"
@@ -1643,7 +1673,6 @@ const hideMenu = insideRestricted;
               </Box>
             </Paper>
           )}
-
 
           {/* Drawers */}
           <FileUploadDrawer
@@ -1887,7 +1916,7 @@ const hideMenu = insideRestricted;
                           .split("/")
                           .slice(0, -1)
                           .join("/");
-console.log("Parent folder path:", parentFolderPath);
+                        console.log("Parent folder path:", parentFolderPath);
                         // 3️⃣ Update the final status only when ALL have signed
                         await updateStatus(
                           { path: fullPath },
@@ -1934,7 +1963,6 @@ console.log("Parent folder path:", parentFolderPath);
           </DialogContent>
         </Dialog>
 
-        
         <Dialog
           open={invoiceDialogOpen}
           onClose={() => setInvoiceDialogOpen(false)}
@@ -1994,7 +2022,7 @@ console.log("Parent folder path:", parentFolderPath);
           ) : (
             <Typography>Loading folder data...</Typography>
           )} */}
-           {folderTree && folderTree.length > 0 ? (
+          {folderTree && folderTree.length > 0 ? (
             <>
               <TableContainer>
                 <Table size="small">
@@ -2010,6 +2038,7 @@ console.log("Parent folder path:", parentFolderPath);
                       <TableCell>Name</TableCell>
                       <TableCell>Status</TableCell>
                       <TableCell>Uploaded</TableCell>
+                      <TableCell>User</TableCell>
                       <TableCell align="right">Actions</TableCell>
                     </TableRow>
                   </TableHead>
@@ -2019,8 +2048,8 @@ console.log("Parent folder path:", parentFolderPath);
 
               {/* Selected Items Summary */}
               {selectedItems.size > 0 && (
-                <Paper elevation={1} sx={{ p: 2, mt: 2, bgcolor: "#e3f2fd" }}>
-                  <Typography variant="body2">
+                <Paper elevation={1} sx={{ p: 2, mt: 2,  }}>
+                  <Typography variant="subtitle1">
                     {selectedItems.size} item(s) selected
                   </Typography>
                 </Paper>
