@@ -8,6 +8,7 @@ import {
   Delete as DeleteIcon,
 } from "@mui/icons-material";
 import { Eye } from "lucide-react";
+// import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
 
 const FolderMenu = ({
   anchorEl,
@@ -82,10 +83,16 @@ const FolderMenu = ({
         Rename
       </MenuItem>
 
-      
-
-      
-     
+      <MenuItem
+        disabled={isLocked}
+        onClick={() => {
+          onMove();
+          onClose();
+        }}
+      >
+        <DriveFileMoveIcon fontSize="small" sx={{ mr: 0.5 }} />
+        Move
+      </MenuItem>
 
       <MenuItem
         disabled={isLocked}

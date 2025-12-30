@@ -19,6 +19,8 @@
     "framer-motion": "^12.16.0",
     "html-react-parser": "^5.2.8",
     "js-cookie": "^3.0.5",
+    "jspdf": "^3.0.4",
+    "jspdf-autotable": "^5.0.2",
     "jszip": "^3.10.1",
     "jwt-decode": "^4.0.0",
     "lodash": "^4.17.21",

@@ -35,6 +35,7 @@ const DocumentApprovals = ({ accountId,adminUserId }) => {
         `${DOCS_MANAGMENTS}/approvals/approvalList/${accountId}/pending`
       );
       setApprovals(data.pendingApprovals || []);
+      console.log("Fetched approvals:", data);
     } catch (error) {
       console.error("Error fetching approvals:", error);
     }
