@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { DocusealForm } from "@docuseal/react";
 import {
@@ -23,7 +22,6 @@ import CloseIcon from "@mui/icons-material/Close";
 //   const SIGNATURE_API = process.env.REACT_APP_ESIGNATURE_API;
 
 //   const targetEmail = sessionStorage.getItem("email");
-
 
 //   // ⭐ FETCH SIGNATURE LIST DIRECTLY HERE
 //   useEffect(() => {
@@ -319,7 +317,7 @@ import CloseIcon from "@mui/icons-material/Close";
 
 //   // Check if all submitters have completed signing for a submission
 //   const checkAllSubmittersCompleted = (submission) => {
-//     return submission.submitters.every(submitter => 
+//     return submission.submitters.every(submitter =>
 //       submitter.status === 'completed' || submitter.completed_at !== null
 //     );
 //   };
@@ -463,9 +461,9 @@ import CloseIcon from "@mui/icons-material/Close";
 //                     const checkCompletionRes = await fetch(
 //                       `${SIGNATURE_API}/signautrelist/check-completion/${data.template.external_id}`
 //                     );
-                    
+
 //                     const completionData = await checkCompletionRes.json();
-                    
+
 //                     let finalStatus = "in_progress";
 //                     if (completionData.allCompleted) {
 //                       finalStatus = "completed";
@@ -618,7 +616,7 @@ import CloseIcon from "@mui/icons-material/Close";
 //         completed_at: s.completed_at,
 //         role: s.role,
 //         // Check if all submitters have completed
-//         allCompleted: submission.submitters.every(submitter => 
+//         allCompleted: submission.submitters.every(submitter =>
 //           submitter.status === 'completed' || submitter.completed_at !== null
 //         )
 //       }))
@@ -643,11 +641,11 @@ import CloseIcon from "@mui/icons-material/Close";
 //         status: s.status,
 //         completed_at: s.completed_at,
 //         role: s.role,
-//         allCompleted: submission.submitters.every(submitter => 
+//         allCompleted: submission.submitters.every(submitter =>
 //           submitter.status === 'completed' || submitter.completed_at !== null
 //         ),
 //         totalSubmitters: submission.submitters.length,
-//         completedCount: submission.submitters.filter(sub => 
+//         completedCount: submission.submitters.filter(sub =>
 //           sub.status === 'completed' || sub.completed_at !== null
 //         ).length
 //       }))
@@ -772,7 +770,7 @@ import CloseIcon from "@mui/icons-material/Close";
 //                     // 2️⃣ Check if ALL submitters have now completed
 //                     if (updateData.allCompleted) {
 //                       console.log("🎉 All submitters have completed signing!");
-                      
+
 //                       // Extract parent folder path
 //                       const fullPath = decodeURIComponent(
 //                         updateData.esignRecord.fileUrl.split("/uploads/accounts/")[1]
@@ -867,7 +865,7 @@ const DocuSealMultiSigner = ({ accountId }) => {
   const updateStatus = async (item, statusType, newValue) => {
     try {
       if (!item?.path) return alert("Invalid item selected");
-
+      console.log("Updating status for", item.path, statusType, newValue);
       const body = {
         targetPath: item.path,
         status: { [statusType]: newValue },
@@ -910,9 +908,10 @@ const DocuSealMultiSigner = ({ accountId }) => {
         status: s.status,
         completed_at: s.completed_at,
         role: s.role,
-        allCompleted: submission.submitters.every(submitter => 
-          submitter.status === 'completed' || submitter.completed_at !== null
-        )
+        allCompleted: submission.submitters.every(
+          (submitter) =>
+            submitter.status === "completed" || submitter.completed_at !== null
+        ),
       }))
     )
     .filter((s) => s.email === targetEmail && !s.completed_at);
@@ -935,13 +934,14 @@ const DocuSealMultiSigner = ({ accountId }) => {
         status: s.status,
         completed_at: s.completed_at,
         role: s.role,
-        allCompleted: submission.submitters.every(submitter => 
-          submitter.status === 'completed' || submitter.completed_at !== null
+        allCompleted: submission.submitters.every(
+          (submitter) =>
+            submitter.status === "completed" || submitter.completed_at !== null
         ),
         totalSubmitters: submission.submitters.length,
-        completedCount: submission.submitters.filter(sub => 
-          sub.status === 'completed' || sub.completed_at !== null
-        ).length
+        completedCount: submission.submitters.filter(
+          (sub) => sub.status === "completed" || sub.completed_at !== null
+        ).length,
       }))
     )
     .filter((s) => s.email === targetEmail);
@@ -949,18 +949,28 @@ const DocuSealMultiSigner = ({ accountId }) => {
   return (
     <>
       <Box>
-        
-
         {/* Pending Signatures */}
         {matchingSubmitters.length > 0 && (
           <>
-          <Typography component="h2" variant="subtitle2" gutterBottom sx={{ fontWeight: "600" }}>
-          Documents
-        </Typography>
+            <Typography
+              component="h2"
+              variant="subtitle2"
+              gutterBottom
+              sx={{ fontWeight: "600" }}
+            >
+              Documents
+            </Typography>
             <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
               Pending Your Signature ({matchingSubmitters.length})
             </Typography>
-            <Box style={{ display: "flex", flexWrap: "wrap", gap: "20px", marginTop: "5px" }}>
+            <Box
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "20px",
+                marginTop: "5px",
+              }}
+            >
               {matchingSubmitters.map((s, index) => (
                 <Card key={index} style={{ minWidth: 200 }}>
                   <CardContent>
@@ -971,7 +981,13 @@ const DocuSealMultiSigner = ({ accountId }) => {
                       Role: {s.role}
                     </Typography>
                     <Typography variant="body2" color="textSecondary">
-                      Progress: {s.submissionData.submitters.filter(sub => sub.completed_at).length} of {s.submissionData.submitters.length} signed
+                      Progress:{" "}
+                      {
+                        s.submissionData.submitters.filter(
+                          (sub) => sub.completed_at
+                        ).length
+                      }{" "}
+                      of {s.submissionData.submitters.length} signed
                     </Typography>
                     <br />
                     <Button
@@ -996,9 +1012,14 @@ const DocuSealMultiSigner = ({ accountId }) => {
           </>
         )}
 
-      
-        <Box style={{ display: "flex", flexWrap: "wrap", gap: "20px", marginTop: "5px" }}>
-          
+        <Box
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "20px",
+            marginTop: "5px",
+          }}
+        >
           {allUserSubmissions.map((s, index) => (
             <Card key={index} style={{ minWidth: 200 }}>
               <CardContent>
@@ -1006,10 +1027,13 @@ const DocuSealMultiSigner = ({ accountId }) => {
                   Template: {s.templateName}
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
-                  Your Status: {s.completed_at ? '✓ Signed' : '⏳ Pending'}
+                  Your Status: {s.completed_at ? "✓ Signed" : "⏳ Pending"}
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
-                  Overall: {s.allCompleted ? '✓ All Signed' : ` ${s.completedCount}/${s.totalSubmitters} signed`}
+                  Overall:{" "}
+                  {s.allCompleted
+                    ? "✓ All Signed"
+                    : ` ${s.completedCount}/${s.totalSubmitters} signed`}
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
                   Role: {s.role}
@@ -1024,7 +1048,12 @@ const DocuSealMultiSigner = ({ accountId }) => {
           ))}
         </Box>
 
-        <Dialog open={dialogOpen} onClose={handleCloseDialog} fullWidth maxWidth="lg">
+        <Dialog
+          open={dialogOpen}
+          onClose={handleCloseDialog}
+          fullWidth
+          maxWidth="lg"
+        >
           <DialogTitle>
             Signing Form
             <IconButton
@@ -1064,17 +1093,21 @@ const DocuSealMultiSigner = ({ accountId }) => {
                     );
 
                     const updateData = await updateSubmitterRes.json();
-
+                    console.log("Update data after signing:", updateData);
                     if (updateData.success) {
                       console.log("✅ Document replaced with latest signature");
-                      
+
                       // 2️⃣ Check if ALL submitters have now completed
                       if (updateData.allCompleted) {
-                        console.log("🎉 All submitters have completed signing!");
-                        
+                        console.log(
+                          "🎉 All submitters have completed signing!"
+                        );
+
                         // Extract parent folder path
                         const fullPath = decodeURIComponent(
-                          updateData.esignRecord.fileUrl.split("/uploads/accounts/")[1]
+                          updateData.esignRecord.fileUrl.split(
+                            "/uploads/accounts/"
+                          )[1]
                         );
                         const parentFolderPath = fullPath
                           .split("/")
@@ -1083,7 +1116,7 @@ const DocuSealMultiSigner = ({ accountId }) => {
 
                         // 3️⃣ Update the final status only when ALL have signed
                         await updateStatus(
-                          { path: parentFolderPath },
+                          { path: fullPath },
                           "signStatus",
                           "signatureCompleted"
                         );
@@ -1095,19 +1128,24 @@ const DocuSealMultiSigner = ({ accountId }) => {
                           body: JSON.stringify({
                             clientName: targetEmail,
                             documentName: selectedSlug,
-                            message: "All parties have completed signing"
+                            message: "All parties have completed signing",
                           }),
                         });
 
-                        alert("All signatures completed! Document has been fully executed.");
+                        alert(
+                          "All signatures completed! Document has been fully executed."
+                        );
                       } else {
-                        console.log(`✅ You have signed. Document updated. Waiting for ${updateData.pendingCount} more signer(s).`);
-                        alert(`Thank you for signing! Document has been updated. Waiting for ${updateData.pendingCount} more signer(s) to complete.`);
+                        console.log(
+                          `✅ You have signed. Document updated. Waiting for ${updateData.pendingCount} more signer(s).`
+                        );
+                        alert(
+                          `Thank you for signing! Document has been updated. Waiting for ${updateData.pendingCount} more signer(s) to complete.`
+                        );
                       }
                     } else {
                       alert("Error updating signature status.");
                     }
-
                   } catch (err) {
                     console.error("Error handling post-sign actions", err);
                     alert("Error while updating sign status.");
@@ -1115,7 +1153,7 @@ const DocuSealMultiSigner = ({ accountId }) => {
 
                   handleCloseDialog();
                   // Refresh the data
-                  window.location.reload();
+                   window.location.reload();
                 }}
               />
             )}

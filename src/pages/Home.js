@@ -16,6 +16,8 @@ import DocuSealWrapper from "../components/Home Components/DocuSealWrapper";
 import DocumnetApprovals from "../components/Home Components/DocumnetApprovals";
 import { set } from "lodash";
 import DocuSealMultiSigner from "../components/Home Components/DocuSealMultiSigner";
+import PendingApprovals from "../components/Home Components/PendingApprovals";
+import { Pending } from "@mui/icons-material";
 const Home = () => {
   const ACCOUNT_API = process.env.REACT_APP_ACCOUNTS_URL;
   // const { logindata } = useContext(LoginContext);
@@ -163,6 +165,7 @@ const Home = () => {
            <DocuSealWrapper accountId={accountId} />
            <DocuSealMultiSigner accountId={accountId} />
            <DocumnetApprovals accountId={accountId} adminUserId={adminUserId}/>
+           <PendingApprovals accountId={accountId}  adminUserId={adminUserId}/>
           </Paper>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>

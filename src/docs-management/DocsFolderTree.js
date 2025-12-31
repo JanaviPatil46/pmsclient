@@ -286,10 +286,21 @@ const getAllChildrenPaths = (item) => {
       }));
     };
 
-    const handleMenuOpen = (event, folder) => {
+    const handleMenuOpen = (event, item) => {
       event.stopPropagation();
       setMenuAnchorEl(event.currentTarget);
-      setSelectedFolderForMenu(folder);
+      // setSelectedFolderForMenu(folder);
+       // Check if it's the specific "Client Uploaded Documents" folder
+  const isClientUploadedDocs = item.name?.toLowerCase() === "client uploaded documents";
+       // Set the item with proper type information
+  setSelectedFolderForMenu({
+    ...item,
+    isFile: item.type === 'file',
+    isFolder: item.type === 'folder',
+    // Check if it's a parent folder (root level)
+    // isParent: !item.path.includes('/') && item.type === 'folder'
+      isParent: (!item.path.includes('/') && item.type === 'folder') || isClientUploadedDocs
+  });
     };
 
     const handleMenuClose = () => {
