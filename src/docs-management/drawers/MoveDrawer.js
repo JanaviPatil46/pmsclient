@@ -283,7 +283,7 @@ const MoveDrawer = ({
       }
     } else {
       // Reset on close
-      setSourcePaths([]);
+      // setSourcePaths([]);
       setDestinationPath("");
       setMessage("");
       setLoading(false);

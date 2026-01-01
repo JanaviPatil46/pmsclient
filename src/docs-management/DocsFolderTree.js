@@ -104,8 +104,16 @@ const DocsFolderTree = () => {
 
     // State for bulk operations
     const [bulkMoveDrawerOpen, setBulkMoveDrawerOpen] = useState(false);
-   
+
     const [bulkOperationLoading, setBulkOperationLoading] = useState(false);
+
+  
+
+  const handleTrashClick = () => {
+   navigate(`/client/trashDocs`);
+  };
+
+  
     // const getAllChildrenPaths = (item) => {
     //   const paths = [item.path];
     //   if (item.children && item.children.length > 0) {
@@ -115,22 +123,22 @@ const DocsFolderTree = () => {
     //   }
     //   return paths;
     // };
-const getAllChildrenPaths = (item) => {
-  const paths = [];
+    const getAllChildrenPaths = (item) => {
+      const paths = [];
 
-  // ❌ Skip this item entirely if readOnly
-  if (item.meta?.readOnly) return paths;
+      // ❌ Skip this item entirely if readOnly
+      if (item.meta?.readOnly) return paths;
 
-  paths.push(item.path);
+      paths.push(item.path);
 
-  if (item.children && item.children.length > 0) {
-    item.children.forEach((child) => {
-      paths.push(...getAllChildrenPaths(child));
-    });
-  }
+      if (item.children && item.children.length > 0) {
+        item.children.forEach((child) => {
+          paths.push(...getAllChildrenPaths(child));
+        });
+      }
 
-  return paths;
-};
+      return paths;
+    };
 
     const handleSelectItem = (path) => {
       setSelectedItems((prev) => {
@@ -290,17 +298,20 @@ const getAllChildrenPaths = (item) => {
       event.stopPropagation();
       setMenuAnchorEl(event.currentTarget);
       // setSelectedFolderForMenu(folder);
-       // Check if it's the specific "Client Uploaded Documents" folder
-  const isClientUploadedDocs = item.name?.toLowerCase() === "client uploaded documents";
-       // Set the item with proper type information
-  setSelectedFolderForMenu({
-    ...item,
-    isFile: item.type === 'file',
-    isFolder: item.type === 'folder',
-    // Check if it's a parent folder (root level)
-    // isParent: !item.path.includes('/') && item.type === 'folder'
-      isParent: (!item.path.includes('/') && item.type === 'folder') || isClientUploadedDocs
-  });
+      // Check if it's the specific "Client Uploaded Documents" folder
+      const isClientUploadedDocs =
+        item.name?.toLowerCase() === "client uploaded documents";
+      // Set the item with proper type information
+      setSelectedFolderForMenu({
+        ...item,
+        isFile: item.type === "file",
+        isFolder: item.type === "folder",
+        // Check if it's a parent folder (root level)
+        // isParent: !item.path.includes('/') && item.type === 'folder'
+        isParent:
+          (!item.path.includes("/") && item.type === "folder") ||
+          isClientUploadedDocs,
+      });
     };
 
     const handleMenuClose = () => {
@@ -465,6 +476,65 @@ const getAllChildrenPaths = (item) => {
         setBulkOperationLoading(false);
       }
     };
+
+       // Bulk Trash
+const handleBulkTrash = async () => {
+  if (selectedItems.size === 0) {
+    toast.warning("Please select items to move to trash");
+    return;
+  }
+
+  const confirmTrash = window.confirm(
+    `Are you sure you want to move ${selectedItems.size} item(s) to trash?`
+  );
+  if (!confirmTrash) return;
+
+  setBulkOperationLoading(true);
+
+  try {
+    const paths = Array.from(selectedItems);
+
+    console.log("Trashing paths:", paths); // Debug log
+
+    const response = await fetch(
+      "https://www.snptaxes.com/api/accountsdoc/bulktrash",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetPaths: paths ,trashedBy: "Client" }),
+      }
+    );
+
+    const data = await response.json();
+    console.log("Bulk trash response:", data); // Debug log
+
+    if (response.ok) {
+      if (data.success) {
+        toast.success(
+          `${data.trashedItems.length} item(s) moved to trash successfully`
+        );
+
+        if (data.failedItems && data.failedItems.length > 0) {
+          toast.warning(`${data.failedItems.length} item(s) failed`);
+          console.log("Failed trash items:", data.failedItems);
+        }
+      } else {
+        toast.error(data.message || "Failed to trash some items");
+      }
+
+      // Clear selection regardless of partial success
+      setSelectedItems(new Set());
+      fetchFolderTree(accountId);
+    } else {
+      toast.error(data.message || "Failed to trash items");
+    }
+  } catch (err) {
+    console.error("Bulk trash error:", err);
+    toast.error("Error moving items to trash: " + err.message);
+  } finally {
+    setBulkOperationLoading(false);
+  }
+};
     const handleBulkDownload = async () => {
       if (selectedItems.size === 0) {
         toast.warning("Please select items to download");
@@ -539,6 +609,42 @@ const getAllChildrenPaths = (item) => {
 
       handleMenuClose();
     };
+    // 🗑️ Move File or Folder to Trash (Soft delete)
+const trashItem = async (item) => {
+  if (!item?.path) return alert("Invalid path");
+
+  const confirmTrash = window.confirm(
+    `Are you sure you want to move "${item.name}" to Trash?`
+  );
+  if (!confirmTrash) return;
+
+  try {
+    const response = await fetch(
+      "https://www.snptaxes.com/api/accountsdoc/trash",
+      {
+        method: "PATCH", // ✅ trash = PATCH
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetPath: item.path, trashedBy: "Client" }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      toast.success(data.message || "Moved to trash");
+      setTimeout(() => {
+        fetchFolderTree(accountId); // refresh tree
+      }, 500);
+    } else {
+      toast.error(data.message || "Failed to move to trash");
+    }
+  } catch (err) {
+    console.error("Error trashing item:", err);
+    toast.error("Error moving item to trash");
+  }
+
+  handleMenuClose();
+};
     const DOCS_MANAGMENTS = process.env.REACT_APP_CLIENT_DOCS_MANAGE;
     const targetEmail = sessionStorage.getItem("email");
     const [selectedSlug, setSelectedSlug] = useState(null);
@@ -1175,9 +1281,9 @@ const getAllChildrenPaths = (item) => {
                     indeterminate={isPartiallySelected}
                     // onChange={() => handleFolderSelect(item)}
                     // disabled={insideRestricted} // ✅ disable
-                      disabled={insideRestricted || meta.readOnly}
+                    disabled={insideRestricted || meta.readOnly}
                     onChange={() => {
-                      if (insideRestricted || meta.readOnly ) return; // ✅ block selection
+                      if (insideRestricted || meta.readOnly) return; // ✅ block selection
                       handleFolderSelect(item);
                     }}
                   />
@@ -1403,6 +1509,24 @@ const getAllChildrenPaths = (item) => {
             >
               Upload Folder
             </Button>
+
+              <Button
+            fullWidth
+            startIcon={<DeleteIcon />}
+            onClick={handleTrashClick}
+            color="error"
+            sx={{
+              backgroundColor: "error.main",
+              color: "white",
+              "&:hover": {
+                backgroundColor: "error.dark",
+                boxShadow: 1,
+              },
+              transition: "background-color 0.2s ease",
+            }}
+          >
+            View Trash
+          </Button>
           </Box>
 
           {selectedItems.size > 0 && (
@@ -1443,7 +1567,7 @@ const getAllChildrenPaths = (item) => {
                 >
                   Lock/Unlock
                 </Button> */}
- <Button
+                <Button
                   variant="contained"
                   size="small"
                   startIcon={<DriveFileMoveIcon />}
@@ -1457,7 +1581,7 @@ const getAllChildrenPaths = (item) => {
                   color="secondary"
                   size="small"
                   startIcon={<DeleteIcon />}
-                  onClick={handleBulkDelete}
+                  onClick={handleBulkTrash}
                   disabled={bulkOperationLoading}
                 >
                   Delete
@@ -1534,7 +1658,7 @@ const getAllChildrenPaths = (item) => {
             selectedFolderForMenu={selectedFolderForMenu}
           />
 
-           <MoveDrawer
+          <MoveDrawer
             isOpen={bulkMoveDrawerOpen}
             onClose={() => setBulkMoveDrawerOpen(false)}
             folderTree={folderTree}
@@ -1910,7 +2034,7 @@ const getAllChildrenPaths = (item) => {
               accId={accountId}
               onToggleReadStatus={toggleReadStatus}
               onToggleReadOnly={toggleReadOnly}
-              onDelete={deleteItem}
+              onDelete={trashItem}
               onDownload={handleFileClick}
             />
           ) : (
@@ -1927,7 +2051,7 @@ const getAllChildrenPaths = (item) => {
               onMove={() => setMoveDrawerOpen(true)}
               onToggleReadStatus={toggleReadStatus}
               onToggleReadOnly={toggleReadOnly}
-              onDelete={deleteItem}
+              onDelete={trashItem}
             />
           )
         ) : null}

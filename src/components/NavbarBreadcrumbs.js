@@ -19,12 +19,13 @@ const StyledBreadcrumbs = styled(Breadcrumbs)(({ theme }) => ({
 
 const customBreadcrumbMap = {
   updatechat: ['chatstasks', 'updatechat'], // special case: show as Chats > Chat
-  payinvoice: ['billing', 'payinvoice']
+  payinvoice: ['billing', 'payinvoice'],
+  trashDocs: ['document', 'trashDocs'], // special case: show as Documents > Trash
 };
 
 const pathToName = {
   home: 'Dashboard',
-  document: 'Documents',
+  trashDocs: 'Documents',
   chatstasks: 'Chats',
   organizers: 'Organizers',
   proposalsels: 'Proposals & Els',
