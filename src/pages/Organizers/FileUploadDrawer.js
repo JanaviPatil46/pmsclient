@@ -427,7 +427,7 @@ const FileUploadDrawer = ({
 
           uploadResults.successful.push({
             fileName: file.name,
-            filePath: selectedFolder,
+            filePath: `${selectedFolder}/${file.name}`,
             uploadDate: new Date().toISOString(),
             serverResponse: res.data
           });
@@ -673,7 +673,7 @@ const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
                   selectedFolder={selectedFolder}
                   level={level + 1}
                 />
-                {item.meta?.files?.length > 0 && (
+                {/* {item.meta?.files?.length > 0 && (
                   <List sx={{ pl: 4 }}>
                     {item.meta.files.map((file) => (
                       <ListItem
@@ -691,7 +691,7 @@ const FolderTreeSelector = ({ items, onSelect, selectedFolder, level = 0 }) => {
                       </ListItem>
                     ))}
                   </List>
-                )}
+                )} */}
               </Collapse>
             )}
           </React.Fragment>
