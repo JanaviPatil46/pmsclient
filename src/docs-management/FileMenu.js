@@ -57,17 +57,17 @@ accId,
         <DriveFileMoveIcon fontSize="small" sx={{ mr: 0.5 }} />
         Move
       </MenuItem>
-      {/* <MenuItem
+      <MenuItem
         disabled={isLocked}
-        onClick={() => {
-          //onMove();
+       onClick={() => {
+          onDownload(selectedItem);
           onClose();
         }}
         sx={{ fontSize: "0.8rem", py: 0.5 }}
       >
         <DriveFileMoveIcon fontSize="small" sx={{ mr: 0.5 }} />
         Download
-      </MenuItem> */}
+      </MenuItem>
 {/* <MenuItem
         onClick={() => {
           if (selectedItem) {

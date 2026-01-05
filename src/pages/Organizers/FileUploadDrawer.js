@@ -396,16 +396,17 @@ const FileUploadDrawer = ({
     };
 
     try {
+
       // Upload files sequentially to avoid overwhelming the server
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        
+              const accountId = sessionStorage.getItem("accountId");
         try {
           setMessage(`Uploading ${i + 1}/${files.length}: ${file.name}`);
           
           const formData = new FormData();
           formData.append("files", file);
-
+ formData.append("accountId", accountId);
           const res = await axios.post(
             `https://www.snptaxes.com/api/accountsdoc/file/upload?folderPath=${encodeURIComponent(
               selectedFolder

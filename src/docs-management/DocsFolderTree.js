@@ -287,7 +287,7 @@ const DocsFolderTree = () => {
     }, [accountId]);
 
     const toggleFolder = (path, isReadOnly) => {
-      if (isReadOnly) return;
+      // if (isReadOnly) return;
       setExpandedFolders((prev) => ({
         ...prev,
         [path]: !prev[path],
@@ -645,6 +645,39 @@ const trashItem = async (item) => {
 
   handleMenuClose();
 };
+ const handleDownloadFile = async (item) => {
+  console.log("Downloading file:", item);
+      try {
+        const res = await fetch(
+          "https://www.snptaxes.com/api/accountsdoc/download",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              paths: item.path, // backend already supports string or array
+            }),
+          }
+        );
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Download failed");
+        }
+
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = item.name || "download";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error("Download error:", err);
+      }
+    };
     const DOCS_MANAGMENTS = process.env.REACT_APP_CLIENT_DOCS_MANAGE;
     const targetEmail = sessionStorage.getItem("email");
     const [selectedSlug, setSelectedSlug] = useState(null);
@@ -1883,6 +1916,7 @@ const trashItem = async (item) => {
                             clientName: targetEmail,
                             documentName: selectedSlug,
                             message: "All parties have completed signing",
+                             accountId: accountId
                           }),
                         });
 
@@ -2035,7 +2069,7 @@ const trashItem = async (item) => {
               onToggleReadStatus={toggleReadStatus}
               onToggleReadOnly={toggleReadOnly}
               onDelete={trashItem}
-              onDownload={handleFileClick}
+              onDownload={handleDownloadFile}
             />
           ) : (
             // 📂 Child Folder Menu

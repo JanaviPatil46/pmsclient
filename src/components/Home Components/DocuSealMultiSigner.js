@@ -1129,6 +1129,7 @@ const DocuSealMultiSigner = ({ accountId }) => {
                             clientName: targetEmail,
                             documentName: selectedSlug,
                             message: "All parties have completed signing",
+                            accountId: accountId
                           }),
                         });
 
