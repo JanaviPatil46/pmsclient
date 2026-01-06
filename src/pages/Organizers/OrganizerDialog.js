@@ -1199,104 +1199,205 @@ const OrganizerDialog = ({ open, handleClose, organizer }) => {
     setActiveStep(selectedIndex);
   };
 
-  const handleSubmit = async () => {
-    const errors = {};
+//   const handleSubmit = async () => {
+//     const errors = {};
 
-    visibleSections.forEach((section) => {
-      section.formElements.forEach((element) => {
-        if (
-          shouldShowElement(element, section.id) &&
-          element.questionsectionsettings?.required
-        ) {
-          const key = `${section.id}_${element.text}`;
+//     visibleSections.forEach((section) => {
+//       section.formElements.forEach((element) => {
+//         if (
+//           shouldShowElement(element, section.id) &&
+//           element.questionsectionsettings?.required
+//         ) {
+//           const key = `${section.id}_${element.text}`;
 
-          if (element.type === "File Upload") {
-            const fileInfos = uploadedFiles[key];
-            if (
-              !fileInfos ||
-              fileInfos.length === 0 ||
-              !fileInfos.some((f) => f.status === "completed")
-            ) {
-              if (!errors[section.id]) {
-                errors[section.id] = {};
-              }
-              errors[section.id][
-                element.text
-              ] = `Please upload the required file(s)`;
+//           if (element.type === "File Upload") {
+//             const fileInfos = uploadedFiles[key];
+//             if (
+//               !fileInfos ||
+//               fileInfos.length === 0 ||
+//               !fileInfos.some((f) => f.status === "completed")
+//             ) {
+//               if (!errors[section.id]) {
+//                 errors[section.id] = {};
+//               }
+//               errors[section.id][
+//                 element.text
+//               ] = `Please upload the required file(s)`;
+//             }
+//           } else {
+//             const hasAnswer = answeredElements[key];
+//             if (!hasAnswer) {
+//               if (!errors[section.id]) {
+//                 errors[section.id] = {};
+//               }
+//               errors[section.id][element.text] = `This question is required`;
+//             }
+//           }
+//         }
+//       });
+//     });
+
+//     setValidationErrors(errors);
+
+//     if (Object.keys(errors).length > 0) {
+//       const firstErrorSectionId = Object.keys(errors)[0];
+//       const sectionIndex = visibleSections.findIndex(
+//         (section) => section.id === firstErrorSectionId
+//       );
+//       if (sectionIndex !== -1) {
+//         setActiveStep(sectionIndex);
+//       }
+
+//       toast.error("Please complete all required questions before submitting");
+//       return;
+//     }
+
+//     try {
+//       const myHeaders = new Headers();
+//       myHeaders.append("Content-Type", "application/json");
+
+//       const data = prepareSubmitData(true);
+//       const isFinalSubmission = data.status === "Completed";
+// console.log("data",data)
+//       if (isFinalSubmission) {
+//         data.issealed = true;
+//       }
+
+//       const endpoint =
+//         data.status === "Completed"
+//           ? `${ORGANIZER_TEMP_API}/workflow/orgaccwise/organizeraccountwise/completeandnotify/${organizer._id}`
+//           : `${ORGANIZER_TEMP_API}/workflow/orgaccwise/organizeraccountwise/${organizer._id}`;
+//       const requestOptions = {
+//         method: "PATCH",
+//         headers: myHeaders,
+//         body: JSON.stringify(data),
+//         redirect: "follow",
+//       };
+
+//       const response = await fetch(endpoint, requestOptions);
+//       const result = await response.json();
+
+//       if (!response.ok) {
+//         throw new Error(result.message || "Failed to update organizer");
+//       }
+
+//       if (isFinalSubmission) {
+//         toast.success("Organizer completed and sealed successfully!");
+//         organizer.issealed = true;
+//         handleClose();
+//       } else {
+//         toast.success("Organizer saved successfully");
+//         handleClose();
+//       }
+//     } catch (error) {
+//       console.error("Error submitting organizer:", error);
+//       toast.error(
+//         error.message || "Something went wrong while updating organizer!"
+//       );
+//     }
+//   };
+const handleSubmit = async () => {
+  const errors = {};
+
+  visibleSections.forEach((section) => {
+    section.formElements.forEach((element) => {
+      if (
+        shouldShowElement(element, section.id) &&
+        element.questionsectionsettings?.required
+      ) {
+        const key = `${section.id}_${element.text}`;
+
+        if (element.type === "File Upload") {
+          const fileInfos = uploadedFiles[key];
+          if (
+            !fileInfos ||
+            fileInfos.length === 0 ||
+            !fileInfos.some((f) => f.status === "completed")
+          ) {
+            if (!errors[section.id]) {
+              errors[section.id] = {};
             }
-          } else {
-            const hasAnswer = answeredElements[key];
-            if (!hasAnswer) {
-              if (!errors[section.id]) {
-                errors[section.id] = {};
-              }
-              errors[section.id][element.text] = `This question is required`;
+            errors[section.id][
+              element.text
+            ] = `Please upload the required file(s)`;
+          }
+        } else {
+          const hasAnswer = answeredElements[key];
+          if (!hasAnswer) {
+            if (!errors[section.id]) {
+              errors[section.id] = {};
             }
+            errors[section.id][element.text] = `This question is required`;
           }
         }
-      });
+      }
+    });
+  });
+
+  setValidationErrors(errors);
+
+  if (Object.keys(errors).length > 0) {
+    const firstErrorSectionId = Object.keys(errors)[0];
+    const sectionIndex = visibleSections.findIndex(
+      (section) => section.id === firstErrorSectionId
+    );
+    if (sectionIndex !== -1) {
+      setActiveStep(sectionIndex);
+    }
+
+    toast.error("Please complete all required questions before submitting");
+    return;
+  }
+
+  try {
+    const myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    // Use a fresh call to prepareSubmitData to ensure we have the latest state
+    const data = {
+      ...prepareSubmitData(true),
+      status: "Completed", // Force the status to be Completed
+      issealed: true,
+      completedby: accountName || username,
+      completedDate: new Date().toISOString(), // Add completion timestamp
+    };
+
+    console.log("Final submission data:", {
+      status: data.status,
+      issealed: data.issealed,
+      completedby: data.completedby,
     });
 
-    setValidationErrors(errors);
+    const endpoint = `${ORGANIZER_TEMP_API}/workflow/orgaccwise/organizeraccountwise/completeandnotify/${organizer._id}`;
+    const requestOptions = {
+      method: "PATCH",
+      headers: myHeaders,
+      body: JSON.stringify(data),
+      redirect: "follow",
+    };
 
-    if (Object.keys(errors).length > 0) {
-      const firstErrorSectionId = Object.keys(errors)[0];
-      const sectionIndex = visibleSections.findIndex(
-        (section) => section.id === firstErrorSectionId
-      );
-      if (sectionIndex !== -1) {
-        setActiveStep(sectionIndex);
-      }
+    const response = await fetch(endpoint, requestOptions);
+    const result = await response.json();
 
-      toast.error("Please complete all required questions before submitting");
-      return;
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to update organizer");
     }
 
-    try {
-      const myHeaders = new Headers();
-      myHeaders.append("Content-Type", "application/json");
+    // Update the organizer object immediately
+    organizer.status = "Completed";
+    organizer.issealed = true;
+    organizer.completedby = accountName || username;
 
-      const data = prepareSubmitData(true);
-      const isFinalSubmission = data.status === "Completed";
-console.log("data",data)
-      if (isFinalSubmission) {
-        data.issealed = true;
-      }
-
-      const endpoint =
-        data.status === "Completed"
-          ? `${ORGANIZER_TEMP_API}/workflow/orgaccwise/organizeraccountwise/completeandnotify/${organizer._id}`
-          : `${ORGANIZER_TEMP_API}/workflow/orgaccwise/organizeraccountwise/${organizer._id}`;
-      const requestOptions = {
-        method: "PATCH",
-        headers: myHeaders,
-        body: JSON.stringify(data),
-        redirect: "follow",
-      };
-
-      const response = await fetch(endpoint, requestOptions);
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Failed to update organizer");
-      }
-
-      if (isFinalSubmission) {
-        toast.success("Organizer completed and sealed successfully!");
-        organizer.issealed = true;
-        handleClose();
-      } else {
-        toast.success("Organizer saved successfully");
-        handleClose();
-      }
-    } catch (error) {
-      console.error("Error submitting organizer:", error);
-      toast.error(
-        error.message || "Something went wrong while updating organizer!"
-      );
-    }
-  };
-
+    toast.success("Organizer completed and sealed successfully!");
+    handleClose();
+    
+  } catch (error) {
+    console.error("Error submitting organizer:", error);
+    toast.error(
+      error.message || "Something went wrong while updating organizer!"
+    );
+  }
+};
   const getQuestionTextValue = (question, sectionId) => {
     const numericSectionId =
       typeof sectionId === "string" ? Number(sectionId) : sectionId;
