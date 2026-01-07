@@ -476,7 +476,7 @@ const OrganizerDialog = ({ open, handleClose, organizer }) => {
     if (fileName) {
       // Delete single file
       const fileInfo = uploadedFiles[key]?.find((f) => f.fileName === fileName);
-
+console.log("fileInfo",fileInfo);
       if (!fileInfo) return;
 
       try {
@@ -493,7 +493,7 @@ const OrganizerDialog = ({ open, handleClose, organizer }) => {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                targetPath: `${fileInfo.filePath}/${fileInfo.fileName}`,
+                targetPath: `${fileInfo.filePath}`,
               }),
             }
           );
