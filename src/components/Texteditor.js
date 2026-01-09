@@ -22,7 +22,7 @@ export default function Editor({ initialContent, onChange,value }) {
       [{ 'list': 'ordered' }, { 'list': 'bullet' }], // Lists
       [{ 'color': [] }, { 'background': [] }], // Text color and highlight
       ['blockquote', 'code-block'], // Blockquote and code
-      ['link', 'image'], // Links and images
+      ['link'], // Links and images
         [{ 'emoji': true }],
       [{ 'indent': '-1' }, { 'indent': '+1' }], // Indent/unindent
       ['clean'], // Remove formatting

@@ -1,0 +1,23 @@
+{
+  "files": {
+    "main.css": "/client/static/css/main.525be62d.css",
+    "main.js": "/client/static/js/main.26dd905b.js",
+    "static/js/239.ccfb86a5.chunk.js": "/client/static/js/239.ccfb86a5.chunk.js",
+    "static/js/977.0301e9cc.chunk.js": "/client/static/js/977.0301e9cc.chunk.js",
+    "static/js/553.09ab0994.chunk.js": "/client/static/js/553.09ab0994.chunk.js",
+    "static/js/453.d90868df.chunk.js": "/client/static/js/453.d90868df.chunk.js",
+    "static/media/png": "/client/static/media/1e7b63404cd2fb8e6525b2fd4ee4d286.b0275d38b7b78d6dd461.png",
+    "static/media/snplogo-removebg-preview.png": "/client/static/media/snplogo-removebg-preview.7afdce437068b60b3da3.png",
+    "index.html": "/client/index.html",
+    "main.525be62d.css.map": "/client/static/css/main.525be62d.css.map",
+    "main.26dd905b.js.map": "/client/static/js/main.26dd905b.js.map",
+    "239.ccfb86a5.chunk.js.map": "/client/static/js/239.ccfb86a5.chunk.js.map",
+    "977.0301e9cc.chunk.js.map": "/client/static/js/977.0301e9cc.chunk.js.map",
+    "553.09ab0994.chunk.js.map": "/client/static/js/553.09ab0994.chunk.js.map",
+    "453.d90868df.chunk.js.map": "/client/static/js/453.d90868df.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.525be62d.css",
+    "static/js/main.26dd905b.js"
+  ]
+}
