@@ -275,7 +275,8 @@ navigate("/client/billing")
             /> */}
             <TextField
   fullWidth
-  label="First Name"
+  // label="First Name"
+  placeholder="First Name"
   size="small"
   value={firstName}
   error={!!errors.firstName}
@@ -285,7 +286,7 @@ navigate("/client/billing")
 
 <TextField
   fullWidth
-  label="Last Name"
+  placeholder="Last Name"
   size="small"
   value={lastName}
   error={!!errors.lastName}
@@ -307,7 +308,7 @@ navigate("/client/billing")
           // />
           <TextField
   fullWidth
-  label="Company Name"
+  placeholder="Company Name"
   size="small"
   value={companyName}
   error={!!errors.companyName}

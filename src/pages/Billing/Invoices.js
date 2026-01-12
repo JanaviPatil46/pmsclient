@@ -180,7 +180,7 @@ const handleMenuClose = () => {
       toast.error("Failed to print invoice");
     }
   };
-const handleDownload = async (_id) => {
+  const handleDownload = async (_id) => {
   try {
     const response = await fetch(
       `${INVOICES_API}/workflow/invoices/invoice/invoiceforprint/${_id}`
@@ -190,98 +190,94 @@ const handleDownload = async (_id) => {
     const doc = new jsPDF("p", "mm", "a4");
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    /* ---------------- HEADER ---------------- */
-    doc.setFontSize(20);
-    doc.setFont("helvetica", "bold");
-    doc.text("INVOICE", 15, 20);
-
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Invoice #: ${invoice.invoicenumber}`, pageWidth - 15, 18, {
-      align: "right",
-    });
-    doc.text(
-      `Date: ${new Date(invoice.invoicedate).toLocaleDateString()}`,
-      pageWidth - 15,
-      24,
-      { align: "right" }
-    );
-
-    doc.setLineWidth(0.5);
-    doc.line(15, 30, pageWidth - 15, 30);
-
-    /* ---------------- BILL TO ---------------- */
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text("Bill To", 15, 38);
-
-    doc.setFont("helvetica", "normal");
-    doc.text(invoice.account?.accountName || "Unknown Account", 15, 44);
-
-    if (invoice.description) {
-      doc.text(`Description: ${invoice.description}`, 15, 50);
-    }
-
-    /* ---------------- TABLE ---------------- */
-    autoTable(doc, {
-      startY: 58,
-      head: [["Item", "Rate", "Qty", "Amount"]],
-      body: invoice.lineItems.map((item) => [
-        item.productorService,
-        `$${item.rate.toFixed(2)}`,
-        item.quantity,
-        `$${item.amount.toFixed(2)}`,
-      ]),
-      theme: "grid",
-      headStyles: {
-        fillColor: [240, 240, 240],
-        textColor: [40, 40, 40],
-        fontStyle: "bold",
-      },
-      styles: {
-        fontSize: 10,
-        cellPadding: 4,
-      },
-      columnStyles: {
-        1: { halign: "right" },
-        2: { halign: "center" },
-        3: { halign: "right" },
-      },
-    });
-
-    /* ---------------- TOTALS ---------------- */
-    const y = doc.lastAutoTable.finalY + 10;
-
-    doc.setFontSize(11);
-    doc.text("Subtotal:", pageWidth - 60, y);
-    doc.text(
-      `$${invoice.summary.subtotal.toFixed(2)}`,
-      pageWidth - 15,
-      y,
-      { align: "right" }
-    );
-
-    doc.text("Tax:", pageWidth - 60, y + 6);
-    doc.text(
-      `$${invoice.summary.taxTotal.toFixed(2)}`,
-      pageWidth - 15,
-      y + 6,
-      { align: "right" }
-    );
-
+    /* ------------- COMPANY INFO TOP RIGHT ---------------- */
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
-    doc.text("Total:", pageWidth - 60, y + 14);
+    doc.text("SNP TAX & FINANCIALS", pageWidth - 15, 20, { align: "right" });
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text("www.snptaxes.com", pageWidth - 15, 26, { align: "right" });
+    doc.text("info@snptaxes.com", pageWidth - 15, 32, { align: "right" });
+    doc.text("123 Main Street, USA", pageWidth - 15, 38, { align: "right" });
+
+    /* ---------------- LEFT TITLE ---------------- */
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(24);
+    doc.text("Invoice", 15, 28);
+
+    /* ---------------- ACCOUNT BLOCK ---------------- */
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("Account Information", 15, 50);
+
+    doc.setFont("helvetica", "normal");
+    doc.text(invoice.account?.accountName || "Unknown Account", 15, 56);
+
+    // Invoice No + Date together (like the image)
     doc.text(
-      `$${invoice.summary.total.toFixed(2)}`,
-      pageWidth - 15,
-      y + 14,
+      `Invoice #: ${invoice.invoicenumber}    |    Date: ${new Date(
+        invoice.invoicedate
+      ).toLocaleDateString()}`,
+      15,
+      62
+    );
+
+    /* ---------------- DESCRIPTION ---------------- */
+    doc.setFont("helvetica", "bold");
+    doc.text("Description:", 15, 80);
+
+    doc.setFont("helvetica", "normal");
+    doc.text(invoice.description || "—", 15, 86);
+
+    /* ---------------- TOTAL BOX RIGHT ---------------- */
+    const boxX = pageWidth - 80;
+    const boxY = 120;
+    const boxWidth = 65;
+    const boxHeight = 40;
+
+    // box border
+    doc.setDrawColor(180);
+    doc.rect(boxX, boxY, boxWidth, boxHeight);
+
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.text("Subtotal", boxX + 5, boxY + 10);
+    doc.text(
+      `$${invoice.summary.subtotal.toFixed(2)}`,
+      boxX + boxWidth - 5,
+      boxY + 10,
       { align: "right" }
     );
+
+    doc.text("Tax", boxX + 5, boxY + 20);
+    doc.text(
+      `$${invoice.summary.taxTotal.toFixed(2)}`,
+      boxX + boxWidth - 5,
+      boxY + 20,
+      { align: "right" }
+    );
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Total", boxX + 5, boxY + 32);
+    doc.text(
+      `$${invoice.summary.total.toFixed(2)}`,
+      boxX + boxWidth - 5,
+      boxY + 32,
+      { align: "right" }
+    );
+
+    /* ---------------- PAID STAMP ---------------- */
+    if (invoice.status === "Paid" || invoice.paymentStatus === "Paid") {
+      doc.setTextColor(200, 0, 0);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(28);
+      doc.text("PAID", pageWidth / 2, 165, { align: "center", angle: -15 });
+      doc.setTextColor(0, 0, 0);
+    }
 
     /* ---------------- FOOTER ---------------- */
     doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
     doc.text(
       "Thank you for your business!",
       pageWidth / 2,
@@ -290,13 +286,129 @@ const handleDownload = async (_id) => {
     );
 
     doc.save(`Invoice_${invoice.invoicenumber}.pdf`);
-    toast.success("Invoice downloaded successfully");
-    handleMenuClose();
   } catch (error) {
     console.error("Error downloading invoice:", error);
     toast.error("Failed to download invoice");
   }
 };
+
+// const handleDownload = async (_id) => {
+//   try {
+//     const response = await fetch(
+//       `${INVOICES_API}/workflow/invoices/invoice/invoiceforprint/${_id}`
+//     );
+//     const { invoice } = await response.json();
+
+//     const doc = new jsPDF("p", "mm", "a4");
+//     const pageWidth = doc.internal.pageSize.getWidth();
+
+//     /* ---------------- HEADER ---------------- */
+//     doc.setFontSize(20);
+//     doc.setFont("helvetica", "bold");
+//     doc.text("INVOICE", 15, 20);
+
+//     doc.setFontSize(10);
+//     doc.setFont("helvetica", "normal");
+//     doc.text(`Invoice #: ${invoice.invoicenumber}`, pageWidth - 15, 18, {
+//       align: "right",
+//     });
+//     doc.text(
+//       `Date: ${new Date(invoice.invoicedate).toLocaleDateString()}`,
+//       pageWidth - 15,
+//       24,
+//       { align: "right" }
+//     );
+
+//     doc.setLineWidth(0.5);
+//     doc.line(15, 30, pageWidth - 15, 30);
+
+//     /* ---------------- BILL TO ---------------- */
+//     doc.setFontSize(11);
+//     doc.setFont("helvetica", "bold");
+//     doc.text("Bill To", 15, 38);
+
+//     doc.setFont("helvetica", "normal");
+//     doc.text(invoice.account?.accountName || "Unknown Account", 15, 44);
+
+//     if (invoice.description) {
+//       doc.text(`Description: ${invoice.description}`, 15, 50);
+//     }
+
+//     /* ---------------- TABLE ---------------- */
+//     autoTable(doc, {
+//       startY: 58,
+//       head: [["Item", "Rate", "Qty", "Amount"]],
+//       body: invoice.lineItems.map((item) => [
+//         item.productorService,
+//         `$${item.rate.toFixed(2)}`,
+//         item.quantity,
+//         `$${item.amount.toFixed(2)}`,
+//       ]),
+//       theme: "grid",
+//       headStyles: {
+//         fillColor: [240, 240, 240],
+//         textColor: [40, 40, 40],
+//         fontStyle: "bold",
+//       },
+//       styles: {
+//         fontSize: 10,
+//         cellPadding: 4,
+//       },
+//       columnStyles: {
+//         1: { halign: "right" },
+//         2: { halign: "center" },
+//         3: { halign: "right" },
+//       },
+//     });
+
+//     /* ---------------- TOTALS ---------------- */
+//     const y = doc.lastAutoTable.finalY + 10;
+
+//     doc.setFontSize(11);
+//     doc.text("Subtotal:", pageWidth - 60, y);
+//     doc.text(
+//       `$${invoice.summary.subtotal.toFixed(2)}`,
+//       pageWidth - 15,
+//       y,
+//       { align: "right" }
+//     );
+
+//     doc.text("Tax:", pageWidth - 60, y + 6);
+//     doc.text(
+//       `$${invoice.summary.taxTotal.toFixed(2)}`,
+//       pageWidth - 15,
+//       y + 6,
+//       { align: "right" }
+//     );
+
+//     doc.setFont("helvetica", "bold");
+//     doc.setFontSize(12);
+//     doc.text("Total:", pageWidth - 60, y + 14);
+//     doc.text(
+//       `$${invoice.summary.total.toFixed(2)}`,
+//       pageWidth - 15,
+//       y + 14,
+//       { align: "right" }
+//     );
+
+//     /* ---------------- FOOTER ---------------- */
+//     doc.setFontSize(9);
+//     doc.setFont("helvetica", "normal");
+//     doc.text(
+//       "Thank you for your business!",
+//       pageWidth / 2,
+//       285,
+//       { align: "center" }
+//     );
+
+//     doc.save(`Invoice_${invoice.invoicenumber}.pdf`);
+//     toast.success("Invoice downloaded successfully");
+//     handleMenuClose();
+//   } catch (error) {
+//     console.error("Error downloading invoice:", error);
+//     toast.error("Failed to download invoice");
+//   }
+// };
 
 //   const handleDownload = async (_id) => {
 //     console.log("Downloading invoice with ID:", _id);
