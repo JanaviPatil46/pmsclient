@@ -180,13 +180,15 @@ const handleMenuClose = () => {
       toast.error("Failed to print invoice");
     }
   };
+  const accountEmail = sessionStorage.getItem("email") || "";
+
   const handleDownload = async (_id) => {
   try {
     const response = await fetch(
       `${INVOICES_API}/workflow/invoices/invoice/invoiceforprint/${_id}`
     );
     const { invoice } = await response.json();
-
+console.log("invoice for pdf", invoice);
     const doc = new jsPDF("p", "mm", "a4");
     const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -197,9 +199,11 @@ const handleMenuClose = () => {
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
-    doc.text("www.snptaxes.com", pageWidth - 15, 26, { align: "right" });
-    doc.text("info@snptaxes.com", pageWidth - 15, 32, { align: "right" });
-    doc.text("123 Main Street, USA", pageWidth - 15, 38, { align: "right" });
+    doc.text("3015 Hopyard Rd, Ste M", pageWidth - 15, 26, { align: "right" });
+    doc.text("Pleasanton, CA 94588", pageWidth - 15, 32, { align: "right" });
+    doc.text("http://www.snptaxandfinancials.com", pageWidth - 15, 38, { align: "right" });
+    doc.text("silpa@snptaxandfinancials.com", pageWidth - 15, 44, { align: "right" });
+     doc.text("(925) 800-3561", pageWidth - 15, 50, { align: "right" });
 
     /* ---------------- LEFT TITLE ---------------- */
     doc.setFont("helvetica", "bold");
@@ -212,16 +216,21 @@ const handleMenuClose = () => {
     doc.text("Account Information", 15, 50);
 
     doc.setFont("helvetica", "normal");
-    doc.text(invoice.account?.accountName || "Unknown Account", 15, 56);
+  // Account name
+doc.text(invoice.account?.accountName || "Unknown Account", 15, 56);
 
-    // Invoice No + Date together (like the image)
-    doc.text(
-      `Invoice #: ${invoice.invoicenumber}    |    Date: ${new Date(
-        invoice.invoicedate
-      ).toLocaleDateString()}`,
-      15,
-      62
-    );
+// Account email directly under name
+doc.text(accountEmail || "—", 15, 62);
+
+// Invoice No + Date below email
+doc.text(
+  `Invoice #: ${invoice.invoicenumber}    |    Date: ${new Date(
+    invoice.invoicedate
+  ).toLocaleDateString()}`,
+  15,
+  68
+);
+
 
     /* ---------------- DESCRIPTION ---------------- */
     doc.setFont("helvetica", "bold");
@@ -268,7 +277,7 @@ const handleMenuClose = () => {
     );
 
     /* ---------------- PAID STAMP ---------------- */
-    if (invoice.status === "Paid" || invoice.paymentStatus === "Paid") {
+    if (invoice.invoiceStatus === "Paid" ) {
       doc.setTextColor(200, 0, 0);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(28);

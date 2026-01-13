@@ -104,7 +104,8 @@ const Home = () => {
       console.log("result account", res.data);
       setAccountName(res.data.accountName)
       console.log("account name",res.data.accountName)
-      setAdminUserId(res.data.adminUserId.email)
+      setAdminUserId(res.data.adminUserId.emailSyncEmail)
+      // console.log("admin user id",res.data.adminUserId.email)
     } catch (error) {
       console.error("Error fetching account details:", error);
     }
