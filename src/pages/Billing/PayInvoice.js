@@ -137,7 +137,12 @@ const handleConfirmPayment = async () => {
 
     const updatePromises = selectedInvoices.map((invoice) => {
       const newPaidAmount = (invoice.paidAmount || 0) + invoice.summary.total;
-
+      const date = new Date();
+const formattedDate = date.toLocaleDateString("en-GB", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+});
       return fetch(`${INVOICE_API}/workflow/invoices/invoice/${invoice._id}`, {
         method: "PATCH",
         headers: {
@@ -146,7 +151,8 @@ const handleConfirmPayment = async () => {
         body: JSON.stringify({
           paidAmount: newPaidAmount,
           invoiceStatus: "Paid",
-          active: "true",
+           lastPaid: formattedDate,
+                    active: "true",
         }),
       })
         .then((res) => res.json())

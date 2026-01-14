@@ -679,7 +679,7 @@ const hasPaidInvoiceSelected = BillingInvoice
                         ? `$${invoice.balanceDueAmount.toFixed(2)}`
                         : `$${invoice.summary?.total?.toFixed(2) || "0.00"}`}
                     </TableCell>
-                    <TableCell></TableCell>
+                    <TableCell>{invoice.lastPaid}</TableCell>
                     <TableCell>{invoice.description}</TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
   <IconButton

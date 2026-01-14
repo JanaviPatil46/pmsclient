@@ -4461,7 +4461,7 @@ const OrganizerDialog = ({ open, handleClose, organizer }) => {
                         }
                       >
                         Choose Files
-                        <Input
+                        {/* <Input
                           type="file"
                           multiple
                           onChange={(e) =>
@@ -4471,7 +4471,14 @@ const OrganizerDialog = ({ open, handleClose, organizer }) => {
                           disabled={
                             isElementActive(element)
                           }
-                        />
+                        /> */}
+                          <input type="file" hidden multiple   onChange={(e) =>
+                            handleFileSelect(e, element.text, sectionId)
+                          }
+                          sx={{ display: "none" }}
+                          disabled={
+                            isElementActive(element)
+                          } />
                       </Button>
                       <Typography
                         variant="caption"
