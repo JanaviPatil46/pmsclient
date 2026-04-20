@@ -1,11 +1,4 @@
-
-
-
-import { createTheme, alpha } from '@mui/material/styles';
-
-const defaultTheme = createTheme();
-
-const customShadows = [...defaultTheme.shadows];
+// Color primitives — reference palette for Tailwind token mapping
 
 // ========== Color Palettes ==========
 export const brand = {
@@ -379,62 +372,21 @@ export const colorSchemes = {
 // ========== Typography & Shape ==========
 export const typography = {
   fontFamily: 'Inter, sans-serif',
-  h1: {
-    fontSize: defaultTheme.typography.pxToRem(48),
-    fontWeight: 600,
-    lineHeight: 1.2,
-    letterSpacing: -0.5,
-  },
-  h2: {
-    fontSize: defaultTheme.typography.pxToRem(36),
-    fontWeight: 600,
-    lineHeight: 1.2,
-  },
-  h3: {
-    fontSize: defaultTheme.typography.pxToRem(30),
-    lineHeight: 1.2,
-  },
-  h4: {
-    fontSize: defaultTheme.typography.pxToRem(24),
-    fontWeight: 600,
-    lineHeight: 1.5,
-  },
-  h5: {
-    fontSize: defaultTheme.typography.pxToRem(20),
-    fontWeight: 600,
-  },
-  h6: {
-    fontSize: defaultTheme.typography.pxToRem(18),
-    fontWeight: 600,
-  },
-  subtitle1: {
-    fontSize: defaultTheme.typography.pxToRem(18),
-  },
-  subtitle2: {
-    fontSize: defaultTheme.typography.pxToRem(14),
-    fontWeight: 500,
-  },
-  body1: {
-    fontSize: defaultTheme.typography.pxToRem(14),
-  },
-  body2: {
-    fontSize: defaultTheme.typography.pxToRem(14),
-    fontWeight: 400,
-  },
-  caption: {
-    fontSize: defaultTheme.typography.pxToRem(12),
-    fontWeight: 400,
-  },
+  h1: { fontSize: '3rem', fontWeight: 600, lineHeight: 1.2, letterSpacing: -0.5 },
+  h2: { fontSize: '2.25rem', fontWeight: 600, lineHeight: 1.2 },
+  h3: { fontSize: '1.875rem', lineHeight: 1.2 },
+  h4: { fontSize: '1.5rem', fontWeight: 600, lineHeight: 1.5 },
+  h5: { fontSize: '1.25rem', fontWeight: 600 },
+  h6: { fontSize: '1.125rem', fontWeight: 600 },
+  subtitle1: { fontSize: '1.125rem' },
+  subtitle2: { fontSize: '0.875rem', fontWeight: 500 },
+  body1: { fontSize: '0.875rem' },
+  body2: { fontSize: '0.875rem', fontWeight: 400 },
+  caption: { fontSize: '0.75rem', fontWeight: 400 },
 };
 
 export const shape = {
   borderRadius: 8,
 };
 
-const defaultShadows = [
-  'none',
-  'var(--template-palette-baseShadow)',
-  ...defaultTheme.shadows.slice(2),
-];
-
-export const shadows = defaultShadows;
+export const shadows = ['none', 'var(--template-palette-baseShadow)'];

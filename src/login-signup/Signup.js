@@ -1,59 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Stepper,
-  Step,
-  StepLabel,
-  InputLabel,
-  TextField,
-  Button,
-  Checkbox,
-  FormControlLabel,
-  Typography,
-  Container,
-  Paper,
-  Box,
-  FormControl,
-  OutlinedInput,
-  InputAdornment,
-  IconButton,
-  Divider,
-  Stack,
-  FormLabel,
-} from "@mui/material";
-import CssBaseline from "@mui/material/CssBaseline";
-import { Link } from "@mui/material";
-import MuiCard from "@mui/material/Card";
-import { styled } from "@mui/material/styles";
-import AppTheme from "../shared-theme/AppTheme";
-import ColorModeSelect from "../shared-theme/ColorModeSelect";
 import OtpInput from "react-otp-input";
-import Visibility from "@mui/icons-material/Visibility";
-import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import { Eye, EyeOff } from "lucide-react";
 import logo from "../Images/snplogo.png";
 import { toast } from "material-react-toastify";
 import axios from "axios";
 import PhoneInput from "react-phone-input-2";
-import 'react-phone-number-input/style.css'; // Optional CSS for basic styling
+import 'react-phone-number-input/style.css';
 const steps = ["Email Verification", "Personal Details", "Password & OTP"];
-const Card = styled(MuiCard)(({ theme }) => ({
-  display: "flex",
-  flexDirection: "column",
-  alignSelf: "center",
-  width: "100%",
-  padding: theme.spacing(4),
-  gap: theme.spacing(2),
-  margin: "auto",
-  [theme.breakpoints.up("sm")]: {
-    maxWidth: "450px",
-  },
-  boxShadow:
-    "hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px",
-  ...theme.applyStyles("dark", {
-    boxShadow:
-      "hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px",
-  }),
-}));
 
 const ClientSignUp = (props) => {
   const LOGIN_API = process.env.REACT_APP_USER_LOGIN
@@ -523,261 +477,194 @@ console.log("User Signup Response:", userResult);
     switch (step) {
       case 0:
         return (
-          <Box component="form" onSubmit={handleEmailSubmit}>
-            <Box>
-              <Typography variant="h5">
-                <strong>Welcome to SNP Tax & Financials</strong>
-              </Typography>
-              <Typography variant="h7">Let's get started</Typography>
-            </Box>
+          <form onSubmit={handleEmailSubmit} className="flex flex-col gap-4">
+            <div>
+              <h2 className="text-xl font-semibold text-foreground"><strong>Welcome to SNP Tax & Financials</strong></h2>
+              <p className="text-sm text-muted-foreground">Let's get started</p>
+            </div>
 
-            <Box mt={3}>
-              <FormLabel htmlFor="email">Email</FormLabel>
-              <TextField
-                fullWidth
+            <div className="flex flex-col gap-1 mt-2">
+              <label htmlFor="email" className="text-sm font-medium text-foreground">Email</label>
+              <input
                 id="email"
                 type="email"
                 name="email"
                 autoComplete="email"
                 autoFocus
                 required
-                variant="outlined"
                 placeholder="Email"
                 value={formData.email}
                 onChange={handleChange}
-                sx={{mt:3}}
+                className="w-full rounded-lg border border-border bg-background text-foreground text-sm px-3 py-2 placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
-            </Box>
+            </div>
 
-            <Box mt={2}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    name="termsAccepted"
-                    checked={formData.termsAccepted}
-                    onChange={handleChange}
-                  />
-                }
-                label="By signing up you agree to TaxDome Terms of Service, Privacy Policy and SMS Policy"
+            <div className="flex items-start gap-2 mt-1">
+              <input
+                type="checkbox"
+                id="termsAccepted"
+                name="termsAccepted"
+                checked={formData.termsAccepted}
+                onChange={handleChange}
+                className="mt-1 h-4 w-4 rounded border-border accent-primary"
               />
-            </Box>
+              <label htmlFor="termsAccepted" className="text-sm text-muted-foreground">
+                By signing up you agree to TaxDome Terms of Service, Privacy Policy and SMS Policy
+              </label>
+            </div>
 
-            <Box mt={3}>
-              <Button
-                type="submit"
-                sx={{ borderRadius: "10px", width: "30%", p: 1 }}
-                variant="contained"
-                color="primary"
-              >
-                Continue
-              </Button>
-            </Box>
-          </Box>
+            <button
+              type="submit"
+              className="w-[30%] rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              Continue
+            </button>
+          </form>
         );
       case 1:
         return (
-          <Box component="form" onSubmit={handlePersonalDetailsSubmit}>
-            <Box>
-              <Typography variant="h5">
-                <strong>Welcome to SNP Tax & Financials</strong>
-              </Typography>
-              <Typography variant="h7">Some basic details about you</Typography>
-            </Box>
+          <form onSubmit={handlePersonalDetailsSubmit} className="flex flex-col gap-3">
+            <div>
+              <h2 className="text-xl font-semibold text-foreground"><strong>Welcome to SNP Tax & Financials</strong></h2>
+              <p className="text-sm text-muted-foreground">Some basic details about you</p>
+            </div>
 
-            <Box mt={3}>
-              <InputLabel sx={{ color: "black" }}>First name</InputLabel>
-              <TextField
-                fullWidth
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-foreground">First name</label>
+              <input
                 name="firstname"
                 placeholder="First name"
-                size="small"
                 value={formData.firstname}
                 onChange={handleChange}
-                error={!!validation.firstName}
-                helperText={validation.firstName}
+                className={`w-full rounded-lg border px-3 py-2 text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 ${
+                  validation.firstName ? "border-destructive" : "border-border"
+                }`}
               />
-            </Box>
+              {validation.firstName && <p className="text-xs text-destructive">{validation.firstName}</p>}
+            </div>
 
-            <Box mt={2}>
-              <InputLabel sx={{ color: "black" }}>Middle name</InputLabel>
-              <TextField
-                fullWidth
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-foreground">Middle name</label>
+              <input
                 name="middleName"
                 placeholder="Middle name"
-                size="small"
                 value={formData.middleName}
                 onChange={handleChange}
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
-            </Box>
+            </div>
 
-            <Box mt={2}>
-              <InputLabel sx={{ color: "black" }}>Last name</InputLabel>
-              <TextField
-                fullWidth
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-foreground">Last name</label>
+              <input
                 name="lastName"
                 placeholder="Last name"
-                size="small"
                 value={formData.lastName}
                 onChange={handleChange}
-                error={!!validation.lastName}
-                helperText={validation.lastName}
+                className={`w-full rounded-lg border px-3 py-2 text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 ${
+                  validation.lastName ? "border-destructive" : "border-border"
+                }`}
               />
-            </Box>
+              {validation.lastName && <p className="text-xs text-destructive">{validation.lastName}</p>}
+            </div>
 
-            <Box mt={2}>
-              <InputLabel sx={{ color: "black" }}>Account name</InputLabel>
-              <TextField
-                fullWidth
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-foreground">Account name</label>
+              <input
                 name="accountName"
                 placeholder="Account name"
-                size="small"
                 value={formData.accountName}
                 onChange={handleChange}
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
-            </Box>
+            </div>
 
-            {/* <Box mt={2}>
-              <InputLabel sx={{ color: "black" }}>Phone number</InputLabel>
-              <TextField
-                fullWidth
-                name="phoneNumber"
-                placeholder="--- --- ---"
-                size="small"
-                value={formData.phoneNumber}
-                onChange={handleChange}
-                error={!!validation.phoneNumber}
-                helperText={validation.phoneNumber}
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-foreground">Phone number</label>
+              <PhoneInput
+                value={formData.phoneNumber.phone}
+                onChange={(value, country) => handlePhoneChange(value, country)}
+                country={formData.phoneNumber.country || "us"}
+                inputStyle={{ width: "100%" }}
+                buttonStyle={{ borderTopLeftRadius: "8px", borderBottomLeftRadius: "8px" }}
+                containerStyle={{ display: "flex", alignItems: "center", gap: "8px" }}
               />
-            </Box> */}
-            <Box mt={2}>
-        <InputLabel sx={{ color: "black" }}>Phone number</InputLabel>
-        {/* <PhoneInput
-          international
-          defaultCountry="US"
-          value={formData.phone.phone}
-          onChange={handlePhoneChange}
-          country={formData.phone.country || "us"}
-          inputStyle={{ 
-            width: "100%",
-            padding: "10px",
-            borderRadius: "4px",
-            border: validation.phoneNumber ? "1px solid red" : "1px solid #ccc"
-          }}
-          buttonStyle={{
-            borderTopLeftRadius: "8px",
-            borderBottomLeftRadius: "8px",
-          }}
-          containerStyle={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}
-        /> */}
-     <PhoneInput
-  value={formData.phoneNumber.phone}
-  onChange={(value, country) => handlePhoneChange(value, country)}
-  country={formData.phoneNumber.country || "us"}
-  inputStyle={{ width: "100%" }}
-  buttonStyle={{
-    borderTopLeftRadius: "8px",
-    borderBottomLeftRadius: "8px",
-  }}
-  containerStyle={{
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-  }}
-/>
-        {validation.phoneNumber && (
-          <Typography color="error" variant="caption">
-            {validation.phoneNumber}
-          </Typography>
-        )}
-      </Box>
+              {validation.phoneNumber && <p className="text-xs text-destructive">{validation.phoneNumber}</p>}
+            </div>
 
-            <Box mt={3} display="flex" justifyContent="space-between">
-              <Button onClick={handleBack} sx={{ borderRadius: "10px", p: 1 }}>
+            <div className="flex justify-between mt-2">
+              <button
+                type="button"
+                onClick={handleBack}
+                className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+              >
                 Back
-              </Button>
-              <Button
+              </button>
+              <button
                 type="submit"
-                sx={{ borderRadius: "10px", p: 1 }}
-                variant="contained"
-                color="primary"
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
               >
                 Continue
-              </Button>
-            </Box>
-          </Box>
+              </button>
+            </div>
+          </form>
         );
       case 2:
         return (
-          <Box component="form" onSubmit={handlePasswordSubmit}>
-            <Box>
-              <Typography variant="h5">
-                <strong>Welcome to SNP Tax & Financials</strong>
-              </Typography>
-              <Typography variant="h7">Enter password</Typography>
-            </Box>
+          <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-4">
+            <div>
+              <h2 className="text-xl font-semibold text-foreground"><strong>Welcome to SNP Tax & Financials</strong></h2>
+              <p className="text-sm text-muted-foreground">Enter password</p>
+            </div>
 
-            <Box mt={3}>
-              <FormControl variant="outlined" fullWidth>
-                <InputLabel htmlFor="password">Password</InputLabel>
-                <OutlinedInput
+            <div className="flex flex-col gap-1">
+              <label htmlFor="password" className="text-sm font-medium text-foreground">Password</label>
+              <div className="relative">
+                <input
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={handleChange}
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={handleClickShowPassword}
-                        onMouseDown={handleMouseDownPassword}
-                        edge="end"
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                  label="Password"
+                  className="w-full rounded-lg border border-border px-3 py-2 pr-10 text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
-              </FormControl>
-            </Box>
+                <button
+                  type="button"
+                  onClick={handleClickShowPassword}
+                  onMouseDown={handleMouseDownPassword}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
 
-            <Box mt={3}>
-              <FormControl variant="outlined" fullWidth>
-                <InputLabel htmlFor="cpassword">Confirm Password</InputLabel>
-                <OutlinedInput
+            <div className="flex flex-col gap-1">
+              <label htmlFor="cpassword" className="text-sm font-medium text-foreground">Confirm Password</label>
+              <div className="relative">
+                <input
                   id="cpassword"
                   name="cpassword"
                   type={showConfirmPassword ? "text" : "password"}
                   value={formData.cpassword}
                   onChange={handleChange}
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={handleClickShowConfirmPassword}
-                        onMouseDown={handleMouseDownPassword}
-                        edge="end"
-                      >
-                        {showConfirmPassword ? (
-                          <VisibilityOff />
-                        ) : (
-                          <Visibility />
-                        )}
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                  label="Confirm Password"
+                  className="w-full rounded-lg border border-border px-3 py-2 pr-10 text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
-              </FormControl>
-            </Box>
+                <button
+                  type="button"
+                  onClick={handleClickShowConfirmPassword}
+                  onMouseDown={handleMouseDownPassword}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  tabIndex={-1}
+                >
+                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
 
-            <Box mt={4}>
-              <Typography variant="subtitle2">
-                Enter verification code
-              </Typography>
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-medium text-foreground">Enter verification code</p>
               <OtpInput
                 value={formData.otp}
                 onChange={handleOtpChange}
@@ -790,33 +677,33 @@ console.log("User Signup Response:", userResult);
                   height: "2rem",
                   margin: "0 0.5rem",
                   fontSize: "1.5rem",
-                  border: "1px solid #ccc",
+                  border: "1px solid var(--border)",
                   borderRadius: "4px",
                   textAlign: "center",
+                  background: "var(--background)",
+                  color: "var(--foreground)",
                 }}
               />
-            </Box>
+            </div>
 
-            <Box mt={2}>
-              <Typography variant="body2">
-                By signing up, you agree to our terms & conditions
-              </Typography>
-            </Box>
+            <p className="text-sm text-muted-foreground">By signing up, you agree to our terms & conditions</p>
 
-            <Box mt={3} display="flex" justifyContent="space-between">
-              <Button onClick={handleBack} sx={{ borderRadius: "10px", p: 1 }}>
+            <div className="flex justify-between">
+              <button
+                type="button"
+                onClick={handleBack}
+                className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+              >
                 Back
-              </Button>
-              <Button
+              </button>
+              <button
                 type="submit"
-                sx={{ borderRadius: "10px", p: 1 }}
-                variant="contained"
-                color="primary"
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
               >
                 Let's get started
-              </Button>
-            </Box>
-          </Box>
+              </button>
+            </div>
+          </form>
         );
       default:
         return "Unknown step";
@@ -824,48 +711,52 @@ console.log("User Signup Response:", userResult);
   };
 
   return (
-    
-    <AppTheme {...props}>
-      <CssBaseline enableColorScheme />
-      <Container
-        direction="column"
-        justifyContent="space-between"
-        sx={{
-          display: "flex",
-          minHeight: "100vh",
-          py: 4,
-        }}
-      >
-        <ColorModeSelect
-          sx={{ position: "fixed", top: "1rem", right: "1rem" }}
-        />
-        <Card
-          variant="outlined"
-          sx={{
-            width: "100%",
-            maxWidth: "600px",
-            mx: "auto",
-            p: 4,
-          }}
-        >
-          {getStepContent(activeStep)}
+    <div className="min-h-screen flex items-center justify-center bg-background py-8 px-4">
+      <div className="w-full max-w-lg rounded-xl border border-border bg-card p-8 shadow-sm flex flex-col gap-5">
+        <div className="flex gap-1 mb-2">
+          {steps.map((label, index) => (
+            <div key={label} className="flex items-center gap-1 flex-1">
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 ${
+                index < activeStep
+                  ? "bg-primary text-primary-foreground"
+                  : index === activeStep
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground border border-border"
+              }`}>
+                {index < activeStep ? "✓" : index + 1}
+              </div>
+              <span className={`text-xs hidden sm:inline ${
+                index === activeStep ? "text-foreground font-medium" : "text-muted-foreground"
+              }`}>{label}</span>
+              {index < steps.length - 1 && (
+                <div className={`flex-1 h-px mx-1 ${
+                  index < activeStep ? "bg-primary" : "bg-border"
+                }`} />
+              )}
+            </div>
+          ))}
+        </div>
 
-          <Divider sx={{ my: 2 }}>or</Divider>
+        {getStepContent(activeStep)}
 
-          <Typography sx={{ textAlign: "center" }}>
-            Already have an account?{" "}
-            <Link
-              component="button"
-              onClick={handleSignInClick}
-              variant="body2"
-              sx={{ alignSelf: "center" }}
-            >
-              Sign in
-            </Link>
-          </Typography>
-        </Card>
-      </Container>
-    </AppTheme>
+        <div className="flex items-center gap-2">
+          <hr className="flex-1 border-border" />
+          <span className="text-xs text-muted-foreground">or</span>
+          <hr className="flex-1 border-border" />
+        </div>
+
+        <p className="text-center text-sm text-foreground">
+          Already have an account?{" "}
+          <button
+            type="button"
+            onClick={handleSignInClick}
+            className="text-primary hover:underline font-medium"
+          >
+            Sign in
+          </button>
+        </p>
+      </div>
+    </div>
   );
 };
 

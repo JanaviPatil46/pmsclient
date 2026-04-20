@@ -1,9 +1,4 @@
-import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
-import Grid from "@mui/material/Grid";
 import React, { useContext, useEffect, useState } from "react";
-import { Stack, Typography } from "@mui/material";
-
 import QuickLinks from "../components/QuickLinks";
 import OrganizersList from "../components/Home Components/OrganizersList";
 import BillingList from "../components/Home Components/BillingList";
@@ -17,7 +12,6 @@ import DocumnetApprovals from "../components/Home Components/DocumnetApprovals";
 import { set } from "lodash";
 import DocuSealMultiSigner from "../components/Home Components/DocuSealMultiSigner";
 import PendingApprovals from "../components/Home Components/PendingApprovals";
-import { Pending } from "@mui/icons-material";
 const Home = () => {
   const ACCOUNT_API = process.env.REACT_APP_ACCOUNTS_URL;
   // const { logindata } = useContext(LoginContext);
@@ -117,63 +111,31 @@ const Home = () => {
     // }
   }, [accountId]);
   return (
-    <Box
-      sx={{
-        width: "100%",
-        maxWidth: { sm: "100%", md: "1700px" },
-        flexGrow: 1,
-       
-        height: "90vh",
-        p: 1,
-      }}
-    >
-      <Grid container spacing={2}>
-        <Grid
-          size={{ xs: 12, md: 8 }}
-          
-        >
-          <Paper
-            sx={{
-              p: 2,
-              borderRadius: 2,
-              boxShadow: 1,
-             
-              transition: "all 0.3s",
-              cursor: "pointer",
-              "&:hover .sign-link": {
-                opacity: 1,
-                visibility: "visible",
-                textDecoration: "none",
-                cursor: "pointer",
-              },
-            }}
-          >
-            <Stack sx={{ p: 0 }}>
-              <Typography
-                variant="h6"
-                component="p"
-                gutterBottom
-                sx={{ fontWeight: "600" }}
-              >
-                Waiting for action
-              </Typography>
-            </Stack>
-            <OrganizersList accountId={accountId} />
-            <BillingList accountId={accountId} />
-           
-            <ChatsList accountId={accountId} />
-            <ProposalsList accountId={accountId} />
-           <DocuSealWrapper accountId={accountId} />
-           <DocuSealMultiSigner accountId={accountId} />
-           <DocumnetApprovals accountId={accountId} adminUserId={adminUserId}/>
-           <PendingApprovals accountId={accountId}  adminUserId={adminUserId}/>
-          </Paper>
-        </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <QuickLinks accountId={accountId}  accountName={accountName}/>
-        </Grid>
-      </Grid>
-    </Box>
+    <div className="w-full max-w-[1700px] flex-1 h-[90vh] overflow-auto p-2">
+      <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-5">
+        <div className="flex flex-col gap-4">
+          <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border bg-muted/40">
+              <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+              <p className="text-sm font-semibold text-foreground tracking-tight">Waiting for action</p>
+            </div>
+            <div className="divide-y divide-border">
+              <OrganizersList accountId={accountId} />
+              <BillingList accountId={accountId} />
+              <ChatsList accountId={accountId} />
+              <ProposalsList accountId={accountId} />
+              <DocuSealWrapper accountId={accountId} />
+              <DocuSealMultiSigner accountId={accountId} />
+              <DocumnetApprovals accountId={accountId} adminUserId={adminUserId} />
+              <PendingApprovals accountId={accountId} adminUserId={adminUserId} />
+            </div>
+          </div>
+        </div>
+        <div>
+          <QuickLinks accountId={accountId} accountName={accountName} />
+        </div>
+      </div>
+    </div>
   );
 };
 

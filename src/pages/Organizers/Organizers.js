@@ -1,18 +1,6 @@
 import React, { useState, useContext, useEffect } from "react";
 import { LoginContext } from "../../context/Context";
 import axios from "axios";
-import {
-  Tooltip,
-  Box,
-  Typography,
-  Chip,
-  Table,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableContainer,Paper
-} from "@mui/material";
 import OrganizerDialog from "./OrganizerDialog";
 const Organizers = () => {
   const ORGANIZER_API = process.env.REACT_APP_ORGANIZER_TEMP_URL
@@ -78,130 +66,84 @@ const Organizers = () => {
     
   };
   return (
-    <Box sx={{ width: "100%", maxWidth: "1700px", p: 2 }}>
-      <Typography variant="h4" fontWeight={600} gutterBottom>
-        Organizers
-      </Typography>
+    <div className="w-full max-w-[1700px] overflow-auto p-2">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h1 className="text-xl font-bold text-foreground tracking-tight">Organizers</h1>
+          {organizersList.length > 0 && (
+            <p className="text-xs text-muted-foreground mt-0.5">{organizersList.length} organizer{organizersList.length !== 1 ? "s" : ""}</p>
+          )}
+        </div>
+      </div>
 
-      
-      <Box>
-  <TableContainer component={Paper} sx={{ overflow: "visible" }}>
-    <Table>
-      <TableHead>
-        <TableRow>
-          {[
-            "Organizer Name",
-            "Seal",
-            "Status",
-            "Date"
-          ].map((label, index) => (
-            <TableCell
-              key={index}
-              sx={{
-                fontSize: "14px",
-                fontWeight: "bold",
-                padding: "16px",
-                minWidth: 120,
-              }}
-            >
-              {label}
-            </TableCell>
-          ))}
-        </TableRow>
-      </TableHead>
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/60">
+              {["Organizer Name", "Seal", "Status", "Date"].map((label, index) => (
+                <th key={index} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide min-w-[120px]">{label}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {organizersList.map((row) => (
+              <tr
+                key={row._id}
+                className="cursor-pointer transition-colors hover:bg-muted/40"
+              >
+                <td className="px-4 py-3">
+                  <span
+                    title="View Details"
+                    className="text-sm font-medium text-primary cursor-pointer hover:underline"
+                    onClick={() => handleOpenDialog(row)}
+                  >
+                    {row.organizerName || "Untitled"}
+                  </span>
+                </td>
 
-      <TableBody>
-        {organizersList.map((row) => (
-          <TableRow
-            key={row._id}
-            hover
-            sx={{
-              cursor: "pointer",
-              "&:hover": {
-                backgroundColor: "#f4f4f4",
-              },
-            }}
-          >
-            <TableCell>
-              <Tooltip title="View Details">
-                <Typography
-                  component="h2"
-                  variant="subtitle2"
-                  sx={{ cursor: "pointer" }}
-                  onClick={() => handleOpenDialog(row)}
-                >
-                  {row.organizerName || "Untitled"}
-                </Typography>
-              </Tooltip>
-            </TableCell>
+                <td className="px-4 py-3">
+                  {row.issealed === true && (
+                    <span className="inline-flex items-center rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                      Sealed
+                    </span>
+                  )}
+                </td>
 
-            <TableCell>
-              {row.issealed === true && (
-                <Chip
-                  label="Sealed"
-                  color="#fff"
-                 
-                  size="small"
-                  sx={{ 
-      border: "none",
-       backgroundColor:"#5C6BC0",
-        // backgroundColor: "#0000FF",
-         color:"#fff"
-        // color: theme => theme.palette.getContrastText(theme.palette.warning.light)
-      
-     
-    }}
-                />
-              )}
-            </TableCell>
+                <td className="px-4 py-3">
+                  <span
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                      row.status === "Pending"
+                        ? "bg-warning/15 text-warning border border-warning/30"
+                        : row.status === "Completed"
+                        ? "bg-green-500/15 text-green-700 dark:text-green-400 border border-green-500/30"
+                        : row.status === "In Progress"
+                        ? "bg-primary/10 text-primary border border-primary/30"
+                        : "bg-muted text-muted-foreground border border-border"
+                    }`}
+                  >
+                    {row.status}
+                  </span>
+                </td>
 
-            <TableCell>
-              <Chip
-                label={row.status}
-              
-                color="#fff"
-                size="small"
-             sx={{ 
-      border: "none",
-      ...(row.status === "Pending" && {
-        // backgroundColor: "#ffc107",
-        backgroundColor:"#FFA726",
-         color:"#fff"
-        // color: theme => theme.palette.getContrastText(theme.palette.warning.light)
-      }),
-      ...(row.status === "Completed" && {
-        // backgroundColor: "#008000",
-        backgroundColor:"#2E7D32",
-      color:"#fff"
-        // color: theme => theme.palette.getContrastText(theme.palette.warning.light)
-      }), ...(row.status === "In Progress" && {
-        backgroundColor: "#1976D2", // or any color you prefer for "In Progress"
-        color: "#fff"
-      })
-    }}
-              />
-            </TableCell>
-
-            <TableCell>
-              {new Date(row.createdAt).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  </TableContainer>
-</Box>
+                <td className="px-4 py-3 text-muted-foreground">
+                  {new Date(row.createdAt).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       <OrganizerDialog
         open={openDialog}
         handleClose={handleCloseDialog}
         organizer={selectedOrganizer}
       />
-    </Box>
+    </div>
   );
 };
 

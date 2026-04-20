@@ -1,35 +1,10 @@
 import * as React from "react";
-import { styled } from "@mui/material/styles";
-import AppBar from "@mui/material/AppBar";
-import Box from "@mui/material/Box";
-import Stack from "@mui/material/Stack";
-import MuiToolbar from "@mui/material/Toolbar";
-import { tabsClasses } from "@mui/material/Tabs";
-import Typography from "@mui/material/Typography";
-import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
-import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
+import { Menu as MenuIcon, LayoutDashboard } from "lucide-react";
 import SideMenuMobile from "./SideMenuMobile";
 import MenuButton from "./MenuButton";
-import ColorModeIconDropdown from "../shared-theme/ColorModeIconDropdown";
-import AddIcon from "@mui/icons-material/Add";
 import SecondSidebar from "./SecondMobileSidebar";
-import ThirdSidebar from "./ThirdSidebarMobile"
+import ThirdSidebar from "./ThirdSidebarMobile";
 import NavbarBreadcrumbs from "./NavbarBreadcrumbs";
-const Toolbar = styled(MuiToolbar)({
-  width: "100%",
-  padding: "12px",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "start",
-  justifyContent: "center",
-  gap: "12px",
-  flexShrink: 0,
-  [`& ${tabsClasses.flexContainer}`]: {
-    gap: "8px",
-    p: "8px",
-    pb: 0,
-  },
-});
 
 export default function AppNavbar() {
   const [open, setOpen] = React.useState(false);
@@ -50,84 +25,40 @@ const handleMenuItemClick = (itemText) => {
 };
 
   return (
-    <AppBar
-      position="fixed"
-      sx={{
-        display: { xs: "auto", md: "none" },
-        boxShadow: 0,
-        bgcolor: "background.paper",
-        backgroundImage: "none",
-        borderBottom: "1px solid",
-        borderColor: "divider",
-        top: "var(--template-frame-height, 0px)",
-      }}
-    >
-      <Toolbar variant="regular">
-        <Stack
-          direction="row"
-          sx={{
-            alignItems: "center",
-            flexGrow: 1,
-            width: "100%",
-            gap: 1,
-          }}
-        >
-          <Stack
-            direction="row"
-            spacing={1}
-            sx={{ justifyContent: "center", mr: "auto" }}
-          >
-            {/* <CustomIcon />
-            <Typography
-              variant="h4"
-              component="h1"
-              sx={{ color: "text.primary" }}
-            >
-              Dashboard
-            </Typography> */}
-            <NavbarBreadcrumbs/>
-          </Stack>
-          <ColorModeIconDropdown />
+    <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b border-border">
+      <div className="w-full p-3 flex flex-col items-start justify-center gap-3 shrink-0">
+        <div className="flex flex-row items-center w-full gap-2">
+          <div className="flex flex-row items-center justify-center mr-auto gap-2">
+            <NavbarBreadcrumbs />
+          </div>
           <MenuButton aria-label="menu" onClick={toggleDrawer(true)}>
-            <MenuRoundedIcon />
+            <MenuIcon size={20} />
           </MenuButton>
-          {/* <MenuButton aria-label="menu" onClick={toggleNewDrawer(true)}>
-            <AddIcon />
-          </MenuButton> */}
           <SecondSidebar
             open={openNewDrawer}
             toggleDrawer={toggleNewDrawer}
             onMenuItemClick={handleMenuItemClick}
           />
-          
           <SideMenuMobile open={open} toggleDrawer={toggleDrawer} />
-        </Stack>
-      </Toolbar>
-    </AppBar>
+        </div>
+      </div>
+    </header>
   );
 }
 
 export function CustomIcon() {
   return (
-    <Box
-      sx={{
-        width: "1.5rem",
-        height: "1.5rem",
-        bgcolor: "black",
-        borderRadius: "999px",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        alignSelf: "center",
+    <div
+      className="w-6 h-6 rounded-full flex items-center justify-center self-center border"
+      style={{
         backgroundImage:
           "linear-gradient(135deg, hsl(210, 98%, 60%) 0%, hsl(210, 100%, 35%) 100%)",
         color: "hsla(210, 100%, 95%, 0.9)",
-        border: "1px solid",
         borderColor: "hsl(210, 100%, 55%)",
         boxShadow: "inset 0 2px 5px rgba(255, 255, 255, 0.3)",
       }}
     >
-      <DashboardRoundedIcon color="inherit" sx={{ fontSize: "1rem" }} />
-    </Box>
+      <LayoutDashboard size={14} />
+    </div>
   );
 }

@@ -1,69 +1,8 @@
-
-
 import React, { useState } from "react";
-import {
-  Box,
-  Button,
-  CssBaseline,
-  FormControl,
-  FormLabel,
-  IconButton,
-  InputAdornment,
-  Stack,
-  TextField,
-  Typography,
-  Fade,
-} from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
-import { styled } from "@mui/material/styles";
-import MuiCard from "@mui/material/Card";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "material-react-toastify";
 import Cookies from "js-cookie";
-import AppTheme from "../shared-theme/AppTheme";
-import ColorModeSelect from "../shared-theme/ColorModeSelect";
-
-const Card = styled(MuiCard)(({ theme }) => ({
-    display: "flex",
-    flexDirection: "column",
-    alignSelf: "center",
-    width: "100%",
-    padding: theme.spacing(4),
-    gap: theme.spacing(2),
-    margin: "auto",
-    [theme.breakpoints.up("sm")]: {
-      maxWidth: "450px",
-    },
-    boxShadow:
-      "hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px",
-    ...theme.applyStyles("dark", {
-      boxShadow:
-        "hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px",
-    }),
-  }));
-  
-  const SignInContainer = styled(Stack)(({ theme }) => ({
-    height: "calc((1 - var(--template-frame-height, 0)) * 100dvh)",
-    minHeight: "100%",
-    padding: theme.spacing(2),
-    [theme.breakpoints.up("sm")]: {
-      padding: theme.spacing(4),
-    },
-    "&::before": {
-      content: '""',
-      display: "block",
-      position: "absolute",
-      zIndex: -1,
-      inset: 0,
-      backgroundImage:
-        "radial-gradient(ellipse at 50% 50%, hsl(210, 100%, 97%), hsl(0, 0%, 100%))",
-      backgroundRepeat: "no-repeat",
-      ...theme.applyStyles("dark", {
-        backgroundImage:
-          "radial-gradient(at 50% 50%, hsla(210, 100%, 16%, 0.5), hsl(220, 30%, 5%))",
-      }),
-    },
-  }));
+import { Eye, EyeOff } from "lucide-react";
 
 export default function UpdatePassword() {
   const LOGIN_API = process.env.REACT_APP_USER_LOGIN;
@@ -151,88 +90,77 @@ export default function UpdatePassword() {
   };
 
   return (
-    <AppTheme>
-      <CssBaseline enableColorScheme />
-      <SignInContainer direction="column" justifyContent="center">
-        <ColorModeSelect sx={{ position: "fixed", top: "1rem", right: "1rem" }} />
-        <Card variant="outlined">
-          <Typography variant="h4" component="h1">
-            Reset Password
-          </Typography>
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="w-full max-w-sm flex flex-col gap-5 rounded-xl border border-border bg-card p-8 shadow-sm">
+        <h1 className="text-2xl font-semibold text-foreground">Reset Password</h1>
 
-          {/* Password */}
-          <FormControl fullWidth margin="normal">
-            <FormLabel htmlFor="password">Password</FormLabel>
-            <TextField
+        <div className="flex flex-col gap-1">
+          <label htmlFor="password" className="text-sm font-medium text-foreground">Password</label>
+          <div className="relative">
+            <input
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              error={passwordError}
-              helperText={passwordErrorMessage}
               placeholder="••••••"
               type={showPassword ? "text" : "password"}
               autoComplete="new-password"
               required
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <Fade in={password.length > 0}>
-                      <IconButton
-                        onClick={handleTogglePasswordVisibility}
-                        edge="end"
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </Fade>
-                  </InputAdornment>
-                ),
-              }}
+              className={`w-full rounded-lg border px-3 py-2 pr-10 text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 ${
+                passwordError ? "border-destructive" : "border-border"
+              }`}
             />
-          </FormControl>
+            {password.length > 0 && (
+              <button
+                type="button"
+                onClick={handleTogglePasswordVisibility}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            )}
+          </div>
+          {passwordError && <p className="text-xs text-destructive">{passwordErrorMessage}</p>}
+        </div>
 
-          {/* Confirm Password */}
-          <FormControl fullWidth margin="normal">
-            <FormLabel htmlFor="confirm-password">Confirm Password</FormLabel>
-            <TextField
+        <div className="flex flex-col gap-1">
+          <label htmlFor="confirm-password" className="text-sm font-medium text-foreground">Confirm Password</label>
+          <div className="relative">
+            <input
               id="confirm-password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              onPaste={(e) =>
-                setConfirmPassword(e.clipboardData.getData("text"))
-              }
-              error={confirmPasswordError}
-              helperText={confirmPasswordErrorMessage}
+              onPaste={(e) => setConfirmPassword(e.clipboardData.getData("text"))}
               placeholder="••••••"
               type={showPassword ? "text" : "password"}
               autoComplete="new-password"
               required
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <Fade in={confirmPassword.length > 0}>
-                      <IconButton
-                        onClick={handleTogglePasswordVisibility}
-                        edge="end"
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </Fade>
-                  </InputAdornment>
-                ),
-              }}
+              className={`w-full rounded-lg border px-3 py-2 pr-10 text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 ${
+                confirmPasswordError ? "border-destructive" : "border-border"
+              }`}
             />
-          </FormControl>
+            {confirmPassword.length > 0 && (
+              <button
+                type="button"
+                onClick={handleTogglePasswordVisibility}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            )}
+          </div>
+          {confirmPasswordError && <p className="text-xs text-destructive">{confirmPasswordErrorMessage}</p>}
+        </div>
 
-          <Button
-            variant="contained"
-            fullWidth
-            sx={{ mt: 3 }}
-            onClick={handleSubmit}
-          >
-            Continue
-          </Button>
-        </Card>
-      </SignInContainer>
-    </AppTheme>
+        <button
+          type="button"
+          onClick={handleSubmit}
+          className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors mt-2"
+        >
+          Continue
+        </button>
+      </div>
+    </div>
   );
 }

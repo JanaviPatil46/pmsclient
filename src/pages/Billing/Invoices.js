@@ -1,26 +1,11 @@
-import {
-  Box,
-  Typography,
-  TableCell,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableContainer,
-  Checkbox,
-  Paper,
-  Table,Button,IconButton
-} from "@mui/material";
 import axios from "axios";
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useRef } from "react";
 import { LoginContext } from "../../context/Context";
 import { useNavigate } from "react-router-dom";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
+import { MoreVertical } from "lucide-react";
 import { toast } from "material-react-toastify";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-
 import "jspdf-autotable";
 const Invoices = () => {
   const INVOICE_API = process.env.REACT_APP_INVOICES_URL;
@@ -569,186 +554,133 @@ const hasPaidInvoiceSelected = BillingInvoice
   .filter(inv => selected.includes(inv._id))
   .some(inv => inv.invoiceStatus?.toLowerCase() === "paid");
 
+  const getStatusBadge = (status) => {
+    const s = status?.toLowerCase();
+    if (s === "paid") return "bg-green-500/15 text-green-700 dark:text-green-400 border border-green-500/30";
+    if (s === "unpaid" || s === "overdue") return "bg-destructive/10 text-destructive border border-destructive/30";
+    if (s === "pending") return "bg-warning/15 text-warning border border-warning/30";
+    return "bg-muted text-muted-foreground border border-border";
+  };
+
   return (
-    <Box
-      sx={{
-        width: "100%",
-        maxWidth: { sm: "100%", md: "1700px" },
-        flexGrow: 1,
-        height: "90vh",
-        p: 1,
-      }}
-    >
-      <Typography variant="h4" fontWeight={600} gutterBottom>
-        Billing
-      </Typography>
+    <div className="w-full max-w-[1700px] flex-1 h-[90vh] overflow-auto p-2">
+      {/* Page header */}
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h1 className="text-xl font-bold text-foreground tracking-tight">Billing</h1>
+          {BillingInvoice.length > 0 && (
+            <p className="text-xs text-muted-foreground mt-0.5">{BillingInvoice.length} invoice{BillingInvoice.length !== 1 ? "s" : ""}</p>
+          )}
+        </div>
+        {selected.length > 0 && (
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground">{selected.length} selected</span>
+            <button
+              onClick={handlePayInvoice}
+              disabled={hasPaidInvoiceSelected}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Pay Invoice
+            </button>
+          </div>
+        )}
+      </div>
 
-      <Box>
-        <TableContainer component={Paper} sx={{ overflow: "visible" }}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  padding="checkbox"
-                  sx={{
-                    position: "sticky",
-                    left: 0,
-                    zIndex: 1,
-
-                    fontWeight: "bold",
-                    textAlign: "center",
-                  }}
-                >
-                  <Checkbox size="small"
-                  checked={selected.length === BillingInvoice.length}
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="overflow-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/60">
+                <th className="sticky left-0 z-10 bg-muted/60 px-3 py-3 text-center">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded accent-primary"
+                    checked={selected.length === BillingInvoice.length && BillingInvoice.length > 0}
                     onChange={() => {
                       if (selected.length === BillingInvoice.length) {
                         setSelected([]);
                       } else {
-                        const allSelected = BillingInvoice.map(
-                          (item) => item._id
-                        );
-                        setSelected(allSelected);
+                        setSelected(BillingInvoice.map((item) => item._id));
                       }
                     }}
-                     />
-                </TableCell>
-                {[
-                  "Invoice #",
-                  "Status",
-                  "Posted",
-                  "Total",
-                  "Amount Paid",
-                  "Balance due",
-                  "Last Paid",
-                  "Description","Action"
-                ].map((label, index) => (
-                  <TableCell
-                    key={index}
-                    sx={{
-                      fontSize: "14px",
-                      fontWeight: "bold",
-                      padding: "16px",
-                      minWidth: index === 7 ? 100 : 100,
-                    }}
-                  >
-                    {label}
-                  </TableCell>
+                  />
+                </th>
+                {["Invoice #", "Status", "Posted", "Total", "Amount Paid", "Balance Due", "Last Paid", "Description", ""].map((label, index) => (
+                  <th key={index} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide min-w-[100px]">{label}</th>
                 ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
               {BillingInvoice.map((invoice) => {
                 const isSelected = selected.indexOf(invoice._id) !== -1;
                 return (
-                  <TableRow
+                  <tr
                     key={invoice._id}
-                    hover
                     onClick={() => handleSelect(invoice._id)}
-                    role="checkbox"
-                    tabIndex={-1}
-                    selected={isSelected}
-                    sx={{
-                      cursor: "pointer",
-                      // transition: "background-color 0.3s ease",
-                      "&:hover": {
-                        backgroundColor: "#f4f4f4", // Add hover effect
-                      },
-                    }}
+                    className={`cursor-pointer transition-colors hover:bg-muted/40 ${
+                      isSelected ? "bg-primary/[0.06]" : ""
+                    }`}
                   >
-                    <TableCell padding="checkbox">
-                      <Checkbox size="small" checked={isSelected} />
-                    </TableCell>
-                    <TableCell>{invoice.invoicenumber}</TableCell>
-                    <TableCell>{invoice.invoiceStatus || "N/A"}</TableCell>
-                    <TableCell>
-                      {new Date(invoice.invoicedate).toLocaleDateString(
-                        "en-US"
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      ${invoice.summary?.total?.toFixed(2) || "0.00"}
-                    </TableCell>
-                    <TableCell>
-                      {invoice.paidAmount !== null
-                        ? `$${invoice.paidAmount.toFixed(2)}`
-                        : "—"}
-                    </TableCell>
-                    <TableCell>
+                    <td className="px-3 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded accent-primary"
+                        checked={isSelected}
+                        onChange={() => handleSelect(invoice._id)}
+                      />
+                    </td>
+                    <td className="px-4 py-3 font-medium text-foreground">{invoice.invoicenumber}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusBadge(invoice.invoiceStatus)}`}>
+                        {invoice.invoiceStatus || "N/A"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{new Date(invoice.invoicedate).toLocaleDateString("en-US")}</td>
+                    <td className="px-4 py-3 font-medium text-foreground">${invoice.summary?.total?.toFixed(2) || "0.00"}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{invoice.paidAmount !== null ? `$${invoice.paidAmount.toFixed(2)}` : "—"}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
                       {invoice.balanceDueAmount !== null
                         ? `$${invoice.balanceDueAmount.toFixed(2)}`
                         : `$${invoice.summary?.total?.toFixed(2) || "0.00"}`}
-                    </TableCell>
-                    <TableCell>{invoice.lastPaid}</TableCell>
-                    <TableCell>{invoice.description}</TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-  <IconButton
-    size="small"
-    onClick={(e) => handleMenuOpen(e, invoice)}
-  >
-    <MoreVertIcon fontSize="small" />
-  </IconButton>
-</TableCell>
-
-                  </TableRow>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{invoice.lastPaid}</td>
+                    <td className="px-4 py-3 text-muted-foreground max-w-[180px] truncate" title={invoice.description}>{invoice.description}</td>
+                    <td className="px-4 py-3 relative" onClick={(e) => e.stopPropagation()}>
+                      <div className="relative inline-block">
+                        <button
+                          className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                          onClick={(e) => handleMenuOpen(e, invoice)}
+                        >
+                          <MoreVertical size={15} />
+                        </button>
+                        {open && selectedInvoice?._id === invoice._id && (
+                          <div className="absolute right-0 z-50 mt-1 w-36 rounded-lg border border-border bg-card shadow-lg text-sm overflow-hidden">
+                            <button
+                              className="w-full px-4 py-2 text-left text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                              disabled={selectedInvoice?.invoiceStatus?.toLowerCase() !== "paid"}
+                              onClick={() => { handleDownload(selectedInvoice._id); handleMenuClose(); }}
+                            >
+                              Download
+                            </button>
+                            <button
+                              className="w-full px-4 py-2 text-left text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                              disabled={selectedInvoice?.invoiceStatus?.toLowerCase() !== "paid"}
+                              onClick={() => { handlePrint(selectedInvoice._id); handleMenuClose(); }}
+                            >
+                              Print
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
                 );
               })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <Menu
-  anchorEl={anchorEl}
-  open={open}
-  onClose={handleMenuClose}
->
-  <MenuItem
-    disabled={selectedInvoice?.invoiceStatus?.toLowerCase() !== "paid"}
-    onClick={() => {
-      // console.log("Download invoice:", selectedInvoice);
-      handleDownload(selectedInvoice._id);  
-      handleMenuClose();
-    }}
-  >
-    Download
-  </MenuItem>
-
-  <MenuItem
-    disabled={selectedInvoice?.invoiceStatus?.toLowerCase() !== "paid"}
-    onClick={() => {
-      console.log("Print invoice:", selectedInvoice);
-      handlePrint(selectedInvoice._id);
-      handleMenuClose();
-    }}
-  >
-    Print
-  </MenuItem>
-</Menu>
-
-      </Box>
-
-      <Box mt={3} mb={2}>
-        {selected.length > 0 && (
-          <Button
-            // variant="contained"
-            size="small"
-            color="primary"
-            onClick={handlePayInvoice}
-             disabled={hasPaidInvoiceSelected} 
-           sx={{
-              backgroundColor: 'text.menu',
-              color: 'primary.contrastText',
-              '&:hover': {
-                backgroundColor: 'menu.dark',
-                boxShadow: 1,
-              },
-              transition: 'background-color 0.2s ease'
-            }}
-          >
-            Pay Invoice
-          </Button>
-        )}
-      </Box>
-    </Box>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   );
 };
 

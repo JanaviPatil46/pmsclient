@@ -73,34 +73,26 @@
 
 
 import * as React from "react";
-import {
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Stack,
-  Tooltip,
-} from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
-import AppTheme from "../shared-theme/AppTheme";
-import HomeFilledIcon from "@mui/icons-material/Home";
-import DescriptionIcon from "@mui/icons-material/Description";
-import TelegramIcon from "@mui/icons-material/Telegram";
-import EventNoteIcon from "@mui/icons-material/EventNote";
-import ArticleIcon from "@mui/icons-material/Article";
-import PaymentsIcon from "@mui/icons-material/Payments";
-import SettingsIcon from "@mui/icons-material/Settings";
+import {
+  Home,
+  FileText,
+  Send,
+  CalendarDays,
+  Newspaper,
+  CreditCard,
+  Settings,
+} from "lucide-react";
 
 export default function MenuContent({ collapsed }) {
   const iconMapping = {
-    HomeFilledIcon: HomeFilledIcon,
-    DescriptionIcon: DescriptionIcon,
-    TelegramIcon: TelegramIcon,
-    EventNoteIcon: EventNoteIcon,
-    ArticleIcon: ArticleIcon,
-    PaymentsIcon: PaymentsIcon,
-    SettingsIcon: SettingsIcon,
+    HomeFilledIcon: Home,
+    DescriptionIcon: FileText,
+    TelegramIcon: Send,
+    EventNoteIcon: CalendarDays,
+    ArticleIcon: Newspaper,
+    PaymentsIcon: CreditCard,
+    SettingsIcon: Settings,
   };
   
   const location = useLocation();
@@ -121,65 +113,37 @@ const SIDEBAR_API = process.env.REACT_APP_SIDEBAR_URL
     const IconComponent = iconMapping[item.icon];
     
     return (
-      <Tooltip 
-        title={collapsed ? item.label : ""} 
-        placement="right"
-        key={item._id}
-      >
-        <ListItem disablePadding sx={{ display: "block" }}>
-          <ListItemButton
-            selected={isActive}
-            onClick={() => navigate(item.path)}
-            sx={{ 
-              borderRadius: 2,
-              mb: 1.2,
-              minHeight: 48,
-              justifyContent: collapsed ? 'center' : 'initial',
-              px: 2.5,
-              // color: 'text.menu',
-    // '&:hover': { backgroundColor: 'action.hover' },
-            }}
-          >
-            {IconComponent && (
-              <ListItemIcon 
-                sx={{ 
-                  // color: "text.menu",
-                  minWidth: 0,
-                  mr: collapsed ? 'auto' : 3,
-                  justifyContent: 'center',
-                }}
-              >
-                <IconComponent />
-              </ListItemIcon>
-            )}
-            {!collapsed && (
-              <ListItemText 
-                primary={item.label} 
-                sx={{ 
-                  // color: "text.menu",
-                  opacity: collapsed ? 0 : 1,
-                  transition: 'opacity 0.2s',
-                }} 
-              />
-            )}
-          </ListItemButton>
-        </ListItem>
-      </Tooltip>
+      <div key={item._id} title={collapsed ? item.label : ""}>
+        <button
+          onClick={() => navigate(item.path)}
+          className={[
+            "w-full flex items-center rounded-lg mb-[6px] min-h-[48px] px-2.5 gap-3 transition-colors text-sm",
+            collapsed ? "justify-center" : "justify-start",
+            isActive
+              ? "bg-primary/10 text-primary border-l-2 border-primary"
+              : "text-foreground hover:bg-muted",
+          ].join(" ")}
+        >
+          {IconComponent && (
+            <span className="flex-shrink-0 flex items-center justify-center">
+              <IconComponent size={20} />
+            </span>
+          )}
+          {!collapsed && (
+            <span className="font-medium transition-opacity duration-200">
+              {item.label}
+            </span>
+          )}
+        </button>
+      </div>
     );
   };
 
   return (
-    <AppTheme>
-      <Stack sx={{ 
-        flexGrow: 1, 
-        p: 1, 
-        justifyContent: "space-between",
-        overflow: 'hidden',
-      }}>
-        <List dense sx={{ overflow: 'hidden' }}>
-          {menuItems.map(renderMenuItem)}
-        </List>
-      </Stack>
-    </AppTheme>
+    <div className="flex flex-col flex-1 p-1 justify-between overflow-hidden">
+      <nav className="overflow-hidden">
+        {menuItems.map(renderMenuItem)}
+      </nav>
+    </div>
   );
 }

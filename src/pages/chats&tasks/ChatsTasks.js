@@ -1,25 +1,13 @@
-import {
-  Button,
-  Typography,
-  Divider,
-  Paper,
-} from "@mui/material";
-import Box from "@mui/material/Box";
-import TelegramIcon from "@mui/icons-material/Telegram";
-import Grid from "@mui/material/Grid";
 import { useState, useEffect, useContext, useCallback } from "react";
 import { LoginContext } from "../../context/Context";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import { useTheme } from "@mui/material/styles";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import NewChat from "./NewChat";
+import { Send } from "lucide-react";
 
 const ChatsTasks = () => {
    const CHAT_API = process.env.REACT_APP_CHAT_API;
     const ACCOUNT_API = process.env.REACT_APP_ACCOUNTS_URL;
-  const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
   const { logindata } = useContext(LoginContext);
   const [loginuserid, setLoginUserId] = useState("");
@@ -108,152 +96,83 @@ console.log("accountid",accountId)
   };
 
   return (
-    <Box
-      sx={{
-        width: "100%",
-        maxWidth: { sm:  "100%", md: "1700px" },
-        flexGrow: 1,
-        height: "90vh",
-        p: 1,
-      }}
-    >
-      <Grid container alignItems="center" justifyContent="space-between" spacing={2}>
-        <Grid item>
-          <Typography variant="h4" component="p" gutterBottom sx={{ fontWeight: 600 }}>
-            Chats & Tasks
-          </Typography>
-        </Grid>
-        <Grid item>
-          <Button
-            size="small"
-           color="primary"
-            fullWidth={isSmallScreen}
-            onClick={handleOpen}
-            sx={{
-              backgroundColor: 'text.menu',
-              color: 'primary.contrastText',
-              '&:hover': {
-                backgroundColor: 'menu.dark',
-                boxShadow: 1,
-              },
-              transition: 'background-color 0.2s ease'
-            }}
-          >
-            New Chat
-          </Button>
-        </Grid>
-      </Grid>
-      <Box>
-        {chatList.length > 0 &&
+    <div className="w-full max-w-[1700px] flex-1 h-[90vh] overflow-auto p-2">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <div>
+          <h1 className="text-xl font-bold text-foreground tracking-tight">Chats &amp; Tasks</h1>
+          {chatList.length > 0 && (
+            <p className="text-xs text-muted-foreground mt-0.5">{chatList.length} conversation{chatList.length !== 1 ? "s" : ""}</p>
+          )}
+        </div>
+        <button
+          onClick={handleOpen}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
+        >
+          <Send size={13} />
+          New Chat
+        </button>
+      </div>
+
+      {/* Chat list */}
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        {chatList.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+            <Send size={28} className="mb-3 opacity-30" />
+            <p className="text-sm">No active conversations</p>
+          </div>
+        ) : (
           chatList.map((chat, index) => {
             const unreadCount = countUnreadAdminMessages(chat);
             const formattedTime = new Date(chat.updatedAt)
-              .toLocaleDateString("en-US", {
-                month: "short",
-                day: "2-digit",
-              })
+              .toLocaleDateString("en-US", { month: "short", day: "2-digit" })
               .replace(",", "");
-            
+            const initials = (chat.accountid?.accountName || "?").slice(0, 2).toUpperCase();
+
             return (
-              <Box key={index}>
-                <Paper
-                  sx={{ p: 1, cursor: "pointer" }}
-                  onClick={() => handleShowChat(chat._id)}
-                >
-                  <Box
-                    display="flex"
-                    alignItems="center"
-                    mb={1}
-                    gap={1.5}
-                    sx={{ justifyContent: "space-between", flexDirection: "row" }}
-                  >
-                    <Box display="flex" alignItems="center" mb={1} gap={1.5}>
-                      <TelegramIcon
-                        sx={{
-                          color: theme.palette.text.menu
-                        }}
-                        fontSize="small"
-                      />
-                      <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                        Chat with {chat.accountid.accountName}{" "}
-                      </Typography>
-                    </Box>
+              <div
+                key={index}
+                className={`flex items-center gap-3 px-4 py-3.5 cursor-pointer transition-colors hover:bg-muted/50 border-b border-border last:border-0 ${
+                  unreadCount > 0 ? "bg-primary/[0.03]" : ""
+                }`}
+                onClick={() => handleShowChat(chat._id)}
+              >
+                {/* Avatar */}
+                <div className="shrink-0 h-9 w-9 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
+                  {initials}
+                </div>
 
-                    <Box display="flex" alignItems="center" gap={1}>
-                      {unreadCount > 0 && (
-                        <Box
-                          sx={{
-                            backgroundColor: theme.palette.success.main,
-                            color: "white",
-                            borderRadius: "50%",
-                            width: 20,
-                            height: 20,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: "0.75rem",
-                          }}
-                        >
-                          {unreadCount}
-                        </Box>
-                      )}
-                    </Box>
-                  </Box>
-                  <Box sx={{}}>
-                    <Typography
-                      component="h2"
-                      variant="subtitle2"
-                      gutterBottom
-                      sx={{ fontWeight: "600" }}
-                    >
-                      {chat.chatsubject}
-                    </Typography>
-                    {/* <Typography component="h2" variant="caption" gutterBottom>
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-1">
+                    <h2 className="text-sm font-semibold text-foreground truncate">{chat.chatsubject}</h2>
+                    <span className="shrink-0 text-[11px] text-muted-foreground">{formattedTime}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-1 mt-0.5">
+                    <span className="text-xs text-muted-foreground truncate">
                       {(() => {
-                        const cleanText =
-                          chat.description[0]?.message.replace(/<[^>]+>/g, "") ||
-                          "";
-                        const words = cleanText.split(/\s+/);
-                        return words.length > 35
-                          ? words.slice(0, 35).join(" ") + "..."
-                          : cleanText;
+                        const messages = chat.description || [];
+                        const latest = messages[messages.length - 1];
+                        if (!latest) return "No messages yet";
+                        const clean = latest.message?.replace(/<[^>]+>/g, "") || "";
+                        const sender = latest.fromwhome === "client" ? "You" : latest.senderid || "";
+                        return `${sender}: ${clean.length > 40 ? clean.slice(0, 40) + "…" : clean}`;
                       })()}
-                    </Typography> */}
-     <Typography variant="caption">
-                    {(() => {
-                      const messages = chat.description || [];
-                      const latest = messages[messages.length - 1];
-                      if (!latest) return "No messages yet";
-
-                      const clean =
-                        latest.message?.replace(/<[^>]+>/g, "") || "";
-                      const sender =
-                        latest.fromwhome === "client"
-                          ? "You"
-                          : latest.senderid || "";
-
-                      return `${sender}: ${
-                        clean.length > 35 ? clean.slice(0, 35) + "..." : clean
-                      }`;
-                    })()}
-                  </Typography>
-                    <Box textAlign="right">
-                      <Typography
-                        variant="caption"
-                        sx={{ color: "text.secondary" }}
-                      >
-                        {formattedTime}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Paper>
-                <Divider sx={{ mb: 1, mt: 1 }} />
-              </Box>
+                    </span>
+                    {unreadCount > 0 && (
+                      <span className="shrink-0 h-5 min-w-[1.25rem] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
             );
-          })}
-      </Box>
-      <NewChat open={open} close={handleClose} accId={accountId} loginuserid={loginuserid} accountName={accountName}/>
-    </Box>
+          })
+        )}
+      </div>
+      <NewChat open={open} close={handleClose} accId={accountId} loginuserid={loginuserid} accountName={accountName} />
+    </div>
   );
 };
 

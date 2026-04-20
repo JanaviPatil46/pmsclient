@@ -1,13 +1,201 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   DESIGN SYSTEM — CSS VARIABLE TOKENS
+   Semantic color tokens compatible with shadcn/ui components.
+   Light mode: :root  |  Dark mode: .dark
+   All values use HSL channels (no hsl() wrapper) so Tailwind
+   can compose them with opacity modifiers: bg-primary/50
+   ============================================================ */
+
+@layer base {
+  :root {
+    /* ── Backgrounds ── */
+    --background:        0 0% 100%;
+    --foreground:        220 30% 6%;
+
+    /* ── Card / Surface ── */
+    --card:              0 0% 100%;
+    --card-foreground:   220 30% 6%;
+
+    /* ── Popover ── */
+    --popover:           0 0% 100%;
+    --popover-foreground: 220 30% 6%;
+
+    /* ── Primary (brand blue — hsl(210, 98%, 48%)) ── */
+    --primary:           210 98% 48%;
+    --primary-foreground: 210 100% 95%;
+
+    /* ── Secondary (light gray surface) ── */
+    --secondary:         220 20% 88%;
+    --secondary-foreground: 220 30% 6%;
+
+    /* ── Muted (very light gray) ── */
+    --muted:             220 35% 97%;
+    --muted-foreground:  220 20% 42%;
+
+    /* ── Accent (brand light blue tint) ── */
+    --accent:            210 100% 92%;
+    --accent-foreground: 220 30% 6%;
+
+    /* ── Destructive (error red) ── */
+    --destructive:       0 90% 40%;
+    --destructive-foreground: 0 100% 97%;
+
+    /* ── Success ── */
+    --success:           120 59% 30%;
+    --success-foreground: 120 80% 98%;
+
+    /* ── Warning ── */
+    --warning:           45 90% 40%;
+    --warning-foreground: 45 100% 97%;
+
+    /* ── Borders / Inputs / Focus Ring ── */
+    --border:            220 20% 88%;
+    --input:             220 20% 88%;
+    --ring:              210 98% 48%;
+
+    /* ── Border radius ── */
+    --radius:            0.5rem;
+  }
+
+  .dark {
+    /* ── Backgrounds ── */
+    --background:        220 35% 3%;
+    --foreground:        0 0% 100%;
+
+    /* ── Card / Surface ── */
+    --card:              220 30% 7%;
+    --card-foreground:   0 0% 100%;
+
+    /* ── Popover ── */
+    --popover:           220 30% 7%;
+    --popover-foreground: 0 0% 100%;
+
+    /* ── Primary ── */
+    --primary:           210 98% 48%;
+    --primary-foreground: 210 100% 95%;
+
+    /* ── Secondary ── */
+    --secondary:         220 20% 25%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* ── Muted ── */
+    --muted:             220 30% 7%;
+    --muted-foreground:  220 20% 65%;
+
+    /* ── Accent ── */
+    --accent:            210 100% 16%;
+    --accent-foreground: 0 0% 100%;
+
+    /* ── Destructive ── */
+    --destructive:       0 90% 40%;
+    --destructive-foreground: 0 100% 97%;
+
+    /* ── Success ── */
+    --success:           120 59% 35%;
+    --success-foreground: 120 80% 98%;
+
+    /* ── Warning ── */
+    --warning:           45 90% 40%;
+    --warning-foreground: 45 100% 97%;
+
+    /* ── Borders / Inputs / Focus Ring ── */
+    --border:            220 20% 25%;
+    --input:             220 20% 25%;
+    --ring:              210 98% 55%;
+  }
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* ============================================================
+   BASE RESET & TYPOGRAPHY
+   ============================================================ */
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+      "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
+      "Droid Sans", "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  code,
+  pre,
+  kbd,
+  samp {
+    font-family: "source-code-pro", Menlo, Monaco, Consolas, "Courier New",
+      monospace;
+  }
+
+  /* ── Heading hierarchy ── */
+  h1 {
+    @apply text-4xl font-bold leading-tight tracking-tight;
+  }
+
+  h2 {
+    @apply text-3xl font-semibold leading-tight;
+  }
+
+  h3 {
+    @apply text-2xl font-semibold leading-snug;
+  }
+
+  h4 {
+    @apply text-xl font-semibold leading-snug;
+  }
+
+  h5 {
+    @apply text-lg font-semibold;
+  }
+
+  h6 {
+    @apply text-base font-semibold;
+  }
+}
+
+/* ============================================================
+   REUSABLE LAYOUT UTILITIES
+   ============================================================ */
+
+@layer components {
+  /* Page-level container */
+  .page-container {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Card / section wrapper */
+  .section-card {
+    @apply rounded-lg border border-border bg-card p-6 shadow-md;
+  }
+
+  /* Vertical form layout */
+  .form-layout {
+    @apply flex flex-col space-y-4;
+  }
+
+  /* Form field label */
+  .form-label {
+    @apply text-sm font-medium text-foreground;
+  }
+
+  /* Body / description text */
+  .text-body {
+    @apply text-sm text-muted-foreground;
+  }
+
+  /* Responsive table wrapper */
+  .table-container {
+    @apply w-full overflow-x-auto rounded-lg border border-border;
+  }
 }
