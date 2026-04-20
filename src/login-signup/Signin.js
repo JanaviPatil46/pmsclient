@@ -476,7 +476,7 @@ const LoginPage = () => {
 
     try {
       const response = await axios.post(
-        "https://www.snptaxes.com/api/auth/login",
+        `${process.env.REACT_APP_API_URL}/api/auth/login`,
         { email, password }
       );
       const { token, accounts } = response.data;
