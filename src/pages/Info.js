@@ -1,9 +1,5 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import Typography from '@mui/material/Typography';
 
 const products = [
   {
@@ -30,28 +26,21 @@ const products = [
 
 function Info({ totalPrice }) {
   return (
-    <React.Fragment>
-      <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
-        Total
-      </Typography>
-      <Typography variant="h4" gutterBottom>
-        {totalPrice}
-      </Typography>
-      <List disablePadding>
+    <div className="space-y-2">
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Total</p>
+      <p className="text-3xl font-bold text-foreground">{totalPrice}</p>
+      <div className="divide-y divide-border">
         {products.map((product) => (
-          <ListItem key={product.name} sx={{ py: 1, px: 0 }}>
-            <ListItemText
-              sx={{ mr: 2 }}
-              primary={product.name}
-              secondary={product.desc}
-            />
-            <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-              {product.price}
-            </Typography>
-          </ListItem>
+          <div key={product.name} className="flex items-center justify-between py-3">
+            <div className="mr-4">
+              <p className="text-sm font-medium text-foreground">{product.name}</p>
+              <p className="text-xs text-muted-foreground">{product.desc}</p>
+            </div>
+            <span className="text-sm font-semibold text-foreground whitespace-nowrap">{product.price}</span>
+          </div>
         ))}
-      </List>
-    </React.Fragment>
+      </div>
+    </div>
   );
 }
 

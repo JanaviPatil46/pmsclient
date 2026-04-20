@@ -1,20 +1,6 @@
 import * as React from "react";
 import { useEffect, useContext, useState } from "react";
-import { styled } from "@mui/material/styles";
-import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
-import { Button, Paper } from "@mui/material";
-import Avatar from "@mui/material/Avatar";
-import MuiDrawer from "@mui/material/Drawer";
-import Box from "@mui/material/Box";
-import Divider from "@mui/material/Divider";
-import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
-import IconButton from "@mui/material/IconButton";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import Tooltip from "@mui/material/Tooltip";
-import { drawerClasses } from "@mui/material/Drawer";
-import SelectContent from "./SelectContent";
+import { ChevronLeft, ChevronRight, LogOut, User, ArrowLeftRight } from "lucide-react";
 import axios from "axios";
 import MenuContent from "./MenuContent";
 import OptionsMenu from "./OptionsMenu";
@@ -23,41 +9,22 @@ import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { toast } from "material-react-toastify";
 import MenuButton from "./MenuButton";
-import PersonIcon from "@mui/icons-material/Person";
-import SwitchAccountIcon from "@mui/icons-material/SwitchAccount";
-// import Logo from "../Images/snplogo.png";
 import Logo from "../Images/snplogo-removebg-preview.png";
+
 const drawerWidth = 240;
 const collapsedWidth = 72;
 
-const Drawer = styled(MuiDrawer, {
-  shouldForwardProp: (prop) => prop !== "collapsed",
-})(({ theme, collapsed }) => ({
-  width: collapsed ? collapsedWidth : drawerWidth,
-  flexShrink: 0,
-  whiteSpace: "nowrap",
-  boxSizing: "border-box",
-  mt: 10,
-  transition: theme.transitions.create("width", {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.enteringScreen,
-  }),
-  "& .MuiDrawer-paper": {
-    width: collapsed ? collapsedWidth : drawerWidth,
-    overflowX: "hidden",
-    transition: theme.transitions.create("width", {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
-    backgroundColor: theme.palette.background.paper,
-  },
-}));
+export default function SideMenu({ collapsed: collapsedProp, onCollapseToggle }) {
+  const [internalCollapsed, setInternalCollapsed] = useState(false);
 
-export default function SideMenu() {
-  const [collapsed, setCollapsed] = useState(false);
+  const collapsed = collapsedProp !== undefined ? collapsedProp : internalCollapsed;
 
   const toggleCollapse = () => {
-    setCollapsed(!collapsed);
+    if (onCollapseToggle) {
+      onCollapseToggle();
+    } else {
+      setInternalCollapsed((v) => !v);
+    }
   };
   const navigate = useNavigate();
 
@@ -121,168 +88,89 @@ export default function SideMenu() {
       : text;
   };
 
+  const avatarSrc = accountInfo?.profilePicture
+    ? `https://www.snptaxes.com/${accountInfo.profilePicture}`
+    : null;
+
   return (
-    <Drawer
-      variant="permanent"
-      collapsed={collapsed}
-      sx={{
-        display: { xs: "none", md: "block" },
-        [`& .${drawerClasses.paper}`]: {
-          backgroundColor: "background.paper",
-        },
-      }}
+    <aside
+      className="hidden md:flex flex-col fixed left-0 top-0 h-screen bg-background border-r border-border z-40 shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out"
+      style={{ width: collapsed ? collapsedWidth : drawerWidth }}
     >
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: collapsed ? "center" : "space-between",
-          alignItems: "center",
-          p: 1,
-          mt: "calc(var(--template-frame-height, 0px) + 4px)",
-        }}
-      >
+      {/* Header: logo + collapse toggle */}
+      <div className={`flex items-center p-2 mt-1 ${collapsed ? "justify-center" : "justify-between"}`}>
         {!collapsed && (
-          <Box sx={{ display: "flex", alignItems: "center", ml: 1 }}>
-            <img
-              src={Logo} // Replace with your logo path
-              alt="Company Logo"
-              style={{ height: 60 }} // Adjust height as needed
-            />
-          </Box>
+          <div className="flex items-center ml-1">
+            <img src={Logo} alt="Company Logo" className="h-14 object-contain" />
+          </div>
         )}
-        {/* title={collapsed ? "Expand" : "Collapse"} */}
-        <Tooltip placement="right">
-          <Box
-            onClick={toggleCollapse}
-            sx={{
-              cursor: "pointer",
-              backgroundColor: "info.main",
-              // padding: '2px',
-              textAlign: "center",
-              borderRadius: "50%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {collapsed ? (
-              <ChevronRightIcon sx={{ color: "white", fontSize: "1.8rem" }} />
-            ) : (
-              <ChevronLeftIcon sx={{ color: "white", fontSize: "1.8rem" }} />
-            )}
-          </Box>
-        </Tooltip>
-      </Box>
-      <Divider />
-      <Box
-        sx={{
-          overflow: "auto",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
+        <button
+          onClick={toggleCollapse}
+          title={collapsed ? "Expand" : "Collapse"}
+          className="flex items-center justify-center rounded-full bg-primary p-0.5 text-primary-foreground hover:bg-primary/90 transition-colors shrink-0"
+        >
+          {collapsed
+            ? <ChevronRight size={22} />
+            : <ChevronLeft size={22} />}
+        </button>
+      </div>
+
+      <hr className="border-border" />
+
+      {/* Nav content — scrollable */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
         <MenuContent collapsed={collapsed} />
-      </Box>
+      </div>
+
+      {/* Collapsed icon actions */}
       {collapsed && (
-        <Stack sx={{ p: 2 }}>
+        <div className="flex flex-col items-center gap-2 p-2">
           <MenuButton>
-            <SwitchAccountIcon />
+            <ArrowLeftRight size={18} />
           </MenuButton>
-        </Stack>
-      )}
-      {collapsed && (
-        <Stack sx={{ p: 2 }}>
           <MenuButton onClick={logoutuser}>
-            <LogoutRoundedIcon />
+            <LogOut size={18} />
           </MenuButton>
-        </Stack>
+        </div>
       )}
 
+      {/* Footer: avatar + account info (expanded) OR avatar only (collapsed) */}
       {!collapsed ? (
-        <Stack
-          direction="row"
-          sx={{
-            p: 2,
-            gap: 1,
-            alignItems: "center",
-            borderTop: "1px solid",
-            borderColor: "divider",
-          }}
-        >
-          
-          <Avatar
-            sx={{
-              width: 36,
-              height: 36,
-              bgcolor: "grey.300",
-              color: "grey.700",
-            }}
-            alt={accountInfo?.accountName || "Account"}
-            src={
-              accountInfo?.profilePicture
-                ? `https://www.snptaxes.com/${accountInfo.profilePicture}`
-                : undefined
-            }
+        <div className="flex items-center gap-2 p-3 border-t border-border">
+          <div
+            className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden border border-border"
+            title={accountInfo ? `${accountInfo.accountName} • ${accountInfo.clientType}` : "Account"}
           >
-            {/* Fallback icon when no profile picture */}
-            {!accountInfo?.profilePicture && <PersonIcon />}
-          </Avatar>
-          <Box sx={{ mr: "auto" }}>
-            {/* ✅ Account Info Section */}
+            {avatarSrc
+              ? <img src={avatarSrc} alt="avatar" className="h-full w-full object-cover" />
+              : <User size={16} className="text-muted-foreground" />}
+          </div>
+          <div className="flex-1 min-w-0 mr-auto">
             {accountInfo ? (
               <>
-                <Typography
-                  variant="body2"
-                  sx={{ fontWeight: 600, lineHeight: "16px" }}
-                >
-                  {truncate(accountInfo?.accountName)}
-                </Typography>
-
-                <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                <p className="text-xs font-semibold text-foreground truncate leading-4">
+                  {truncate(accountInfo.accountName)}
+                </p>
+                <p className="text-[11px] text-muted-foreground truncate">
                   {truncate(email)}
-                </Typography>
+                </p>
               </>
-            ) : (
-              <Typography
-                variant="caption"
-                sx={{ color: "text.secondary" }}
-              ></Typography>
-            )}
-          </Box>
-
+            ) : null}
+          </div>
           <OptionsMenu email={email} />
-        </Stack>
+        </div>
       ) : (
-        <Box sx={{ p: 1, borderTop: "1px solid", borderColor: "divider" }}>
-          <Tooltip
-            title={
-              accountInfo
-                ? `${accountInfo.accountName} • ${accountInfo.clientType}`
-                : "No account info"
-            }
-            placement="right"
+        <div className="flex justify-center p-2 border-t border-border">
+          <div
+            className="h-9 w-9 rounded-full bg-muted flex items-center justify-center overflow-hidden border border-border"
+            title={accountInfo ? `${accountInfo.accountName} • ${accountInfo.clientType}` : "No account info"}
           >
-            <Avatar
-              sx={{
-                width: 36,
-                height: 36,
-                bgcolor: "grey.300",
-                color: "grey.700",
-              }}
-              alt={accountInfo?.accountName || "Account"}
-              src={
-                accountInfo?.profilePicture
-                  ? `https://www.snptaxes.com/${accountInfo.profilePicture}`
-                  : undefined
-              }
-            >
-              {/* Fallback icon when no profile picture */}
-              {!accountInfo?.profilePicture && <PersonIcon />}
-            </Avatar>
-          </Tooltip>
-        </Box>
+            {avatarSrc
+              ? <img src={avatarSrc} alt="avatar" className="h-full w-full object-cover" />
+              : <User size={16} className="text-muted-foreground" />}
+          </div>
+        </div>
       )}
-    </Drawer>
+    </aside>
   );
 }

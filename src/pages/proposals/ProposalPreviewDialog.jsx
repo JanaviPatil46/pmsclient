@@ -2,32 +2,11 @@
 
 
 import React, { useState, useRef } from "react";
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  Box,
-  List,
-  ListItemButton,
-  Typography,
-  Divider,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  TextField,
-  Button,
-  ButtonGroup,
-  FormControlLabel,
-  Checkbox,
-  ListItemText,
-  ListItemIcon
-} from "@mui/material";
 import SignatureCanvas from "react-signature-canvas";
 import axios from "axios";
-import CloseIcon from "@mui/icons-material/Close";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import HTMLReactParser from "html-react-parser";
 import { toast } from "material-react-toastify";
+import { X, CheckCircle, ChevronDown } from "lucide-react";
 
 const ProposalPreviewDialog = ({ open, handleClose, proposal }) => {
   const [activeStep, setActiveStep] = useState("general");
@@ -108,491 +87,365 @@ const ProposalPreviewDialog = ({ open, handleClose, proposal }) => {
     }
   };
 
+  const [invoiceAccordionOpen, setInvoiceAccordionOpen] = useState(false);
+
   return (
-    <Dialog open={open} onClose={handleClose} fullScreen>
-      <DialogTitle sx={{ display: "flex", justifyContent: "space-between" }}>
-        {proposal?.general?.proposalName || "Proposal"}
-        <CloseIcon sx={{ cursor: "pointer",color:'red' }} onClick={handleClose} />
-      </DialogTitle>
+    <>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-[1200] bg-black/50" onClick={handleClose} />
+          <div className="fixed inset-0 z-[1201] flex items-stretch justify-center pointer-events-none">
+            <div
+              className="pointer-events-auto flex flex-col bg-background shadow-2xl w-full max-w-5xl h-full overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card shrink-0">
+                <h1 className="text-lg font-semibold text-foreground truncate">
+                  {proposal?.general?.proposalName || "Proposal"}
+                </h1>
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
 
-      <DialogContent sx={{ display: "flex", height: "75vh", p: 0 }}>
-        
-        {/* LEFT SIDE MENU */}
-        <Box sx={{ width: "28%", borderRight: "1px solid #ddd" }}>
-          <List>
-            {steps.map((step) => (
-              <ListItemButton
-                key={step.id}
-                selected={activeStep === step.id}
-                onClick={() => handleStepClick(step.id)}
-                sx={{
-                  // Apply green color when signed
-                  ...(isSigned && {
-                    color: "success.main",
-                    "& .MuiListItemText-primary": {
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                    },
-                  }),
-                }}
-              >
-                {/* Show checkmark icon when signed */}
-                {isSigned && (
-                  <ListItemIcon sx={{ minWidth: "auto", mr: 1 }}>
-                    <CheckCircleOutlineIcon 
-                      fontSize="small" 
-                      sx={{ color: "success.main" }} 
-                    />
-                  </ListItemIcon>
-                )}
-                <ListItemText 
-                  primary={step.label}
-                  sx={{
-                    // Ensure text color changes when signed
-                    color: isSigned ? "success.main" : "inherit",
-                  }}
-                />
-              </ListItemButton>
-            ))}
-          </List>
-        </Box>
+              {/* Body */}
+              <div className="flex flex-1 overflow-hidden">
+                {/* Left nav */}
+                <nav className="w-56 shrink-0 border-r border-border bg-card overflow-y-auto">
+                  <ul className="py-2">
+                    {steps.map((step) => (
+                      <li key={step.id}>
+                        <button
+                          type="button"
+                          onClick={() => handleStepClick(step.id)}
+                          className={`w-full text-left flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors rounded-none border-l-2 ${
+                            activeStep === step.id
+                              ? "border-primary bg-primary/5 text-primary"
+                              : "border-transparent text-foreground hover:bg-muted"
+                          } ${isSigned ? "text-green-600 dark:text-green-400" : ""}`}
+                        >
+                          {isSigned && (
+                            <CheckCircle size={14} className="text-green-500 shrink-0" />
+                          )}
+                          {step.label}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
 
-        {/* RIGHT CONTENT */}
-        <Box sx={{ flexGrow: 1, overflowY: "auto", p: 2 }} onScroll={handleScroll}>
+                {/* Right scrollable content */}
+                <div
+                  className="flex-1 overflow-y-auto px-6 md:px-10 py-6"
+                  onScroll={handleScroll}
+                >
+                  {/* INTRODUCTION */}
+                  {proposal?.general?.introductionEnabled && (
+                    <div ref={introRef} className="mb-8">
+                      <h2 className="text-base font-semibold text-foreground mb-2">
+                        {proposal?.introduction?.title || "Introduction"}
+                      </h2>
+                      <div className="prose prose-sm max-w-none text-foreground leading-relaxed">
+                        {HTMLReactParser(proposal?.introduction?.description || "")}
+                      </div>
+                      <hr className="border-border mt-4" />
+                    </div>
+                  )}
 
-          {/* ✅ INTRODUCTION */}
-          {proposal?.general?.introductionEnabled && (
-            <Box ref={introRef} sx={{ mb: 3 }}>
-              <Typography variant="h6">{proposal?.introduction?.title || "Introduction"}</Typography>
-              {HTMLReactParser(proposal?.introduction?.description || "")}
-              <Divider sx={{ my: 2 }} />
-            </Box>
-          )}
+                  {/* TERMS */}
+                  {proposal?.general?.termsEnabled && (
+                    <div ref={termsRef} className="mb-8">
+                      <h2 className="text-base font-semibold text-foreground mb-2">Terms & Conditions</h2>
+                      <div className="prose prose-sm max-w-none text-foreground leading-relaxed">
+                        {HTMLReactParser(proposal?.terms?.description || "")}
+                      </div>
+                      <hr className="border-border mt-4" />
+                    </div>
+                  )}
 
-          {/* ✅ TERMS */}
-          {proposal?.general?.termsEnabled && (
-            <Box ref={termsRef} sx={{ mb: 3 }}>
-              <Typography variant="h6">Terms & Conditions</Typography>
-              {HTMLReactParser(proposal?.terms?.description || "")}
-              <Divider sx={{ my: 2 }} />
-            </Box>
-          )}
+                  {/* SERVICES — ITEMIZED */}
+                  {proposal?.general?.servicesEnabled && proposal?.services?.option === "services" && (
+                    <div ref={servicesRef} className="mb-8">
+                      <h2 className="text-base font-semibold text-foreground mb-3">Services</h2>
+                      <div className="rounded-xl border border-border overflow-hidden">
+                        <div className="grid grid-cols-[3fr_1fr_1fr_1fr_1fr] bg-muted/40 px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          <span>Service</span>
+                          <span className="text-right">Rate</span>
+                          <span className="text-right">Qty</span>
+                          <span className="text-right">Tax</span>
+                          <span className="text-right">Amount</span>
+                        </div>
+                        {proposal?.services?.itemizedData?.lineItems?.map((item, i) => {
+                          const rate = Number(item.rate || 0);
+                          const qty = Number(item.quantity || 1);
+                          const taxRate = proposal?.services?.itemizedData?.taxRate || 0;
+                          const base = rate * qty;
+                          const tax = item.tax ? (base * taxRate) / 100 : 0;
+                          const total = base + tax;
+                          return (
+                            <div key={i} className="grid grid-cols-[3fr_1fr_1fr_1fr_1fr] border-t border-border px-3 py-2 text-sm text-foreground">
+                              <div>
+                                <p className="font-semibold">{item.productorService}</p>
+                                <p className="text-xs text-muted-foreground">{item.description}</p>
+                              </div>
+                              <span className="text-right">${rate.toFixed(2)}</span>
+                              <span className="text-right">{qty}</span>
+                              <span className="text-right">${tax.toFixed(2)}</span>
+                              <span className="text-right">${total.toFixed(2)}</span>
+                            </div>
+                          );
+                        })}
+                        <div className="border-t border-border px-3 py-2 flex justify-end text-sm font-bold text-foreground">
+                          Total: ${proposal?.services?.itemizedData?.totalAmount?.toFixed(2)}
+                        </div>
+                      </div>
+                      <hr className="border-border mt-4" />
+                    </div>
+                  )}
 
-          {/* ✅ SERVICES - ITEMIZED */}
-          {proposal?.general?.servicesEnabled && proposal?.services?.option === "services" && (
-            <Box ref={servicesRef} sx={{ mb: 3 }}>
-              <Typography variant="h6" sx={{ mb: 2 }}>Services</Typography>
+                  {/* SERVICES — INVOICE */}
+                  {proposal?.general?.servicesEnabled && proposal?.services?.option === "invoice" && (
+                    <div ref={servicesRef} className="mb-8">
+                      <h2 className="text-base font-semibold text-foreground mb-3">Invoice</h2>
+                      <div className="space-y-3 mb-4">
+                        {[
+                          { label: "Amount", value: `$${proposal?.services?.invoices?.[0]?.totalAmount?.toFixed(2)}` },
+                          { label: "Invoice will be issued", value: proposal?.services?.invoices?.[0]?.issueinvoice || "N/A" },
+                          { label: "Description", value: proposal?.services?.invoices?.[0]?.description || "N/A" },
+                        ].map(({ label, value }) => (
+                          <div key={label}>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">{label}</p>
+                            <div className="rounded-lg bg-muted/30 border border-border px-3 py-2 text-sm text-foreground">{value}</div>
+                          </div>
+                        ))}
+                      </div>
 
-              <Box sx={{ border: "1px solid #e5e7eb", borderRadius: "10px", overflow: "hidden" }}>
-                <Box sx={{
-                  p: 1, fontWeight: "bold",
-                  display: "grid", gridTemplateColumns: "3fr 1fr 1fr 1fr 1fr"
-                }}>
-                  <Typography>Service</Typography>
-                  <Typography textAlign="right">Rate</Typography>
-                  <Typography textAlign="right">Qty</Typography>
-                  <Typography textAlign="right">Tax</Typography>
-                  <Typography textAlign="right">Amount</Typography>
-                </Box>
+                      {/* Accordion */}
+                      <div className="rounded-xl border border-border overflow-hidden">
+                        <button
+                          type="button"
+                          onClick={() => setInvoiceAccordionOpen((v) => !v)}
+                          className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-foreground bg-muted/20 hover:bg-muted/40 transition-colors"
+                        >
+                          Invoice details
+                          <ChevronDown
+                            size={16}
+                            className={`transition-transform ${invoiceAccordionOpen ? "rotate-180" : ""}`}
+                          />
+                        </button>
+                        {invoiceAccordionOpen && (
+                          <div className="border-t border-border">
+                            <div className="grid grid-cols-[3fr_1fr_1fr_1fr_1fr] bg-muted/40 px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                              <span>Service</span>
+                              <span className="text-right">Rate</span>
+                              <span className="text-right">Qty</span>
+                              <span className="text-right">Tax</span>
+                              <span className="text-right">Amount</span>
+                            </div>
+                            {proposal?.services?.invoices?.[0]?.lineItems?.map((item, i) => {
+                              const rate = Number(item.rate || 0);
+                              const qty = Number(item.quantity || 1);
+                              const taxRate = proposal?.services?.invoices?.[0]?.taxRate || 0;
+                              const base = rate * qty;
+                              const tax = item.tax ? (base * taxRate) / 100 : 0;
+                              const total = base + tax;
+                              return (
+                                <div key={i} className="grid grid-cols-[3fr_1fr_1fr_1fr_1fr] border-t border-border px-3 py-2 text-sm text-foreground">
+                                  <div>
+                                    <p className="font-semibold">{item.productorService}</p>
+                                    <p className="text-xs text-muted-foreground">{item.description}</p>
+                                  </div>
+                                  <span className="text-right">${rate.toFixed(2)}</span>
+                                  <span className="text-right">{qty}</span>
+                                  <span className="text-right">${tax.toFixed(2)}</span>
+                                  <span className="text-right">${total.toFixed(2)}</span>
+                                </div>
+                              );
+                            })}
+                            <div className="border-t border-border px-3 py-2 flex justify-end text-sm font-bold text-foreground">
+                              Total: ${proposal?.services?.invoices?.[0]?.totalAmount?.toFixed(2)}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <hr className="border-border mt-4" />
+                    </div>
+                  )}
 
-                {proposal?.services?.itemizedData?.lineItems?.map((item, i) => {
-                  const rate = Number(item.rate || 0);
-                  const qty = Number(item.quantity || 1);
-                  const taxRate = proposal?.services?.itemizedData?.taxRate || 0;
+                  {/* PAYMENTS */}
+                  {proposal?.general?.paymentsEnabled && (
+                    <div ref={paymentsRef} className="mb-8">
+                      <h2 className="text-base font-semibold text-foreground mb-2">Payments</h2>
+                      <div className="rounded-xl border border-border bg-muted/10 px-4 py-3 space-y-1 text-sm text-foreground">
+                        <p><span className="font-semibold">Method:</span> {proposal?.payments?.method}</p>
+                        <p><span className="font-semibold">Amount:</span> ${proposal?.payments?.amount}</p>
+                      </div>
+                      <hr className="border-border mt-4" />
+                    </div>
+                  )}
 
-                  const base = rate * qty;
-                  const tax = item.tax ? (base * taxRate) / 100 : 0;
-                  const total = base + tax;
+                  {/* SIGNATURE SECTION */}
+                  <div ref={signatureRef} className="mb-8 max-w-lg">
+                    <h2 className="text-base font-semibold text-foreground mb-2">Sign & Accept</h2>
+                    <hr className="border-border mb-4" />
 
-                  return (
-                    <Box key={i} sx={{
-                      p: 1,
-                      borderTop: "1px solid #e5e7eb",
-                      display: "grid",
-                      gridTemplateColumns: "3fr 1fr 1fr 1fr 1fr"
-                    }}>
-                      <Box>
-                        <Typography fontWeight="bold">{item.productorService}</Typography>
-                        <Typography fontSize={12} color="text.secondary">{item.description}</Typography>
-                      </Box>
+                    {proposal?.status === "Signed" ? (
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <CheckCircle size={15} className="text-green-500" />
+                          Signed on {new Date(proposal.signedAt).toLocaleString()}
+                        </div>
+                        <p className="text-sm font-semibold text-foreground">Signature:</p>
+                        {proposal?.signature?.startsWith("data:image") ? (
+                          <img
+                            src={proposal.signature}
+                            alt="signature"
+                            className="max-w-xs rounded-lg border border-border bg-white p-2 mt-1"
+                          />
+                        ) : (
+                          <div className="rounded-lg border border-border bg-muted/20 px-5 py-4 text-2xl font-[cursive] text-foreground mt-1">
+                            {proposal.signature}
+                          </div>
+                        )}
+                        <button
+                          disabled
+                          className="rounded-lg bg-primary/50 px-4 py-2 text-sm font-semibold text-primary-foreground cursor-not-allowed opacity-60 mt-2"
+                        >
+                          Already Signed
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-5">
+                        {/* Toggle */}
+                        <div className="flex rounded-lg border border-border overflow-hidden w-fit">
+                          {["draw", "type"].map((t) => (
+                            <button
+                              key={t}
+                              type="button"
+                              onClick={() => setSignatureType(t)}
+                              className={`px-5 py-2 text-sm font-medium transition-colors ${
+                                signatureType === t
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-background text-foreground hover:bg-muted"
+                              }`}
+                            >
+                              {t === "draw" ? "Draw" : "Type"}
+                            </button>
+                          ))}
+                        </div>
 
-                      <Typography textAlign="right">${rate.toFixed(2)}</Typography>
-                      <Typography textAlign="right">{qty}</Typography>
-                      <Typography textAlign="right">${tax.toFixed(2)}</Typography>
-                      <Typography textAlign="right">${total.toFixed(2)}</Typography>
-                    </Box>
-                  );
-                })}
+                        {/* Draw */}
+                        {signatureType === "draw" && (
+                          <div className="space-y-3">
+                            <div className="rounded-lg border border-border bg-muted/20 overflow-hidden">
+                              <SignatureCanvas
+                                ref={sigCanvas}
+                                penColor="black"
+                                canvasProps={{
+                                  width: 500,
+                                  height: 200,
+                                  className: "w-full",
+                                  style: { background: "transparent" },
+                                }}
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => sigCanvas.current.clear()}
+                                className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                              >
+                                Clear
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (sigCanvas.current.isEmpty()) {
+                                    toast.warning("Please draw your signature first");
+                                    return;
+                                  }
+                                  setSignatureData(sigCanvas.current.toDataURL("image/png"));
+                                }}
+                                className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+                              >
+                                Save Signature
+                              </button>
+                            </div>
+                            {signatureData && (
+                              <div className="space-y-1.5">
+                                <div className="flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400">
+                                  <CheckCircle size={14} />
+                                  Signature saved successfully
+                                </div>
+                                <img
+                                  src={signatureData}
+                                  alt="preview"
+                                  className="max-w-xs rounded-lg border border-border bg-white p-2"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
 
-                <Box sx={{
-                  borderTop: "1px solid #e5e7eb",
-                  p: 1,
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  fontWeight: "bold"
-                }}>
-                  Total: ${proposal?.services?.itemizedData?.totalAmount?.toFixed(2)}
-                </Box>
-              </Box>
+                        {/* Type */}
+                        {signatureType === "type" && (
+                          <div className="space-y-3">
+                            <input
+                              type="text"
+                              placeholder="Type your full name"
+                              value={typedSignature}
+                              onChange={(e) => setTypedSignature(e.target.value)}
+                              className="w-full rounded-lg border border-border bg-background px-3 py-3 text-2xl font-[cursive] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                            />
+                            {typedSignature && (
+                              <div className="rounded-lg border border-border bg-muted/20 px-5 py-5 text-2xl font-[cursive] text-foreground">
+                                {typedSignature}
+                              </div>
+                            )}
+                          </div>
+                        )}
 
-              <Divider sx={{ my: 2 }} />
-            </Box>
-          )}
+                        {/* Terms checkbox */}
+                        <label className="flex items-start gap-2.5 cursor-pointer select-none mt-2">
+                          <input
+                            type="checkbox"
+                            checked={termsAccepted}
+                            onChange={(e) => setTermsAccepted(e.target.checked)}
+                            disabled={proposal?.status === "Signed"}
+                            className="mt-1 accent-primary"
+                          />
+                          <span className="text-sm text-foreground">I accept the Terms & Conditions</span>
+                        </label>
 
-          {/* ✅ SERVICES - INVOICE MODE */}
-          {proposal?.general?.servicesEnabled && proposal?.services?.option === "invoice" && (
-            <Box ref={servicesRef} sx={{ mb: 3 }}>
-              <Typography variant="h6" sx={{ mb: 2 }}>Invoice</Typography>
-
-              <Box sx={{ mb: 2 }}>
-                <Typography fontWeight="bold">Amount</Typography>
-                <Box sx={{ bgcolor: "#f9fafb", p: 1, borderRadius: "8px" }}>
-                  ${proposal?.services?.invoices?.[0]?.totalAmount?.toFixed(2)}
-                </Box>
-
-                <Typography fontWeight="bold" sx={{ mt: 2 }}>Invoice will be issued</Typography>
-                <Box sx={{ bgcolor: "#f9fafb", p: 1, borderRadius: "8px" }}>
-                  {proposal?.services?.invoices?.[0]?.issueinvoice || "N/A"}
-                </Box>
-
-                <Typography fontWeight="bold" sx={{ mt: 2 }}>Description</Typography>
-                <Box sx={{ bgcolor: "#f9fafb", p: 1, borderRadius: "8px" }}>
-                  {proposal?.services?.invoices?.[0]?.description || "N/A"}
-                </Box>
-              </Box>
-
-              <Accordion>
-                <AccordionSummary expandIcon={<span>▼</span>}>
-                  <Typography fontWeight="bold">Invoice details</Typography>
-                </AccordionSummary>
-
-                <AccordionDetails>
-                  <Box sx={{ border: "1px solid #e5e7eb", borderRadius: "10px", overflow: "hidden" }}>
-                    <Box sx={{
-                      bgcolor: "#f9fafb", p: 1, fontWeight: "bold",
-                      display: "grid", gridTemplateColumns: "3fr 1fr 1fr 1fr 1fr"
-                    }}>
-                      <Typography>Service</Typography>
-                      <Typography textAlign="right">Rate</Typography>
-                      <Typography textAlign="right">Qty</Typography>
-                      <Typography textAlign="right">Tax</Typography>
-                      <Typography textAlign="right">Amount</Typography>
-                    </Box>
-
-                    {proposal?.services?.invoices?.[0]?.lineItems?.map((item, i) => {
-                      const rate = Number(item.rate || 0);
-                      const qty = Number(item.quantity || 1);
-                      const taxRate = proposal?.services?.invoices?.[0]?.taxRate || 0;
-
-                      const base = rate * qty;
-                      const tax = item.tax ? (base * taxRate) / 100 : 0;
-                      const total = base + tax;
-
-                      return (
-                        <Box key={i} sx={{
-                          p: 1,
-                          borderTop: "1px solid #e5e7eb",
-                          display: "grid",
-                          gridTemplateColumns: "3fr 1fr 1fr 1fr 1fr"
-                        }}>
-                          <Box>
-                            <Typography fontWeight="bold">{item.productorService}</Typography>
-                            <Typography fontSize={12} color="text.secondary">{item.description}</Typography>
-                          </Box>
-
-                          <Typography textAlign="right">${rate.toFixed(2)}</Typography>
-                          <Typography textAlign="right">{qty}</Typography>
-                          <Typography textAlign="right">${tax.toFixed(2)}</Typography>
-                          <Typography textAlign="right">${total.toFixed(2)}</Typography>
-                        </Box>
-                      );
-                    })}
-
-                    <Box sx={{
-                      borderTop: "1px solid #e5e7eb",
-                      p: 1,
-                      display: "flex",
-                      justifyContent: "flex-end",
-                      fontWeight: "bold"
-                    }}>
-                      Total: ${proposal?.services?.invoices?.[0]?.totalAmount?.toFixed(2)}
-                    </Box>
-                  </Box>
-                </AccordionDetails>
-              </Accordion>
-
-              <Divider sx={{ my: 2 }} />
-            </Box>
-          )}
-
-          {/* ✅ PAYMENTS */}
-          {proposal?.general?.paymentsEnabled && (
-            <Box ref={paymentsRef} sx={{ mb: 3 }}>
-              <Typography variant="h6">Payments</Typography>
-              <Typography><b>Method:</b> {proposal?.payments?.method}</Typography>
-              <Typography><b>Amount:</b> ${proposal?.payments?.amount}</Typography>
-              <Divider sx={{ my: 2 }} />
-            </Box>
-          )}
-
-          {/* ✅ SIGNATURE SECTION */}
-          <Box ref={signatureRef} sx={{ mb: 4 }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>Sign & Accept</Typography>
-            <Divider sx={{ mb: 2 }} />
-
-            {/* Already signed */}
-            {proposal?.status === "Signed" ? (
-              <>
-                <Typography sx={{ mb: 2 }} color="text.secondary">
-                  Signed on {new Date(proposal.signedAt).toLocaleString()}
-                </Typography>
-
-                <Typography fontWeight="bold">Signature:</Typography>
-
-                {proposal?.signature?.startsWith("data:image") ? (
-                  <img
-                    src={proposal.signature}
-                    alt="signature"
-                    style={{
-                      maxWidth: 300,
-                      border: "1px solid #ddd",
-                      background: "white",
-                      padding: 10,
-                      marginTop: 10,
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      fontSize: 24,
-                      fontFamily: "cursive",
-                      border: "1px solid #ccc",
-                      padding: 20,
-                      background: "#f7f7f7",
-                      marginTop: 10,
-                      borderRadius: 6,
-                    }}
-                  >
-                    {proposal.signature}
-                  </div>
-                )}
-
-                <Button color="primary"  sx={{
-              backgroundColor: 'text.menu',
-              mt: 2, opacity: 0.7,
-              color: 'primary.contrastText',
-              '&:hover': {
-                backgroundColor: 'menu.dark',
-                boxShadow: 1,
-              },
-              transition: 'background-color 0.2s ease'
-            }} disabled >
-                  Already Signed
-                </Button>
-              </>
-            ) : (
-              <>
-                {/* Signature type selector */}
-                {/* <ButtonGroup sx={{ mb: 2 }}>
-                  <Button
-                    variant={signatureType === "draw" ? "contained" : "outlined"}
-                    onClick={() => setSignatureType("draw")}
-                  >
-                    Draw
-                  </Button>
-                  <Button
-                    variant={signatureType === "type" ? "contained" : "outlined"}
-                    onClick={() => setSignatureType("type")}
-                  >
-                    Type
-                  </Button>
-                </ButtonGroup> */}
-<ButtonGroup sx={{ mb: 2 }}>
-  <Button
-    color="primary"
-    sx={{
-      backgroundColor:
-        signatureType === "draw" ? "primary.main" : "text.menu",
-      color:
-        signatureType === "draw"
-          ? "primary.contrastText"
-          : "primary.contrastText",
-      "&:hover": {
-        backgroundColor:
-          signatureType === "draw" ? "primary.dark" : "menu.dark",
-        boxShadow: 1,
-      },
-      transition: "background-color 0.2s ease"
-    }}
-    onClick={() => setSignatureType("draw")}
-  >
-    Draw
-  </Button>
-
-  <Button
-    color="primary"
-    sx={{
-      backgroundColor:
-        signatureType === "type" ? "primary.main" : "text.menu",
-      color:
-        signatureType === "type"
-          ? "primary.contrastText"
-          : "primary.contrastText",
-      "&:hover": {
-        backgroundColor:
-          signatureType === "type" ? "primary.dark" : "menu.dark",
-        boxShadow: 1,
-      },
-      transition: "background-color 0.2s ease"
-    }}
-    onClick={() => setSignatureType("type")}
-  >
-    Type
-  </Button>
-</ButtonGroup>
-
-
-
-                {/* Draw Mode */}
-                {signatureType === "draw" && (
-                  <>
-                    <SignatureCanvas
-                      ref={sigCanvas}
-                      penColor="black"
-                      canvasProps={{
-                        width: 500,
-                        height: 200,
-                        style: {
-                          border: "1px solid #ccc",
-                          background: "#fafafa",
-                          borderRadius: 6,
-                        },
-                      }}
-                    />
-
-                    <Box sx={{ display: "flex", gap: 1, my: 2 }}>
-                      <Button variant="outlined" onClick={() => sigCanvas.current.clear()}>
-                        Clear
-                      </Button>
-                      <Button
-                        // variant="contained"
-                        color="primary"  sx={{
-              backgroundColor: 'text.menu',
-              color: 'primary.contrastText',
-              '&:hover': {
-                backgroundColor: 'menu.dark',
-                boxShadow: 1,
-              },
-              transition: 'background-color 0.2s ease'
-            }}
-                        onClick={() => {
-                          if (sigCanvas.current.isEmpty()) {
-                            alert("Please draw your signature first");
-                            return;
+                        {/* Complete */}
+                        <button
+                          type="button"
+                          disabled={
+                            isSigning ||
+                            !termsAccepted ||
+                            (signatureType === "draw" ? !signatureData : !typedSignature) ||
+                            proposal?.status === "Signed"
                           }
-                          const signature = sigCanvas.current.toDataURL("image/png");
-                          setSignatureData(signature);
-                        }}
-                      >
-                        Save Signature
-                      </Button>
-                    </Box>
-
-                    {signatureData && (
-                      <>
-                        <Typography variant="body2" color="success.main" sx={{ mb: 1 }}>
-                          ✓ Signature saved successfully
-                        </Typography>
-                        <img
-                          src={signatureData}
-                          alt="preview"
-                          style={{
-                            maxWidth: 300,
-                            border: "1px solid #ddd",
-                            padding: 10,
-                            background: "white",
-                          }}
-                        />
-                      </>
-                    )}
-                  </>
-                )}
-
-                {/* Type Mode */}
-                {signatureType === "type" && (
-                  <>
-                    <TextField
-                      fullWidth
-                      placeholder="Type your full name"
-                      value={typedSignature}
-                      onChange={(e) => setTypedSignature(e.target.value)}
-                      sx={{ mb: 2 }}
-                      InputProps={{
-                        style: { fontFamily: "cursive", fontSize: 22 },
-                      }}
-                    />
-
-                    {typedSignature && (
-                      <div
-                        style={{
-                          fontSize: 24,
-                          fontFamily: "cursive",
-                          border: "1px solid #ccc",
-                          padding: 20,
-                          background: "#fafafa",
-                          borderRadius: 6,
-                          marginBottom: 20,
-                        }}
-                      >
-                        {typedSignature}
+                          onClick={handleCompleteProposal}
+                          className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isSigning ? "Saving…" : "Complete Proposal"}
+                        </button>
                       </div>
                     )}
-                  </>
-                )}
-
-                {/* Accept terms checkbox */}
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={termsAccepted}
-                      onChange={(e) => setTermsAccepted(e.target.checked)}
-                      disabled={proposal?.status === "Signed"}
-                    />
-                  }
-                  label="I accept the Terms & Conditions"
-                  sx={{ mt: 2 }}
-                />
-
-                {/* Complete button */}
-                <Button
-                  // variant="contained"
-                  color="primary"  sx={{
-              backgroundColor: 'text.menu',
-              color: 'primary.contrastText',
-              '&:hover': {
-                backgroundColor: 'menu.dark',
-                boxShadow: 1,
-              },
-              transition: 'background-color 0.2s ease'
-            }}
-                  // sx={{ mt: 2 }}
-                  disabled={
-                    isSigning ||
-                    !termsAccepted ||
-                    (signatureType === "draw" ? !signatureData : !typedSignature) ||
-                    proposal?.status === "Signed"
-                  }
-                  onClick={handleCompleteProposal}
-                >
-                  {isSigning ? "Saving..." : "Complete Proposal"}
-                </Button>
-              </>
-            )}
-          </Box>
-        </Box>
-      </DialogContent>
-    </Dialog>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </>
   );
 };
 

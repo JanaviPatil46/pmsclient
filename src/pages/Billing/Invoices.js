@@ -16,21 +16,34 @@ const Invoices = () => {
   const [selected, setSelected] = useState([]);
   const [accountName, setAccountName]=useState("")
      const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
-const [anchorEl, setAnchorEl] = useState(null);
+const [menuPos, setMenuPos] = useState(null);
 const [selectedInvoice, setSelectedInvoice] = useState(null);
+const menuRef = useRef(null);
 
-const open = Boolean(anchorEl);
+const open = Boolean(menuPos);
 
 const handleMenuOpen = (event, invoice) => {
-  event.stopPropagation(); // prevent row selection
-  setAnchorEl(event.currentTarget);
+  event.stopPropagation();
+  const rect = event.currentTarget.getBoundingClientRect();
+  setMenuPos({ top: rect.bottom + window.scrollY, left: rect.right + window.scrollX });
   setSelectedInvoice(invoice);
 };
 
 const handleMenuClose = () => {
-  setAnchorEl(null);
+  setMenuPos(null);
   setSelectedInvoice(null);
 };
+
+useEffect(() => {
+  if (!open) return;
+  const handleClickOutside = (e) => {
+    if (menuRef.current && !menuRef.current.contains(e.target)) {
+      handleMenuClose();
+    }
+  };
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => document.removeEventListener("mousedown", handleClickOutside);
+}, [open]);
  const handlePrint = async (_id) => {
     try {
       const response = await fetch(
@@ -645,33 +658,13 @@ const hasPaidInvoiceSelected = BillingInvoice
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{invoice.lastPaid}</td>
                     <td className="px-4 py-3 text-muted-foreground max-w-[180px] truncate" title={invoice.description}>{invoice.description}</td>
-                    <td className="px-4 py-3 relative" onClick={(e) => e.stopPropagation()}>
-                      <div className="relative inline-block">
-                        <button
-                          className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                          onClick={(e) => handleMenuOpen(e, invoice)}
-                        >
-                          <MoreVertical size={15} />
-                        </button>
-                        {open && selectedInvoice?._id === invoice._id && (
-                          <div className="absolute right-0 z-50 mt-1 w-36 rounded-lg border border-border bg-card shadow-lg text-sm overflow-hidden">
-                            <button
-                              className="w-full px-4 py-2 text-left text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                              disabled={selectedInvoice?.invoiceStatus?.toLowerCase() !== "paid"}
-                              onClick={() => { handleDownload(selectedInvoice._id); handleMenuClose(); }}
-                            >
-                              Download
-                            </button>
-                            <button
-                              className="w-full px-4 py-2 text-left text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                              disabled={selectedInvoice?.invoiceStatus?.toLowerCase() !== "paid"}
-                              onClick={() => { handlePrint(selectedInvoice._id); handleMenuClose(); }}
-                            >
-                              Print
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                    <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={(e) => handleMenuOpen(e, invoice)}
+                      >
+                        <MoreVertical size={15} />
+                      </button>
                     </td>
                   </tr>
                 );
@@ -680,6 +673,34 @@ const hasPaidInvoiceSelected = BillingInvoice
           </table>
         </div>
       </div>
+      {/* Fixed dropdown — renders outside overflow containers */}
+      {open && menuPos && selectedInvoice && (
+        <div
+          ref={menuRef}
+          style={{
+            position: "fixed",
+            top: menuPos.top,
+            left: menuPos.left - 144,
+            zIndex: 9999,
+          }}
+          className="w-36 rounded-lg border border-border bg-card shadow-xl text-sm overflow-hidden"
+        >
+          <button
+            className="w-full px-4 py-2.5 text-left text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            disabled={selectedInvoice?.invoiceStatus?.toLowerCase() !== "paid"}
+            onClick={() => { handleDownload(selectedInvoice._id); handleMenuClose(); }}
+          >
+            Download
+          </button>
+          <button
+            className="w-full px-4 py-2.5 text-left text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            disabled={selectedInvoice?.invoiceStatus?.toLowerCase() !== "paid"}
+            onClick={() => { handlePrint(selectedInvoice._id); handleMenuClose(); }}
+          >
+            Print
+          </button>
+        </div>
+      )}
     </div>
   );
 };

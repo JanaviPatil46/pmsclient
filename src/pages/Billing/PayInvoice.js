@@ -1,21 +1,8 @@
-import { useLocation,useNavigate } from "react-router-dom";
-import {
-  Box,
-  Typography,
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-  Divider,
-  TextField,
-  Autocomplete,
-  Button,
-  InputLabel,
-} from "@mui/material";
+import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useState } from "react";
 import { toast } from "material-react-toastify";
+import { CreditCard, ChevronLeft } from "lucide-react";
 const PayInvoice = () => {
   const INVOICE_API = process.env.REACT_APP_INVOICES_URL;
       const accountHolderTypeOptions = [
@@ -185,178 +172,208 @@ navigate("/client/billing")
   }
 };
 
+  const fieldClass = (err) =>
+    `w-full rounded-lg border px-3 py-2 text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 ${err ? "border-destructive" : "border-border"}`;
+
+  const totalAmount = selectedInvoices.reduce((sum, row) => sum + row.summary.total, 0);
+
   return (
-    <Box   sx={{
-        width: "100%",
-        maxWidth: { sm: "100%", md: "1700px" },
-        flexGrow: 1,
-       
-        p: 1,
-      }}>
-      <Typography variant="h4" gutterBottom>
-        Paying Invoices
-      </Typography>
+    <div className="w-full max-w-[1700px] p-4 space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-2">
+        <CreditCard size={22} className="text-primary shrink-0" />
+        <h1 className="text-2xl font-bold text-foreground">Pay Invoices</h1>
+      </div>
 
-      <Box sx={{ mb: 3 }}>
-        <InputLabel sx={{ fontWeight: "bold", mb: 0.5 }}>Client</InputLabel>
-        <Typography variant="subtitle1">{accountName}</Typography>
-      </Box>
+      {/* Client */}
+      {accountName && (
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">Client</p>
+          <p className="text-sm font-medium text-foreground">{accountName}</p>
+        </div>
+      )}
 
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Invoice #</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell>Amount</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {selectedInvoices.map((row) => (
-            <TableRow key={row._id}>
-              <TableCell>{row.invoicenumber}</TableCell>
-              <TableCell>{row.invoiceStatus}</TableCell>
-              <TableCell>${row.summary.total.toFixed(2)}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      {/* Invoice table */}
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/40">
+                {["Invoice #", "Status", "Amount"].map((h) => (
+                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {selectedInvoices.map((row) => (
+                <tr key={row._id} className="hover:bg-muted/30 transition-colors">
+                  <td className="px-4 py-3 font-medium text-foreground">{row.invoicenumber}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{row.invoiceStatus}</td>
+                  <td className="px-4 py-3 font-medium text-foreground">${row.summary.total.toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="flex justify-end px-4 py-3 border-t border-border bg-muted/20 text-sm font-semibold text-foreground">
+          Total: ${totalAmount.toFixed(2)}
+        </div>
+      </div>
 
-      <Box sx={{ mt: 3 }}>
-        <strong>Total Amount:</strong>{" "}
-        ${selectedInvoices.reduce((sum, row) => sum + row.summary.total, 0).toFixed(2)}
-      </Box>
+      <hr className="border-border" />
 
-      <Divider sx={{ my: 3 }} />
+      {/* Payment Details */}
+      <div className="rounded-xl border border-border bg-card shadow-sm p-5 space-y-4 max-w-lg">
+        <h2 className="text-base font-semibold text-foreground">Payment Details</h2>
 
-      <Typography variant="h5" gutterBottom>
-        Payment Details
-      </Typography>
+        {/* Routing Number */}
+        <div>
+          <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+            Routing Number
+          </label>
+          <input
+            type="text"
+            placeholder="Routing Number"
+            value={routingNumber}
+            className={fieldClass(errors.routingNumber)}
+            readOnly
+          />
+          {errors.routingNumber && (
+            <p className="mt-1 text-xs text-destructive">{errors.routingNumber}</p>
+          )}
+        </div>
 
-      <Box mt={2}>
-        <InputLabel>Routing Number</InputLabel>
-        <TextField
-          fullWidth
-          placeholder="Routing Number"
-          size="small"
-          value={routingNumber}
-        //   onChange={(e) => setRoutingNumber(e.target.value)}
-          sx={{ mb: 2 }}
-        />
+        {/* Account Number */}
+        <div>
+          <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+            Bank Account Number
+          </label>
+          <input
+            type="text"
+            placeholder="Account Number"
+            value={accountNumber}
+            className={fieldClass(errors.accountNumber)}
+            readOnly
+          />
+          {errors.accountNumber && (
+            <p className="mt-1 text-xs text-destructive">{errors.accountNumber}</p>
+          )}
+        </div>
 
-        <InputLabel>Bank Account Number</InputLabel>
-        <TextField
-          fullWidth
-          placeholder="Account Number"
-          size="small"
-          value={accountNumber}
-        //   onChange={(e) => setAccountNumber(e.target.value)}
-          sx={{ mb: 2 }}
-        />
-
-        <InputLabel>Account Holder Type</InputLabel>
-        <Autocomplete
-        //   size="small"
-          options={accountHolderTypeOptions}
-          value={selectedAccountHolderType}
-          onChange={handleAccountHolderTypeChange}
-          getOptionLabel={(option) => option.label}
-          renderInput={(params) => <TextField {...params} placeholder="Account Holder Type" />}
-        />
-
-        {selectedAccountHolderType?.value === "individual" && (
-          <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-            {/* <TextField
-              fullWidth
-              label="First Name"
-              size="small"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-            />
-            <TextField
-              fullWidth
-              label="Last Name"
-              size="small"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-            /> */}
-            <TextField
-  fullWidth
-  // label="First Name"
-  placeholder="First Name"
-  size="small"
-  value={firstName}
-  error={!!errors.firstName}
-  helperText={errors.firstName}
-  onChange={(e) => setFirstName(e.target.value)}
-/>
-
-<TextField
-  fullWidth
-  placeholder="Last Name"
-  size="small"
-  value={lastName}
-  error={!!errors.lastName}
-  helperText={errors.lastName}
-  onChange={(e) => setLastName(e.target.value)}
-/>
-
-          </Box>
-        )}
-
-        {selectedAccountHolderType?.value === "business" && (
-          // <TextField
-          //   fullWidth
-          //   label="Company Name"
-          //   size="small"
-          //   value={companyName}
-          //   onChange={(e) => setCompanyName(e.target.value)}
-          //   sx={{ mt: 2 }}
-          // />
-          <TextField
-  fullWidth
-  placeholder="Company Name"
-  size="small"
-  value={companyName}
-  error={!!errors.companyName}
-  helperText={errors.companyName}
-  onChange={(e) => setCompanyName(e.target.value)}
-  sx={{ mt: 2 }}
-/>
-
-        )}
-
-        <InputLabel sx={{ mt: 2 }}>Account Type</InputLabel>
-        <Autocomplete
-        //   size="small"
-          options={accountTypeOptions}
-          value={selectedAccountType}
-          onChange={handleAccountTypeChange}
-          getOptionLabel={(option) => option.label}
-          renderInput={(params) => <TextField {...params} placeholder="Account Type" />}
-        />
-      </Box>
-
-      <Box mt={4} display="flex" gap={2}>
-        <Button variant="outlined" onClick={() => window.history.back()}>
-          Cancel
-        </Button>
-        <Button 
-        // variant="contained"
-        size="small"
-        sx={{
-              backgroundColor: 'text.menu',
-              color: 'primary.contrastText',
-              '&:hover': {
-                backgroundColor: 'menu.dark',
-                boxShadow: 1,
-              },
-              transition: 'background-color 0.2s ease'
+        {/* Account Holder Type */}
+        <div>
+          <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+            Account Holder Type
+          </label>
+          <select
+            value={selectedAccountHolderType?.value}
+            onChange={(e) => {
+              const found = accountHolderTypeOptions.find((o) => o.value === e.target.value);
+              setSelectedAccountHolderType(found);
             }}
-         color="primary" onClick={handleConfirmPayment}>
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+          >
+            {accountHolderTypeOptions.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Individual fields */}
+        {selectedAccountHolderType?.value === "individual" && (
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                First Name
+              </label>
+              <input
+                type="text"
+                placeholder="First Name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className={fieldClass(errors.firstName)}
+              />
+              {errors.firstName && (
+                <p className="mt-1 text-xs text-destructive">{errors.firstName}</p>
+              )}
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                Last Name
+              </label>
+              <input
+                type="text"
+                placeholder="Last Name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className={fieldClass(errors.lastName)}
+              />
+              {errors.lastName && (
+                <p className="mt-1 text-xs text-destructive">{errors.lastName}</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Business field */}
+        {selectedAccountHolderType?.value === "business" && (
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+              Company Name
+            </label>
+            <input
+              type="text"
+              placeholder="Company Name"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              className={fieldClass(errors.companyName)}
+            />
+            {errors.companyName && (
+              <p className="mt-1 text-xs text-destructive">{errors.companyName}</p>
+            )}
+          </div>
+        )}
+
+        {/* Account Type */}
+        <div>
+          <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+            Account Type
+          </label>
+          <select
+            value={selectedAccountType?.value}
+            onChange={(e) => {
+              const found = accountTypeOptions.find((o) => o.value === e.target.value);
+              setSelectedAccountType(found);
+            }}
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+          >
+            {accountTypeOptions.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-3 pt-2">
+        <button
+          type="button"
+          onClick={() => window.history.back()}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+        >
+          <ChevronLeft size={15} />
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={handleConfirmPayment}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+        >
+          <CreditCard size={15} />
           Confirm Payment
-        </Button>
-      </Box>
-    </Box>
+        </button>
+      </div>
+    </div>
   );
 };
 

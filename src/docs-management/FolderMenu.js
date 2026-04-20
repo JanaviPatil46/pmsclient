@@ -1,14 +1,5 @@
-// src/components/FolderMenu.jsx
-import React from "react";
-import { Menu, MenuItem } from "@mui/material";
-import {
-  DriveFileMove as DriveFileMoveIcon,
-  Lock as LockIcon,
-  LockOpen as LockOpenIcon,
-  Delete as DeleteIcon,
-} from "@mui/icons-material";
-import { Eye } from "lucide-react";
-// import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
+import React, { useEffect, useRef } from "react";
+import { FolderPlus, Upload, FolderUp, Pencil, MoveRight, Trash2 } from "lucide-react";
 
 const FolderMenu = ({
   anchorEl,
@@ -24,88 +15,62 @@ const FolderMenu = ({
   onToggleReadOnly,
   onDelete,
 }) => {
+  const menuRef = useRef(null);
   const isLocked = selectedItem?.meta?.readOnly === true;
-  const isRead = selectedItem?.meta?.readStatus === true;
+
+  useEffect(() => {
+    if (!open) return;
+    const handle = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target) && e.target !== anchorEl) {
+        onClose();
+      }
+    };
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [open, anchorEl, onClose]);
+
+  if (!open || !anchorEl) return null;
+
+  const rect = anchorEl.getBoundingClientRect();
+  const style = {
+    position: "fixed",
+    top: rect.bottom + 4,
+    right: window.innerWidth - rect.right,
+    zIndex: 1300,
+    minWidth: "168px",
+  };
+
+  const Item = ({ onClick, disabled, danger, icon: Icon, children }) => (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() => { if (!disabled) { onClick(); onClose(); } }}
+      className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors rounded-md
+        ${disabled ? "opacity-40 cursor-not-allowed text-muted-foreground"
+          : danger ? "text-destructive hover:bg-destructive/10"
+          : "text-foreground hover:bg-muted"
+        }`}
+    >
+      {Icon && <Icon size={14} className="shrink-0" />}
+      {children}
+    </button>
+  );
 
   return (
-    <Menu
-      anchorEl={anchorEl}
-      open={open}
-      onClose={onClose}
-      anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      transformOrigin={{ vertical: "top", horizontal: "right" }}
+    <div
+      ref={menuRef}
+      style={style}
+      className="rounded-lg border border-border bg-popover shadow-lg p-1 animate-in fade-in-0 zoom-in-95"
     >
-      <MenuItem
-        disabled={isLocked}
-        onClick={() => {
-          onCreateFolder();
-          onClose();
-        }}
-        sx={{ fontSize: "0.8rem", py: 0.5 }}
-      >
-        <DriveFileMoveIcon fontSize="small" sx={{ mr: 0.5 }} />
-        New Folder
-      </MenuItem>
-
-      <MenuItem
-        disabled={isLocked}
-        onClick={() => {
-          onUploadFile();
-          onClose();
-        }}
-        sx={{ fontSize: "0.8rem", py: 0.5 }}
-      >
-        <DriveFileMoveIcon fontSize="small" sx={{ mr: 0.5 }} />
-        Upload File
-      </MenuItem>
-
-      <MenuItem
-        disabled={isLocked}
-        onClick={() => {
-          onUploadFolder();
-          onClose();
-        }}
-        sx={{ fontSize: "0.8rem", py: 0.5 }}
-      >
-        <DriveFileMoveIcon fontSize="small" sx={{ mr: 0.5 }} />
-        Upload Folder
-      </MenuItem>
-
-      <MenuItem
-        disabled={isLocked}
-        onClick={() => {
-          onRename();
-          onClose();
-        }}
-        sx={{ fontSize: "0.8rem", py: 0.5 }}
-      >
-        <DriveFileMoveIcon fontSize="small" sx={{ mr: 0.5 }} />
-        Rename
-      </MenuItem>
-
-      <MenuItem
-        disabled={isLocked}
-        onClick={() => {
-          onMove();
-          onClose();
-        }}
-      >
-        <DriveFileMoveIcon fontSize="small" sx={{ mr: 0.5 }} />
-        Move
-      </MenuItem>
-
-      <MenuItem
-        disabled={isLocked}
-        onClick={() => {
-          onDelete(selectedItem);
-          onClose();
-        }}
-        sx={{ fontSize: "0.8rem", py: 0.5 }}
-      >
-        <DeleteIcon fontSize="small" sx={{ mr: 0.5 }} />
-        <span style={{ color: "red" }}>Delete</span>
-      </MenuItem>
-    </Menu>
+      <Item icon={FolderPlus} disabled={isLocked} onClick={onCreateFolder}>New Folder</Item>
+      <Item icon={Upload} disabled={isLocked} onClick={onUploadFile}>Upload File</Item>
+      <Item icon={FolderUp} disabled={isLocked} onClick={onUploadFolder}>Upload Folder</Item>
+      <div className="my-1 border-t border-border" />
+      <Item icon={Pencil} disabled={isLocked} onClick={onRename}>Rename</Item>
+      <Item icon={MoveRight} disabled={isLocked} onClick={onMove}>Move</Item>
+      <div className="my-1 border-t border-border" />
+      <Item icon={Trash2} disabled={isLocked} danger onClick={() => onDelete(selectedItem)}>Delete</Item>
+    </div>
   );
 };
 

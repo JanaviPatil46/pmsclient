@@ -11,9 +11,15 @@ import axios from "axios";
 export default function Dashboard(props) {
   const navigate = useNavigate();
   const { setLoginData } = useContext(LoginContext);
-const [loading, setLoading] = useState(true);
-  // const [data, setData] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [sideMenuCollapsed, setSideMenuCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
    useEffect(() => {
     validateSession();
@@ -46,17 +52,22 @@ const [loading, setLoading] = useState(true);
 
   if (loading) return <div className="p-10"></div>;
 
+  const sidebarWidth = sideMenuCollapsed ? 72 : 240;
+
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-background">
       <SideMenu
         collapsed={sideMenuCollapsed}
         onCollapseToggle={() => setSideMenuCollapsed(!sideMenuCollapsed)}
       />
       <AppNavbar />
 
-      {/* Main content */}
-      <main className="w-full">
-        <div className="flex items-center mx-3 mt-8 md:mt-0">
+      {/* Main content — offset by sidebar width on md+ so fixed sidebar doesn't overlap */}
+      <main
+        className="flex flex-col flex-1 min-w-0 transition-[margin] duration-300 ease-in-out pt-14 md:pt-0"
+        style={{ marginLeft: isMobile ? 0 : sidebarWidth }}
+      >
+        <div className="hidden md:flex items-center px-3">
           <Header />
         </div>
 

@@ -1,25 +1,10 @@
-
-
 import { useState, useContext, useEffect } from "react";
-import {
-  Box,
-
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-  Typography,
-  Paper,
-  TableContainer,
-  Chip,
-  Tooltip,
-} from "@mui/material";
 import { LoginContext } from "../../context/Context";
 import axios from "axios";
 import ProposalPreviewDialog from "../proposals//ProposalPreviewDialog";
 import { data } from "react-router-dom";
 import { toast } from "material-react-toastify";
+import { FileText } from "lucide-react";
 const Proposals = () => {
   const PROPOSAL_API = process.env.REACT_APP_PROPOSAL_URL
     const ACCOUNT_API = process.env.REACT_APP_ACCOUNTS_URL;
@@ -59,112 +44,90 @@ const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
 fetchPrprosalsAllData(accountId);
   };
 
+  const statusConfig = {
+    Pending: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
+    Signed: "bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-400",
+    "Partially Signed": "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+  };
+
   return (
-    <Box sx={{ width: "100%", maxWidth: "1700px", p: 2 }}>
-      <Typography variant="h4" fontWeight={600} gutterBottom>
-        Proposals & ELs
-      </Typography>
+    <div className="w-full max-w-[1700px] p-4 space-y-6">
+      {/* Page heading */}
+      <div className="flex items-center gap-2">
+        <FileText size={22} className="text-primary shrink-0" />
+        <h1 className="text-2xl font-bold text-foreground">Proposals & ELs</h1>
+      </div>
 
-     
+      {/* Table card */}
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/40">
+                {["Proposal Name", "Status", "Date"].map((label) => (
+                  <th
+                    key={label}
+                    className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide"
+                  >
+                    {label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {proposalsList.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                    No proposals found.
+                  </td>
+                </tr>
+              ) : (
+                proposalsList.map((row) => (
+                  <tr
+                    key={row._id}
+                    className="hover:bg-muted/40 transition-colors cursor-pointer"
+                    onClick={() => handleOpenDialog(row)}
+                  >
+                    <td className="px-4 py-3">
+                      <span
+                        title="View Details"
+                        className="font-medium text-foreground hover:text-primary transition-colors"
+                      >
+                        {row.general.proposalName || "Untitled"}
+                      </span>
+                    </td>
 
-<Box>
-  <TableContainer component={Paper} sx={{ overflow: "visible" }}>
-    <Table sx={{ minWidth: 800 }} aria-label="proposals table">
-      <TableHead>
-        <TableRow>
-          {["Proposal Name", "Status", "Date", ].map((label, index) => (
-            <TableCell
-              key={index}
-              sx={{
-                fontSize: "14px",
-                fontWeight: "bold",
-                padding: "16px",
-                minWidth: 120,
-              }}
-            >
-              {label}
-            </TableCell>
-          ))}
-        </TableRow>
-      </TableHead>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                          statusConfig[row.status] ?? "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {row.status}
+                      </span>
+                    </td>
 
-      <TableBody>
-        {proposalsList.map((row) => (
-          <TableRow
-            key={row._id}
-            hover
-            sx={{
-              cursor: "pointer",
-              "&:hover": {
-                backgroundColor: "#f4f4f4",
-              },
-            }}
-          >
-            <TableCell>
-              <Tooltip title="View Details">
-                <Typography
-                  component="h2"
-                  variant="subtitle2"
-                  sx={{ cursor: "pointer" }}
-                  onClick={() => handleOpenDialog(row)}
-                >
-                  {row.general.proposalName || "Untitled"}
-                </Typography>
-              </Tooltip>
-            </TableCell>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {new Date(row.createdAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-<TableCell>
-  <Chip
-    label={row.status}
-   
-         color="#fff"
-    sx={{ 
-      border: "none",
-      ...(row.status === "Pending" && {
-        // backgroundColor: "#ffc107",
-        backgroundColor:"#FFA726",
-           color:"#fff"
-       
-      }),
-       ...(row.status === "Signed" && {
-        // backgroundColor: "#008000",
-        backgroundColor:"#0288D1",
-            color:"#fff"
-        
-      }),
-       ...(row.status === "Partially Signed" && {
-        // backgroundColor: "#FF0000",
-        backgroundColor:'#FBC02D',
-        color:"#fff"
-       
-      })
-    }}
-    size="small"
-  />
-</TableCell>
-            <TableCell>
-              {new Date(row.createdAt).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
-            </TableCell>
-
-           
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  </TableContainer>
-</Box>
-
-      
-     <ProposalPreviewDialog
-    open={openDialog}
-    handleClose={handleCloseDialog}
-    proposal={selectedProposal}
-  />
-    </Box>
+      <ProposalPreviewDialog
+        open={openDialog}
+        handleClose={handleCloseDialog}
+        proposal={selectedProposal}
+      />
+    </div>
   );
 };
 

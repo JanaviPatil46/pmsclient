@@ -33,8 +33,6 @@
 
 
 import React from "react";
-import { Button } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 
 const SelectableButton = ({
   selected = false,
@@ -42,32 +40,21 @@ const SelectableButton = ({
   onClick,
   children,
 }) => {
-  const theme = useTheme();
-
   return (
-    <Button
-      variant={selected ? "" : "outlined"}
+    <button
+      type="button"
       disabled={disabled}
       onClick={() => !disabled && onClick?.()}
-      sx={{
-        borderRadius: "15px",
-        transition: "background-color 0.2s ease",
-        ...(selected && {
-          backgroundColor: theme.palette.text.menu,        // teal
-          color: theme.palette.primary.contrastText,       // white (or theme-contrast)
-          "&:hover": {
-            backgroundColor: theme.palette.menu.dark,      // darker teal on hover
-            boxShadow: 1,
-          },
-          "&.Mui-disabled": {
-            backgroundColor: theme.palette.text.menu,      // stay teal even if disabled
-            color: theme.palette.primary.contrastText,
-          },
-        }),
-      }}
+      className={`rounded-full px-4 py-1.5 text-sm font-medium border transition-colors duration-200
+        ${selected
+          ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90 disabled:bg-primary disabled:text-primary-foreground disabled:opacity-70"
+          : "bg-transparent text-foreground border-border hover:bg-muted disabled:opacity-50"
+        }
+        disabled:cursor-not-allowed
+      `}
     >
       {children}
-    </Button>
+    </button>
   );
 };
 

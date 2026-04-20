@@ -1,22 +1,7 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  IconButton,
-  Typography,
-  Box,
-  List,
-  ListItemButton,
-  ListItemText,
-  Divider,
-  Button,
-  ButtonGroup,
-  TextField,
-} from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
 import SignatureCanvas from "react-signature-canvas";
 import { LoginContext } from "../../context/Context";
+import { X, CheckCircle } from "lucide-react";
 
 const ProposalDialog = ({ open, handleClose, proposal, onProposalSigned }) => {
   const { logindata } = useContext(LoginContext);
@@ -211,381 +196,252 @@ const ProposalDialog = ({ open, handleClose, proposal, onProposalSigned }) => {
     key: "signature",
     label: "Sign & accept",
     content: (
-      <div
-        style={{
-          fontFamily: "Arial, sans-serif",
-          color: "#1e1e1e",
-          maxWidth: "500px",
-        }}
-      >
-        <div style={{ textAlign: "center", marginBottom: "30px" }}>
-          {isSigned ? (
-            <>
-              <p style={{ color: "#666", marginBottom: "20px" }}>
-                Signed on {new Date(proposal.signedAt).toLocaleString()}
-              </p>
-              <div style={{ marginBottom: "20px" }}>
-                <p>Signature:</p>
-                {existingSignature.startsWith("data:image") ? (
-                  <img
-                    src={existingSignature}
-                    alt="Saved signature"
-                    style={{
-                      maxWidth: "300px",
-                      border: "1px solid #e5e7eb",
-                      backgroundColor: "white",
-                      padding: "10px",
+      <div className="max-w-lg">
+        {isSigned ? (
+          <div className="space-y-5">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <CheckCircle size={16} className="text-green-500" />
+              Signed on {new Date(proposal.signedAt).toLocaleString()}
+            </div>
+
+            <div>
+              <p className="text-sm font-medium text-foreground mb-2">Signature:</p>
+              {existingSignature.startsWith("data:image") ? (
+                <img
+                  src={existingSignature}
+                  alt="Saved signature"
+                  className="max-w-xs rounded-lg border border-border bg-white p-2"
+                />
+              ) : (
+                <div className="rounded-lg border border-border bg-muted/30 px-5 py-4 text-2xl font-[cursive] text-foreground">
+                  {existingSignature}
+                </div>
+              )}
+            </div>
+
+            <label className="flex items-start gap-2.5 cursor-not-allowed select-none">
+              <input type="checkbox" checked disabled className="mt-1 accent-primary" />
+              <span className="text-sm text-muted-foreground">
+                Terms accepted on {new Date(proposal.signedAt).toLocaleString()}
+              </span>
+            </label>
+
+            <button
+              disabled
+              className="w-full rounded-lg bg-primary/50 px-4 py-2.5 text-sm font-semibold text-primary-foreground cursor-not-allowed opacity-60"
+            >
+              Already Signed
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-5">
+            <p className="text-sm text-muted-foreground text-center">Your signature</p>
+
+            {/* Toggle */}
+            <div className="flex rounded-lg border border-border overflow-hidden w-fit mx-auto">
+              {["draw", "type"].map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setSignatureType(t)}
+                  className={`px-5 py-2 text-sm font-medium transition-colors ${
+                    signatureType === t
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-background text-foreground hover:bg-muted"
+                  }`}
+                >
+                  {t === "draw" ? "Draw Signature" : "Type Signature"}
+                </button>
+              ))}
+            </div>
+
+            {/* Draw */}
+            {signatureType === "draw" && (
+              <div className="space-y-3">
+                <div className="rounded-lg border border-border bg-muted/20 overflow-hidden">
+                  <SignatureCanvas
+                    ref={sigCanvas}
+                    penColor="black"
+                    canvasProps={{
+                      width: 500,
+                      height: 200,
+                      className: "signature-canvas w-full",
+                      style: { background: "transparent" },
                     }}
                   />
-                ) : (
-                  <div
-                    style={{
-                      fontSize: "24px",
-                      fontFamily: "cursive",
-                      border: "1px solid #e5e7eb",
-                      padding: "20px",
-                      backgroundColor: "#f9fafb",
-                      borderRadius: "4px",
-                    }}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={clearSignature}
+                    disabled={isSigning}
+                    className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
                   >
-                    {existingSignature}
+                    Clear
+                  </button>
+                  <button
+                    type="button"
+                    onClick={saveSignature}
+                    disabled={isSigning}
+                    className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50"
+                  >
+                    Save Signature
+                  </button>
+                </div>
+                {signatureData && (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400">
+                      <CheckCircle size={14} />
+                      Signature saved
+                    </div>
+                    <img
+                      src={signatureData}
+                      alt="Saved signature"
+                      className="max-w-xs rounded-lg border border-border bg-white p-2"
+                    />
                   </div>
                 )}
               </div>
-              <div style={{ textAlign: "left", marginBottom: "25px" }}>
-                <label style={{ display: "flex", alignItems: "flex-start" }}>
-                  <input
-                    type="checkbox"
-                    checked={true}
-                    disabled
-                    style={{ marginRight: "10px", marginTop: "3px" }}
-                  />
-                  <span>
-                    Terms accepted on{" "}
-                    {new Date(proposal.signedAt).toLocaleString()}
-                  </span>
-                </label>
-              </div>
-              <Button
-                variant="contained"
-                disabled
-                style={{
-                  backgroundColor: "#3f80ff",
-                  color: "white",
-                  padding: "12px 24px",
-                  borderRadius: "6px",
-                  fontSize: "16px",
-                  width: "100%",
-                  fontWeight: "bold",
-                  opacity: 0.7,
-                }}
-              >
-                Already Signed
-              </Button>
-            </>
-          ) : (
-            <>
-              <p style={{ color: "#666", marginBottom: "20px" }}>
-                Your signature
-              </p>
+            )}
 
-              {/* Signature Type Toggle */}
-              <div
-                style={{
-                  marginBottom: "20px",
-                  display: "flex",
-                  justifyContent: "center",
-                }}
-              >
-                <ButtonGroup>
-                  <Button
-                    variant={
-                      signatureType === "draw" ? "contained" : "outlined"
-                    }
-                    onClick={() => setSignatureType("draw")}
-                  >
-                    Draw Signature
-                  </Button>
-                  <Button
-                    variant={
-                      signatureType === "type" ? "contained" : "outlined"
-                    }
-                    onClick={() => setSignatureType("type")}
-                  >
-                    Type Signature
-                  </Button>
-                </ButtonGroup>
-              </div>
-
-              {/* Drawing Signature */}
-              {signatureType === "draw" && (
-                <>
-                  <div
-                    style={{
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "4px",
-                      marginBottom: "20px",
-                      backgroundColor: "#f9fafb",
-                    }}
-                  >
-                    <SignatureCanvas
-                      ref={sigCanvas}
-                      penColor="black"
-                      canvasProps={{
-                        width: 500,
-                        height: 200,
-                        className: "signature-canvas",
-                        style: { background: "transparent" },
-                      }}
-                    />
+            {/* Type */}
+            {signatureType === "type" && (
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  placeholder="Type your name as signature"
+                  value={typedSignature}
+                  onChange={(e) => setTypedSignature(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-3 text-xl font-[cursive] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+                {typedSignature && (
+                  <div className="rounded-lg border border-border bg-muted/20 px-5 py-5 text-2xl font-[cursive] text-foreground">
+                    {typedSignature}
                   </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "10px",
-                      marginBottom: "20px",
-                    }}
-                  >
-                    <Button
-                      variant="outlined"
-                      onClick={clearSignature}
-                      style={{ flex: 1 }}
-                      disabled={isSigning}
-                    >
-                      Clear
-                    </Button>
-                    <Button
-                      color="primary"
-                      sx={{
-                        backgroundColor: "text.menu",
-                        color: "primary.contrastText",
-                        "&:hover": {
-                          backgroundColor: "menu.dark",
-                          boxShadow: 1,
-                        },
-                        transition: "background-color 0.2s ease",
-                      }}
-                      onClick={saveSignature}
-                      style={{ flex: 1 }}
-                    >
-                      Save Signature
-                    </Button>
-                  </div>
-
-                  {signatureData && (
-                    <div style={{ marginBottom: "20px" }}>
-                      <p>Your saved signature:</p>
-                      <img
-                        src={signatureData}
-                        alt="Saved signature"
-                        style={{
-                          maxWidth: "300px",
-                          border: "1px solid #e5e7eb",
-                          backgroundColor: "white",
-                          padding: "10px",
-                        }}
-                      />
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* Typed Signature */}
-              {signatureType === "type" && (
-                <>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    variant="outlined"
-                    placeholder="Type your name as signature"
-                    value={typedSignature}
-                    onChange={(e) => setTypedSignature(e.target.value)}
-                    sx={{
-                      marginBottom: "20px",
-                      "& .MuiOutlinedInput-root": {
-                        "& fieldset": {
-                          borderColor: "#e5e7eb",
-                        },
-                        "&:hover fieldset": {
-                          borderColor: "#d1d5db",
-                        },
-                      },
-                    }}
-                    InputProps={{
-                      style: {
-                        fontFamily: "cursive",
-                        //   fontFamily: '"Segoe Print", "Bradley Hand", cursive, sans-serif',
-                        fontSize: "20px",
-                        height: "60px",
-                      },
-                    }}
-                  />
-
-                  {typedSignature && (
-                    <div style={{ marginBottom: "20px" }}>
-                      <p>Your typed signature:</p>
-                      <div
-                        style={{
-                          fontSize: "24px",
-                          fontFamily: "cursive",
-                          border: "1px solid #e5e7eb",
-                          padding: "20px",
-                          backgroundColor: "#f9fafb",
-                          borderRadius: "4px",
-                        }}
-                      >
-                        {typedSignature}
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* Terms acceptance */}
-              <div style={{ textAlign: "left", marginBottom: "25px" }}>
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    cursor: "pointer",
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={termsAccepted}
-                    onChange={(e) => setTermsAccepted(e.target.checked)}
-                    style={{ marginRight: "10px", marginTop: "3px" }}
-                    disabled={isSigning}
-                  />
-                  <span>
-                    I accept the above terms and TaxDome's Terms of Service
-                  </span>
-                </label>
+                )}
               </div>
+            )}
 
-              {/* Complete button */}
-              <Button
-                color="primary"
-                onClick={handleCompleteProposal}
-                disabled={
-                  !termsAccepted ||
-                  (signatureType === "draw"
-                    ? !signatureData
-                    : !typedSignature) ||
-                  isSigning
-                }
-                sx={{
-                  backgroundColor: "text.menu",
-                  color: "primary.contrastText",
-                  "&:hover": {
-                    backgroundColor: "menu.dark",
-                    boxShadow: 1,
-                  },
-                  transition: "background-color 0.2s ease",
-                }}
-              >
-                {isSigning ? "Processing..." : "Complete"}
-              </Button>
-            </>
-          )}
-        </div>
+            {/* Terms */}
+            <label className="flex items-start gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                disabled={isSigning}
+                className="mt-1 accent-primary"
+              />
+              <span className="text-sm text-foreground">
+                I accept the above terms and TaxDome's Terms of Service
+              </span>
+            </label>
+
+            {/* Complete */}
+            <button
+              type="button"
+              onClick={handleCompleteProposal}
+              disabled={
+                !termsAccepted ||
+                (signatureType === "draw" ? !signatureData : !typedSignature) ||
+                isSigning
+              }
+              className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSigning ? "Processing…" : "Complete"}
+            </button>
+          </div>
+        )}
       </div>
     ),
   });
 
   return (
-    <Dialog fullScreen open={open} onClose={handleClose}>
-      <DialogTitle
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          px: 3,
-          py: 2,
-          borderBottom: "1px solid #ddd",
-        }}
-      >
-        <Typography variant="h6" component="p">
-          {proposal?.proposalname || "Proposal"}
-        </Typography>
-        <IconButton edge="end" onClick={handleClose}>
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-
-      <DialogContent sx={{ display: "flex", height: "100%", p: 0 }}>
-        {/* Left Navigation */}
-        <Box
-          sx={{
-            width: 250,
-            borderRight: "1px solid #ddd",
-            height: "100%",
-          }}
-        >
-          <List>
-            {sections.map((section) => (
-              <ListItemButton
-                key={section.key}
-                selected={selectedSection === section.key}
-                onClick={() => {
-                  setSelectedSection(section.key);
-                  setIsManualScroll(true); // lock
-                  sectionRefs.current[section.key]?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start",
-                  });
-
-                  // Unlock after smooth scroll finishes (~800ms)
-                  setTimeout(() => {
-                    setIsManualScroll(false);
-                  }, 800);
-                }}
-              >
-                <ListItemText primary={section.label} />
-              </ListItemButton>
-            ))}
-          </List>
-        </Box>
-
-        {/* Right Content - Scrollable All Sections */}
-        <Box
-          ref={contentRef} // Add the ref here
-          sx={{
-            flexGrow: 1,
-            p: 3,
-            overflowY: "auto",
-            scrollBehavior: "smooth",
-          }}
-        >
-          {sections.map((section) => (
-            <Box
-              key={section.key}
-              ref={(el) => (sectionRefs.current[section.key] = el)}
-              sx={{ mb: 6 }}
+    <>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-[1200] bg-black/50" onClick={handleClose} />
+          <div className="fixed inset-0 z-[1201] flex items-stretch justify-center pointer-events-none">
+            <div
+              className="pointer-events-auto flex flex-col bg-background shadow-2xl w-full max-w-5xl h-full overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
             >
-              <Typography
-                variant="h6"
-                component="p"
-                gutterBottom
-                sx={{ fontWeight: "600" }}
-              >
-                {section.label}
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              {typeof section.content === "string" ? (
-                <Box
-                  dangerouslySetInnerHTML={{ __html: section.content }}
-                  sx={{ lineHeight: 1.7 }}
-                />
-              ) : (
-                section.content
-              )}
-            </Box>
-          ))}
-        </Box>
-      </DialogContent>
-    </Dialog>
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card shrink-0">
+                <h1 className="text-lg font-semibold text-foreground truncate">
+                  {proposal?.proposalname || "Proposal"}
+                </h1>
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="flex flex-1 overflow-hidden">
+                {/* Left nav */}
+                <nav className="w-56 shrink-0 border-r border-border bg-card overflow-y-auto">
+                  <ul className="py-2">
+                    {sections.map((section) => (
+                      <li key={section.key}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedSection(section.key);
+                            setIsManualScroll(true);
+                            sectionRefs.current[section.key]?.scrollIntoView({
+                              behavior: "smooth",
+                              block: "start",
+                            });
+                            setTimeout(() => setIsManualScroll(false), 800);
+                          }}
+                          className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors rounded-none border-l-2 ${
+                            selectedSection === section.key
+                              ? "border-primary bg-primary/5 text-primary"
+                              : "border-transparent text-foreground hover:bg-muted hover:text-foreground"
+                          }`}
+                        >
+                          {section.label}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+
+                {/* Right scrollable content */}
+                <div
+                  ref={contentRef}
+                  className="flex-1 overflow-y-auto scroll-smooth px-8 py-6"
+                >
+                  {sections.map((section) => (
+                    <div
+                      key={section.key}
+                      ref={(el) => (sectionRefs.current[section.key] = el)}
+                      className="mb-10"
+                    >
+                      <h2 className="text-base font-semibold text-foreground mb-2">
+                        {section.label}
+                      </h2>
+                      <hr className="border-border mb-4" />
+                      {typeof section.content === "string" ? (
+                        <div
+                          className="prose prose-sm max-w-none text-foreground leading-relaxed"
+                          dangerouslySetInnerHTML={{ __html: section.content }}
+                        />
+                      ) : (
+                        section.content
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </>
   );
 };
 

@@ -1,35 +1,5 @@
-// import React,{useState} from 'react'
-import React, { useState, useEffect } from "react";
-import {
-  Typography,
-  Box,
-  Paper,
-  IconButton,
-  Menu,
-  MenuItem,
-  TableCell,
-  TableHead,
-  TableRow,
-  TableBody,
-  Table,
-  TableContainer,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-} from "@mui/material";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import DeleteIcon from "@mui/icons-material/Delete";
-import RestoreIcon from "@mui/icons-material/Restore";
-import { useParams } from "react-router-dom";
-import {
-  Folder as FolderClosedIcon,
-  FolderOpen as FolderOpenIcon,
-} from "lucide-react";
-
-import DownloadIcon from "@mui/icons-material/Download";
+import React, { useState, useEffect, useRef } from "react";
+import { Folder as FolderClosedIcon, FolderOpen as FolderOpenIcon, MoreVertical, Trash2, RotateCcw, Download, ChevronRight } from "lucide-react";
 import { toast } from "material-react-toastify";
 import {
   FaFilePdf,
@@ -284,17 +254,14 @@ const TrashedInfo = ({ meta }) => {
 
   const trashedAt = new Date(meta.trash.trashedAt);
   const now = new Date();
-
   const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
-
-  // Remaining time
   const diffTime = trashedAt.getTime() + TWO_HOURS_MS - now.getTime();
 
   if (diffTime <= 0) {
     return (
-      <Typography variant="caption" sx={{ fontWeight: "bold", color: "error.main" }}>
+      <span className="text-xs font-semibold text-destructive">
         Deleting soon
-      </Typography>
+      </span>
     );
   }
 
@@ -302,22 +269,18 @@ const TrashedInfo = ({ meta }) => {
   const hours = Math.floor(remainingMinutes / 60);
   const minutes = remainingMinutes % 60;
 
-  // Format trashed date
   const formattedDate = trashedAt
-    .toLocaleDateString("en-US", {
-      month: "short",
-      day: "2-digit",
-      year: "numeric",
-    })
+    .toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
     .toUpperCase()
     .replace(",", "");
 
   return (
-    <Typography variant="caption" sx={{ fontWeight: "bold" }}>
-      {formattedDate} (
-      {hours > 0 && `${hours} hr${hours > 1 ? "s" : ""} `}
-      {minutes > 0 && `${minutes} min${minutes > 1 ? "s" : ""}`} left)
-    </Typography>
+    <span className="text-xs font-semibold text-muted-foreground">
+      {formattedDate}{" "}
+      <span className="text-foreground">
+        ({hours > 0 && `${hours}hr${hours > 1 ? "s" : ""} `}{minutes > 0 && `${minutes}min left`})
+      </span>
+    </span>
   );
 };
 
@@ -346,84 +309,60 @@ const TrashedInfo = ({ meta }) => {
         const fullPath = item.path;
         const meta = item.meta || {};
         const isFolder = item.type === "folder";
-
-        const showMenu =
-          level === 0 && (item.type === "folder" || item.type === "file");
-
-        const getAllChildrenPaths = (item) => {
-          const paths = [item.path];
-          if (item.children && item.children.length > 0) {
-            item.children.forEach((child) => {
-              paths.push(...getAllChildrenPaths(child));
-            });
-          }
-          return paths;
-        };
+        const showMenu = level === 0 && (item.type === "folder" || item.type === "file");
 
         return (
           <React.Fragment key={fullPath}>
-            <TableRow
-              sx={{
-                backgroundColor: level % 2 === 0 ? "#fafafa" : "white",
-                "&:hover": { backgroundColor: "#f5f5f5" },
-              }}
-            >
-              <TableCell sx={{ paddingLeft: level * 4 + 2 }}>
-                <Box sx={{ display: "flex", alignItems: "center" }}>
+            <tr className={`border-b border-border transition-colors hover:bg-muted/40 ${level % 2 === 0 ? "bg-background" : "bg-muted/20"}`}>
+              <td className="px-3 py-2.5" style={{ paddingLeft: `${12 + level * 20}px` }}>
+                <div className="flex items-center gap-2">
                   {isFolder ? (
                     <>
-                      <IconButton
-                        size="small"
+                      <button
+                        type="button"
                         onClick={() => toggleFolder(fullPath)}
-                        sx={{ mr: 0.5 }}
+                        className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
                       >
-                        {expandedFolders[fullPath] ? (
-                          <FolderOpenIcon />
-                        ) : (
-                          <FolderClosedIcon />
-                        )}
-                      </IconButton>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          ml: 0.5,
-                          fontWeight: "medium",
-                          cursor: "pointer",
-                        }}
+                        {expandedFolders[fullPath]
+                          ? <FolderOpenIcon size={16} className="text-amber-500" />
+                          : <FolderClosedIcon size={16} className="text-amber-500" />}
+                      </button>
+                      <span
+                        className="text-sm font-medium text-foreground cursor-pointer hover:text-primary transition-colors"
                         onClick={() => toggleFolder(fullPath)}
                       >
-                        {item.name} (Trashed)
-                      </Typography>
+                        {item.name}
+                        <span className="ml-1.5 text-xs text-muted-foreground font-normal">(Trashed)</span>
+                      </span>
                     </>
                   ) : (
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <Box sx={{ mr: 1 }}>{getFileIcon(item.name)}</Box>
-                      <Typography
-                        variant="body2"
-                        sx={{ cursor: "not-allowed" }}
-                      >
-                        {item.name} (Trashed)
-                      </Typography>
-                    </Box>
+                    <div className="flex items-center gap-2">
+                      <span className="shrink-0">{getFileIcon(item.name)}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {item.name}
+                        <span className="ml-1.5 text-xs opacity-60">(Trashed)</span>
+                      </span>
+                    </div>
                   )}
-                </Box>
-              </TableCell>
+                </div>
+              </td>
 
-              <TableCell>
+              <td className="px-3 py-2.5">
                 {level === 0 && <TrashedInfo meta={meta} />}
-              </TableCell>
+              </td>
 
-              <TableCell align="right">
+              <td className="px-3 py-2.5 text-right">
                 {showMenu && (
-                  <IconButton
-                    size="small"
+                  <button
+                    type="button"
                     onClick={(e) => handleMenuOpen(e, { ...item, fullPath })}
+                    className="inline-flex items-center justify-center rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                   >
-                    <MoreVertIcon />
-                  </IconButton>
+                    <MoreVertical size={15} />
+                  </button>
                 )}
-              </TableCell>
-            </TableRow>
+              </td>
+            </tr>
 
             {isFolder &&
               expandedFolders[fullPath] &&
@@ -435,166 +374,172 @@ const TrashedInfo = ({ meta }) => {
       });
     };
 
+    // Context menu dropdown
+    const ContextMenu = () => {
+      const menuRef = useRef(null);
+      useEffect(() => {
+        if (!menuAnchorEl) return;
+        const handle = (e) => {
+          if (menuRef.current && !menuRef.current.contains(e.target) && e.target !== menuAnchorEl) {
+            handleMenuClose();
+          }
+        };
+        document.addEventListener("mousedown", handle);
+        return () => document.removeEventListener("mousedown", handle);
+      }, []);
+
+      if (!menuAnchorEl || !selectedFolderForMenu) return null;
+      const rect = menuAnchorEl.getBoundingClientRect();
+      const style = {
+        position: "fixed",
+        top: rect.bottom + 4,
+        right: window.innerWidth - rect.right,
+        zIndex: 1300,
+        minWidth: "176px",
+      };
+
+      const Item = ({ onClick, danger, icon: Icon, children }) => (
+        <button
+          type="button"
+          onClick={() => { onClick(); handleMenuClose(); }}
+          className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors rounded-md
+            ${danger ? "text-destructive hover:bg-destructive/10" : "text-foreground hover:bg-muted"}`}
+        >
+          {Icon && <Icon size={14} className="shrink-0" />}
+          {children}
+        </button>
+      );
+
+      return (
+        <div ref={menuRef} style={style} className="rounded-lg border border-border bg-popover shadow-lg p-1 animate-in fade-in-0 zoom-in-95">
+          <Item icon={RotateCcw} onClick={() => restoreItem(selectedFolderForMenu)}>Restore</Item>
+          <Item icon={Download} onClick={() => handleDownload(selectedFolderForMenu)}>Download</Item>
+          <div className="my-1 border-t border-border" />
+          <Item icon={Trash2} danger onClick={() => {
+            setItemToDelete(selectedFolderForMenu);
+            setDeleteConfirmText("");
+            setDeleteDialogOpen(true);
+          }}>Delete Permanently</Item>
+        </div>
+      );
+    };
+
     return (
-      <Box sx={{ margin: "auto", p: 3 }}>
-        <Paper elevation={3} sx={{ p: 2, mt: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            📜 Folder Explorer
-          </Typography>
-<Box
-  sx={{
-    mb: 2,
-    p: 1.5,
-    borderRadius: 1,
-    backgroundColor: "#fff8e1",
-    border: "1px solid #ffe082",
-  }}
->
-  <Typography variant="body2" sx={{ fontWeight: 500 }}>
-    ⚠️ Items in Trash will be <strong>permanently deleted after 60 days</strong>.
-    <br />
-    Please restore important files or folders before this period.
-  </Typography>
-</Box>
+      <div className="w-full max-w-[1700px] p-4 space-y-4">
+        {/* Page header */}
+        <div className="flex items-center gap-2">
+          <Trash2 size={18} className="text-destructive" />
+          <div>
+            <h1 className="text-xl font-bold text-foreground tracking-tight">Trash</h1>
+            <p className="text-xs text-muted-foreground">Items are permanently deleted after 2 hours</p>
+          </div>
+        </div>
+
+        {/* Warning banner */}
+        <div className="flex items-start gap-2.5 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3">
+          <span className="text-warning text-sm shrink-0 mt-0.5">⚠️</span>
+          <p className="text-sm text-foreground">
+            Items in Trash will be <strong>permanently deleted after 2 hours</strong>. Please restore important files or folders before this period.
+          </p>
+        </div>
+
+        {/* Table card */}
+        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-border bg-muted/40">
+            <h2 className="text-sm font-semibold text-foreground tracking-tight">Trashed Items</h2>
+          </div>
           {folderTree && folderTree.length > 0 ? (
-            <>
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Name</TableCell>
-
-                      <TableCell>Trashed</TableCell>
-
-                      <TableCell align="right">Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>{renderTrashedRows(folderTree)}</TableBody>
-                </Table>
-              </TableContainer>
-            </>
+            <div className="overflow-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-muted/60">
+                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Name</th>
+                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Trashed</th>
+                    <th className="px-3 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">{renderTrashedRows(folderTree)}</tbody>
+              </table>
+            </div>
           ) : (
-            <Typography sx={{ p: 2, textAlign: "center" }}>
-              🗑️ Trash is empty.
-            </Typography>
+            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+              <Trash2 size={32} className="mb-3 opacity-20" />
+              <p className="text-sm">Trash is empty</p>
+            </div>
           )}
-        </Paper>
-        <Menu
-          anchorEl={menuAnchorEl}
-          open={Boolean(menuAnchorEl)}
-          onClose={handleMenuClose}
-        >
-          {selectedFolderForMenu && (
-            <>
-              <MenuItem
-                onClick={() => {
-                  restoreItem(selectedFolderForMenu);
-                  handleMenuClose();
-                }}
-              >
-                <RestoreIcon sx={{ mr: 1 }} />
-                Restore
-              </MenuItem>
+        </div>
 
-              {/* <MenuItem
-                onClick={() => {
-                  deleteItem(selectedFolderForMenu);
-                  handleMenuClose();
-                }}
-                sx={{ color: "error.main" }}
-              > */}
-              <MenuItem
-                onClick={() => {
-                  setItemToDelete(selectedFolderForMenu);
-                  setDeleteConfirmText("");
-                  setDeleteDialogOpen(true);
-                  handleMenuClose();
-                }}
-                sx={{ color: "error.main" }}
-              >
-                <DeleteIcon sx={{ mr: 1 }} />
-                Delete Permanently
-              </MenuItem>
-              <MenuItem
-                onClick={() => {
-                  handleDownload(selectedFolderForMenu);
-                  handleMenuClose();
-                }}
-              >
-                <DownloadIcon sx={{ mr: 1 }} />
-                Download
-              </MenuItem>
-            </>
-          )}
-        </Menu>
+        {/* Context menu */}
+        <ContextMenu />
 
-        <Dialog
-          open={deleteDialogOpen}
-          onClose={() => setDeleteDialogOpen(false)}
-          maxWidth="xs"
-          fullWidth
-        >
-          <DialogTitle sx={{ color: "error.main" }}>
-            Delete Permanently
-          </DialogTitle>
+        {/* Delete confirmation dialog */}
+        {deleteDialogOpen && (
+          <>
+            <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={() => setDeleteDialogOpen(false)} />
+            <div className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-background rounded-xl border border-border shadow-xl p-6 space-y-4">
+              {/* Dialog header */}
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-destructive">Delete Permanently</h3>
+                <p className="text-sm text-muted-foreground">
+                  This action <strong className="text-foreground">cannot be undone</strong>. Type <strong className="text-foreground">DELETE</strong> to confirm permanent deletion of:
+                </p>
+              </div>
 
-          <DialogContent>
-            <Typography variant="body2" sx={{ mb: 2 }}>
-              This action <strong>cannot be undone</strong>.
-              <br />
-              Type <strong>DELETE</strong> to confirm permanent deletion of:
-            </Typography>
+              {/* Item name */}
+              <div className="rounded-lg border border-border bg-muted/30 px-3 py-2">
+                <p className="text-sm font-semibold text-foreground truncate">{itemToDelete?.name}</p>
+              </div>
 
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              {itemToDelete?.name}
-            </Typography>
+              {/* Confirm input */}
+              <div className="space-y-1">
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder="Type DELETE"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  className={`w-full rounded-lg border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-colors
+                    ${deleteConfirmText.length > 0 && deleteConfirmText !== "DELETE"
+                      ? "border-destructive focus:ring-destructive/40"
+                      : "border-border focus:ring-primary/40"}`}
+                />
+                {deleteConfirmText.length > 0 && deleteConfirmText !== "DELETE" && (
+                  <p className="text-xs text-destructive">You must type DELETE exactly</p>
+                )}
+              </div>
 
-            <TextField
-              autoFocus
-              fullWidth
-              placeholder="Type DELETE"
-              value={deleteConfirmText}
-              onChange={(e) => setDeleteConfirmText(e.target.value)}
-              error={
-                deleteConfirmText.length > 0 && deleteConfirmText !== "DELETE"
-              }
-              helperText={
-                deleteConfirmText && deleteConfirmText !== "DELETE"
-                  ? "You must type DELETE exactly"
-                  : " "
-              }
-            />
-          </DialogContent>
-
-          <DialogActions>
-            <Button
-              onClick={() => setDeleteDialogOpen(false)}
-              variant="outlined"
-            >
-              Cancel
-            </Button>
-
-            <Button
-              variant="contained"
-              color="error"
-              disabled={deleteConfirmText !== "DELETE"}
-              onClick={async () => {
-                await deleteItem(itemToDelete);
-                setDeleteDialogOpen(false);
-                setItemToDelete(null);
-              }}
-            >
-              Delete Permanently
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </Box>
+              {/* Actions */}
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setDeleteDialogOpen(false)}
+                  className="flex-1 rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={deleteConfirmText !== "DELETE"}
+                  onClick={async () => {
+                    await deleteItem(itemToDelete);
+                    setDeleteDialogOpen(false);
+                    setItemToDelete(null);
+                  }}
+                  className="flex-1 rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Delete Permanently
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
     );
   };
   return (
-    <Box>
+    <div className="w-full">
       <FolderTreeView accountId={accountId} />
-    </Box>
+    </div>
   );
 }
 

@@ -1,30 +1,8 @@
-import {
-  MenuItem,
-  Select,
-  FormControl,
-  Dialog,
-  DialogContent,
-  Typography,
-  DialogTitle,
-  IconButton,
-  Box,
-  TextField,
-  Button,Chip,
-  Input,
-} from "@mui/material";
-import { LinearProgress } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import DeleteIcon from "@mui/icons-material/Delete";
-import { useState, useEffect, useCallback, useContext ,useMemo} from "react";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { useState, useEffect, useCallback, useContext, useMemo } from "react";
 import { toast } from "material-react-toastify";
 import dayjs from "dayjs";
 import { debounce } from "lodash";
-import AddIcon from "@mui/icons-material/Add";
+import { X, Trash2, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 
 import { LoginContext } from "../../context/Context";
 import SelectableButton from "./SelectableButton";
@@ -3992,815 +3970,446 @@ const OrganizerDialog = ({ open, handleClose, organizer }) => {
     const canRepeat =
       section.sectionsettings?.sectionRepeatingMode && !isRepeated && !organizer?.issealed;
 
+    const fieldClass = "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50 disabled:cursor-not-allowed";
+    const labelClass = "block text-sm font-semibold text-foreground mb-1";
+    const errorClass = "mt-1 text-xs text-destructive";
+
     return (
-      <Box key={sectionId}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 2,
-          }}
-        >
-          <Typography variant="h6" component="h2">
+      <div key={sectionId}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
             {section.text}
             {isRepeated && (
-              <Chip 
-                label="Repeated" 
-                size="small" 
-                color="secondary" 
-                sx={{ ml: 1, fontSize: '0.7rem' }}
-              />
+              <span className="inline-flex items-center rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                Repeated
+              </span>
             )}
-          </Typography>
+          </h2>
           {isRepeated && (
-            <Button
-              variant="outlined"
-              color="error"
-              size="small"
-              onClick={() =>
-                removeRepeatedSection(originalSectionId, Number(sectionId))
-              }
+            <button
+              type="button"
+              onClick={() => removeRepeatedSection(originalSectionId, Number(sectionId))}
               disabled={organizer?.issealed}
+              className="rounded-lg border border-destructive/50 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
             >
               Remove Section
-            </Button>
+            </button>
           )}
-        </Box>
+        </div>
 
         {section.formElements.map(
           (element) =>
             shouldShowElement(element, sectionId) && (
-              <Box key={`${sectionId}_${element.id}`}>
+              <div key={`${sectionId}_${element.id}`} className="mt-5">
+
                 {element.type === "Text Editor" && (
-                  <Box mt={2} mb={2}>
-                    <Typography>
-                      <span
-                        dangerouslySetInnerHTML={{
-                          __html: element.text,
-                        }}
-                      />
-                    </Typography>
-                  </Box>
+                  <div className="prose prose-sm max-w-none text-foreground my-3">
+                    <span dangerouslySetInnerHTML={{ __html: element.text }} />
+                  </div>
                 )}
 
-                {(element.type === "Free Entry" ||
-                  element.type === "Email") && (
-                  <Box mt={2}>
-                    <Typography
-                      variant="subtitle2"
-                      component="p"
-                      gutterBottom
-                      sx={{ fontWeight: "550" }}
-                    >
+                {(element.type === "Free Entry" || element.type === "Email") && (
+                  <div>
+                    <label className={labelClass}>
                       {element.text}
                       {element.questionsectionsettings?.required && (
-                        <span style={{ color: "red", marginLeft: "4px" }}>
-                          *
-                        </span>
+                        <span className="text-destructive ml-1">*</span>
                       )}
-                    </Typography>
-                    <TextField
+                    </label>
+                    <textarea
                       disabled={isElementActive(element)}
-                      variant="filled"
-                      size="small"
-                      multiline
-                      fullWidth
                       placeholder={`${element.type} Answer`}
-                      inputProps={{
-                        type:
-                          element.type === "Free Entry"
-                            ? "text"
-                            : element.type.toLowerCase(),
-                      }}
-                      style={{ display: "block" }}
+                      rows={3}
+                      className={fieldClass}
                       value={inputValues[`${sectionId}_${element.text}`] || ""}
-                      onChange={(e) =>
-                        handleInputChange(e, element.text, sectionId)
-                      }
-                      error={hasError(sectionId, element.text)}
+                      onChange={(e) => handleInputChange(e, element.text, sectionId)}
                     />
                     {hasError(sectionId, element.text) && (
-                      <Typography
-                        variant="caption"
-                        color="error"
-                        sx={{ display: "block", mt: 0.5, ml: 1 }}
-                      >
-                        {getErrorMessage(sectionId, element.text)}
-                      </Typography>
+                      <p className={errorClass}>{getErrorMessage(sectionId, element.text)}</p>
                     )}
-                  </Box>
+                  </div>
                 )}
 
                 {element.type === "Number" && (
-                  <Box mt={2}>
-                    <Typography
-                      variant="subtitle2"
-                      component="p"
-                      gutterBottom
-                      sx={{ fontWeight: "550" }}
-                    >
+                  <div>
+                    <label className={labelClass}>
                       {element.text}
                       {element.questionsectionsettings?.required && (
-                        <span style={{ color: "red", marginLeft: "4px" }}>
-                          *
-                        </span>
+                        <span className="text-destructive ml-1">*</span>
                       )}
-                    </Typography>
-                    <TextField
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       disabled={isElementActive(element)}
-                      variant="outlined"
-                      size="small"
-                      multiline
-                      fullWidth
-                      placeholder={`${element.type} Answer`}
-                      inputProps={{
-                        type: "text",
-                        inputMode: "numeric",
-                        pattern: "[0-9]*",
-                      }}
-                      maxRows={8}
-                      style={{
-                        display: "block",
-                        marginTop: "15px",
-                      }}
+                      placeholder="Number Answer"
+                      className={fieldClass}
                       value={inputValues[`${sectionId}_${element.text}`] || ""}
                       onChange={(e) => {
                         const numericValue = e.target.value.replace(/\D/g, "");
-                        handleInputChange(
-                          { target: { value: numericValue } },
-                          element.text,
-                          sectionId
-                        );
+                        handleInputChange({ target: { value: numericValue } }, element.text, sectionId);
                       }}
-                      error={hasError(sectionId, element.text)}
                     />
                     {hasError(sectionId, element.text) && (
-                      <Typography
-                        variant="caption"
-                        color="error"
-                        sx={{ display: "block", mt: 0.5, ml: 1 }}
-                      >
-                        {getErrorMessage(sectionId, element.text)}
-                      </Typography>
+                      <p className={errorClass}>{getErrorMessage(sectionId, element.text)}</p>
                     )}
-                  </Box>
+                  </div>
                 )}
 
                 {element.type === "Radio Buttons" && (
-                  <Box mt={2}>
-                    <Typography
-                      variant="subtitle2"
-                      component="p"
-                      gutterBottom
-                      sx={{ fontWeight: "550" }}
-                    >
+                  <div>
+                    <label className={labelClass}>
                       {element.text}
                       {element.questionsectionsettings?.required && (
-                        <span style={{ color: "red", marginLeft: "4px" }}>
-                          *
-                        </span>
+                        <span className="text-destructive ml-1">*</span>
                       )}
-                    </Typography>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        gap: 1,
-                        flexWrap: "wrap",
-                      }}
-                    >
+                    </label>
+                    <div className="flex flex-wrap gap-2 mt-1">
                       {element.options.map((option) => (
                         <SelectableButton
                           key={option.text}
-                          selected={
-                            radioValues[`${sectionId}_${element.text}`] ===
-                            option.text
-                          }
+                          selected={radioValues[`${sectionId}_${element.text}`] === option.text}
                           disabled={isElementActive(element)}
-                          onClick={() =>
-                            handleRadioChange(
-                              option.text,
-                              element.text,
-                              sectionId
-                            )
-                          }
+                          onClick={() => handleRadioChange(option.text, element.text, sectionId)}
                         >
                           {option.text}
                         </SelectableButton>
                       ))}
-                    </Box>
+                    </div>
                     {hasError(sectionId, element.text) && (
-                      <Typography
-                        variant="caption"
-                        color="error"
-                        sx={{ display: "block", mt: 0.5, ml: 1 }}
-                      >
-                        {getErrorMessage(sectionId, element.text)}
-                      </Typography>
+                      <p className={errorClass}>{getErrorMessage(sectionId, element.text)}</p>
                     )}
-                  </Box>
+                  </div>
                 )}
 
                 {element.type === "Checkboxes" && (
-                  <Box mt={2}>
-                    <Typography
-                      variant="subtitle2"
-                      component="p"
-                      gutterBottom
-                      sx={{ fontWeight: "550" }}
-                    >
+                  <div>
+                    <label className={labelClass}>
                       {element.text}
                       {element.questionsectionsettings?.required && (
-                        <span style={{ color: "red", marginLeft: "4px" }}>
-                          *
-                        </span>
+                        <span className="text-destructive ml-1">*</span>
                       )}
-                    </Typography>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        gap: 1,
-                        flexWrap: "wrap",
-                      }}
-                    >
+                    </label>
+                    <div className="flex flex-wrap gap-2 mt-1">
                       {element.options.map((option) => (
                         <SelectableButton
                           key={option.text}
-                          selected={
-                            checkboxValues[`${sectionId}_${element.text}`]?.[
-                              option.text
-                            ]
-                          }
+                          selected={checkboxValues[`${sectionId}_${element.text}`]?.[option.text]}
                           disabled={isElementActive(element)}
-                          onClick={() =>
-                            handleCheckboxChange(
-                              option.text,
-                              element.text,
-                              sectionId
-                            )
-                          }
+                          onClick={() => handleCheckboxChange(option.text, element.text, sectionId)}
                         >
                           {option.text}
                         </SelectableButton>
                       ))}
-                    </Box>
+                    </div>
                     {hasError(sectionId, element.text) && (
-                      <Typography
-                        variant="caption"
-                        color="error"
-                        sx={{ display: "block", mt: 0.5, ml: 1 }}
-                      >
-                        {getErrorMessage(sectionId, element.text)}
-                      </Typography>
+                      <p className={errorClass}>{getErrorMessage(sectionId, element.text)}</p>
                     )}
-                  </Box>
+                  </div>
                 )}
 
                 {element.type === "Yes/No" && (
-                  <Box mt={2}>
-                    <Typography
-                      variant="subtitle2"
-                      component="p"
-                      gutterBottom
-                      sx={{ fontWeight: "550" }}
-                    >
+                  <div>
+                    <label className={labelClass}>
                       {element.text}
                       {element.questionsectionsettings?.required && (
-                        <span style={{ color: "red", marginLeft: "4px" }}>
-                          *
-                        </span>
+                        <span className="text-destructive ml-1">*</span>
                       )}
-                    </Typography>
-                    <Box sx={{ display: "flex", gap: 1 }}>
+                    </label>
+                    <div className="flex gap-2 mt-1">
                       {element.options.map((option) => (
                         <SelectableButton
                           key={option.text}
-                          selected={
-                            selectedYesNoValues[
-                              `${sectionId}_${element.text}`
-                            ] === option.text
-                          }
+                          selected={selectedYesNoValues[`${sectionId}_${element.text}`] === option.text}
                           disabled={isElementActive(element)}
-                          onClick={() =>
-                            handleYesNoChange(
-                              option.text,
-                              element.text,
-                              sectionId
-                            )
-                          }
+                          onClick={() => handleYesNoChange(option.text, element.text, sectionId)}
                         >
                           {option.text}
                         </SelectableButton>
                       ))}
-                    </Box>
+                    </div>
                     {hasError(sectionId, element.text) && (
-                      <Typography
-                        variant="caption"
-                        color="error"
-                        sx={{ display: "block", mt: 0.5, ml: 1 }}
-                      >
-                        {getErrorMessage(sectionId, element.text)}
-                      </Typography>
+                      <p className={errorClass}>{getErrorMessage(sectionId, element.text)}</p>
                     )}
-                  </Box>
+                  </div>
                 )}
 
                 {element.type === "Dropdown" && (
-                  <Box mt={2}>
-                    <Typography
-                      variant="subtitle2"
-                      component="p"
-                      gutterBottom
-                      sx={{ fontWeight: "550" }}
-                    >
+                  <div>
+                    <label className={labelClass}>
                       {element.text}
                       {element.questionsectionsettings?.required && (
-                        <span style={{ color: "red", marginLeft: "4px" }}>
-                          *
-                        </span>
+                        <span className="text-destructive ml-1">*</span>
                       )}
-                    </Typography>
-                    <FormControl fullWidth>
-                      <Select
-                        value={
-                          selectedDropdownValues[
-                            `${sectionId}_${element.text}`
-                          ] || ""
-                        }
-                        disabled={isElementActive(element)}
-                        onChange={(event) =>
-                          handleDropdownValueChange(
-                            event,
-                            element.text,
-                            sectionId
-                          )
-                        }
-                        size="small"
-                      >
-                        {element.options.map((option) => (
-                          <MenuItem key={option.text} value={option.text}>
-                            {option.text}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
+                    </label>
+                    <select
+                      disabled={isElementActive(element)}
+                      value={selectedDropdownValues[`${sectionId}_${element.text}`] || ""}
+                      onChange={(event) => handleDropdownValueChange(event, element.text, sectionId)}
+                      className={fieldClass}
+                    >
+                      <option value="">Select an option…</option>
+                      {element.options.map((option) => (
+                        <option key={option.text} value={option.text}>
+                          {option.text}
+                        </option>
+                      ))}
+                    </select>
                     {hasError(sectionId, element.text) && (
-                      <Typography
-                        variant="caption"
-                        color="error"
-                        sx={{ display: "block", mt: 0.5, ml: 1 }}
-                      >
-                        {getErrorMessage(sectionId, element.text)}
-                      </Typography>
+                      <p className={errorClass}>{getErrorMessage(sectionId, element.text)}</p>
                     )}
-                  </Box>
+                  </div>
                 )}
 
                 {element.type === "Date" && (
-                  <Box mt={2}>
-                    <Typography
-                      variant="subtitle2"
-                      component="p"
-                      gutterBottom
-                      sx={{ fontWeight: "550" }}
-                    >
+                  <div>
+                    <label className={labelClass}>
                       {element.text}
                       {element.questionsectionsettings?.required && (
-                        <span style={{ color: "red", marginLeft: "4px" }}>
-                          *
-                        </span>
+                        <span className="text-destructive ml-1">*</span>
                       )}
-                    </Typography>
-
-                    {element.type === "Date" && (
-                      <Box mt={2}>
-                        <Typography
-                          variant="subtitle2"
-                          component="p"
-                          gutterBottom
-                          sx={{ fontWeight: "550" }}
-                        >
-                          {element.text}
-                          {element.questionsectionsettings?.required && (
-                            <span style={{ color: "red", marginLeft: "4px" }}>
-                              *
-                            </span>
-                          )}
-                        </Typography>
-
-                        <DatePicker
-                          format="MM/DD/YYYY"
-                          sx={{
-                            width: "100%",
-                            backgroundColor: "#fff",
-                          }}
-                          value={
-                            dateValues[`${sectionId}_${element.text}`] ||
-                            dayjs()
-                          } // Default to today
-                          disabled={isElementActive(element)}
-                          onChange={(newValue) => {
-                            if (!isElementActive(element)) {
-                              handleDateChange(
-                                newValue,
-                                element.text,
-                                sectionId
-                              );
-                            }
-                          }}
-                          renderInput={(params) => (
-                            <TextField {...params} size="small" />
-                          )}
-                        />
-                        {hasError(sectionId, element.text) && (
-                          <Typography
-                            variant="caption"
-                            color="error"
-                            sx={{ display: "block", mt: 0.5, ml: 1 }}
-                          >
-                            {getErrorMessage(sectionId, element.text)}
-                          </Typography>
-                        )}
-                      </Box>
-                    )}
+                    </label>
+                    <input
+                      type="date"
+                      disabled={isElementActive(element)}
+                      className={fieldClass}
+                      value={
+                        dateValues[`${sectionId}_${element.text}`]
+                          ? dateValues[`${sectionId}_${element.text}`].format("YYYY-MM-DD")
+                          : dayjs().format("YYYY-MM-DD")
+                      }
+                      onChange={(e) => {
+                        if (!isElementActive(element)) {
+                          handleDateChange(dayjs(e.target.value), element.text, sectionId);
+                        }
+                      }}
+                    />
                     {hasError(sectionId, element.text) && (
-                      <Typography
-                        variant="caption"
-                        color="error"
-                        sx={{ display: "block", mt: 0.5, ml: 1 }}
-                      >
-                        {getErrorMessage(sectionId, element.text)}
-                      </Typography>
+                      <p className={errorClass}>{getErrorMessage(sectionId, element.text)}</p>
                     )}
-                  </Box>
+                  </div>
                 )}
 
                 {element.type === "File Upload" && (
-                  <Box mt={2}>
-                    <Typography
-                      variant="subtitle2"
-                      component="p"
-                      gutterBottom
-                      sx={{ fontWeight: "550" }}
-                    >
+                  <div>
+                    <label className={labelClass}>
                       {element.text}
                       {element.questionsectionsettings?.required && (
-                        <span style={{ color: "red", marginLeft: "4px" }}>
-                          *
-                        </span>
+                        <span className="text-destructive ml-1">*</span>
                       )}
-                    </Typography>
+                    </label>
 
-                    {/* File input for multiple files */}
-                    <Box sx={{ mb: 2 }}>
-                      <Button
-                        variant="outlined"
-                        component="label"
-                        disabled={
-                          isElementActive(element)
-                        }
-                      >
+                    <div className="mb-3">
+                      <label className={`inline-flex items-center gap-2 cursor-pointer rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors ${isElementActive(element) ? "opacity-50 pointer-events-none" : ""}`}>
+                        <Plus size={14} />
                         Choose Files
-                        {/* <Input
+                        <input
                           type="file"
+                          hidden
                           multiple
-                          onChange={(e) =>
-                            handleFileSelect(e, element.text, sectionId)
-                          }
-                          sx={{ display: "none" }}
-                          disabled={
-                            isElementActive(element)
-                          }
-                        /> */}
-                          <input type="file" hidden multiple   onChange={(e) =>
-                            handleFileSelect(e, element.text, sectionId)
-                          }
-                          sx={{ display: "none" }}
-                          disabled={
-                            isElementActive(element)
-                          } />
-                      </Button>
-                      <Typography
-                        variant="caption"
-                        sx={{ display: "block", mt: 0.5, ml: 1 }}
-                      >
-                        You can select multiple files
-                      </Typography>
-                    </Box>
+                          disabled={isElementActive(element)}
+                          onChange={(e) => handleFileSelect(e, element.text, sectionId)}
+                        />
+                      </label>
+                      <p className="mt-1 text-xs text-muted-foreground ml-1">You can select multiple files</p>
+                    </div>
 
-                    {/* Display pending files */}
-                    {pendingFiles[`${sectionId}_${element.text}`]?.length >
-                      0 && (
-                      <Box sx={{ mb: 2 }}>
-                        <Typography
-                          variant="body2"
-                          fontWeight="bold"
-                          gutterBottom
-                        >
-                          Files ready to upload (
-                          {pendingFiles[`${sectionId}_${element.text}`].length}
-                          ):
-                        </Typography>
-                        {pendingFiles[`${sectionId}_${element.text}`].map(
-                          (fileInfo, index) => (
-                            <Box
-                              key={index}
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                                mb: 0.5,
-                              }}
-                            >
-                              <Typography variant="body2">
-                                {fileInfo.fileName} (Ready to upload)
-                              </Typography>
-                            </Box>
-                          )
-                        )}
-                      </Box>
+                    {pendingFiles[`${sectionId}_${element.text}`]?.length > 0 && (
+                      <div className="mb-3 rounded-lg border border-border bg-muted/20 divide-y divide-border">
+                        <p className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          Ready to upload ({pendingFiles[`${sectionId}_${element.text}`].length})
+                        </p>
+                        {pendingFiles[`${sectionId}_${element.text}`].map((fileInfo, index) => (
+                          <div key={index} className="flex items-center gap-2 px-3 py-2 text-sm text-foreground">
+                            <span className="truncate">{fileInfo.fileName}</span>
+                            <span className="shrink-0 text-xs text-muted-foreground">(Ready)</span>
+                          </div>
+                        ))}
+                      </div>
                     )}
 
-                    {/* Display uploaded files */}
-                    {uploadedFiles[`${sectionId}_${element.text}`]?.length >
-                      0 && (
-                      <Box sx={{ mb: 2 }}>
-                        <Typography
-                          variant="body2"
-                          fontWeight="bold"
-                          gutterBottom
-                        >
-                          Uploaded Files (
-                          {uploadedFiles[`${sectionId}_${element.text}`].length}
-                          ):
-                        </Typography>
-                        {uploadedFiles[`${sectionId}_${element.text}`].map(
-                          (fileInfo, index) => (
-                            <Box
-                              key={index}
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                                mb: 0.5,
-                                p: 1,
-                                bgcolor: "grey.50",
-                                borderRadius: 1,
-                              }}
-                            >
-                              <Typography variant="body2" sx={{ flex: 1 }}>
-                                {fileInfo.fileName}
-                                {fileInfo.status === "uploading" &&
-                                  " (Uploading...)"}
-                                {fileInfo.status === "completed" && " ✓"}
-                              </Typography>
-
-                              {/* Delete individual file button */}
-                              {!isElementActive(element) &&
-                                fileInfo.status === "completed" && (
-                                  <IconButton
-                                    size="small"
-                                    color="error"
-                                    onClick={() =>
-                                      handleDeleteFile(
-                                        sectionId,
-                                        element.text,
-                                        fileInfo.fileName
-                                      )
-                                    }
-                                    title="Delete this file"
-                                  >
-                                    <DeleteIcon fontSize="small" />
-                                  </IconButton>
-                                )}
-                            </Box>
-                          )
-                        )}
-
-                        {/* Delete all files button */}
-                        {!isElementActive(element) &&
-                          uploadedFiles[`${sectionId}_${element.text}`].length >
-                            1 && (
-                            <Button
-                              variant="outlined"
-                              color="error"
-                              size="small"
-                              onClick={() =>
-                                handleDeleteFile(sectionId, element.text)
-                              }
-                              sx={{ mt: 1 }}
+                    {uploadedFiles[`${sectionId}_${element.text}`]?.length > 0 && (
+                      <div className="mb-3 rounded-lg border border-border bg-muted/20 divide-y divide-border">
+                        <p className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          Uploaded ({uploadedFiles[`${sectionId}_${element.text}`].length})
+                        </p>
+                        {uploadedFiles[`${sectionId}_${element.text}`].map((fileInfo, index) => (
+                          <div key={index} className="flex items-center gap-2 px-3 py-2">
+                            <span className="flex-1 text-sm text-foreground truncate">
+                              {fileInfo.fileName}
+                              {fileInfo.status === "uploading" && <span className="text-muted-foreground ml-1">(Uploading…)</span>}
+                              {fileInfo.status === "completed" && <span className="text-green-600 dark:text-green-400 ml-1">✓</span>}
+                            </span>
+                            {!isElementActive(element) && fileInfo.status === "completed" && (
+                              <button
+                                type="button"
+                                title="Delete this file"
+                                onClick={() => handleDeleteFile(sectionId, element.text, fileInfo.fileName)}
+                                className="shrink-0 rounded p-1 text-destructive hover:bg-destructive/10 transition-colors"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                        {!isElementActive(element) && uploadedFiles[`${sectionId}_${element.text}`].length > 1 && (
+                          <div className="px-3 py-2">
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteFile(sectionId, element.text)}
+                              className="text-xs font-semibold text-destructive hover:underline"
                             >
                               Delete All Files
-                            </Button>
-                          )}
-                      </Box>
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     )}
 
-                    {/* Status messages and errors */}
-                    {/* {hasError(sectionId, elementText) && (
-                      <Typography
-                        variant="caption"
-                        color="error"
-                        sx={{ display: "block", mt: 0.5, ml: 1 }}
-                      >
-                        {getErrorMessage(sectionId, element.text)}
-                      </Typography>
-                    )} */}
                     {hasError(sectionId, element.text) && (
-                      <Typography
-                        variant="caption"
-                        color="error"
-                        sx={{ display: "block", mt: 0.5, ml: 1 }}
-                      >
-                        {getErrorMessage(sectionId, element.text)}
-                      </Typography>
+                      <p className={errorClass}>{getErrorMessage(sectionId, element.text)}</p>
                     )}
-                    {pendingFiles[`${sectionId}_${element.text}`]?.length >
-                      0 && (
-                      <Typography variant="caption" color="warning.main">
-                        ⚠ {pendingFiles[`${sectionId}_${element.text}`].length}{" "}
-                        file(s) selected but not uploaded yet
-                      </Typography>
+                    {pendingFiles[`${sectionId}_${element.text}`]?.length > 0 && (
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                        ⚠ {pendingFiles[`${sectionId}_${element.text}`].length} file(s) selected but not uploaded yet
+                      </p>
                     )}
-                  </Box>
+                  </div>
                 )}
-              </Box>
+              </div>
             )
         )}
 
         {canRepeat && (
-          <Box mt={3} mb={2}>
-            <Button
-              variant="outlined"
+          <div className="mt-5 mb-3">
+            <button
+              type="button"
               onClick={() => addRepeatedSection(sectionId)}
               disabled={organizer?.issealed}
-              startIcon={<AddIcon />}
+              className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
             >
+              <Plus size={14} />
               Add Another {section.text}
-            </Button>
-          </Box>
+            </button>
+          </div>
         )}
-      </Box>
+      </div>
     );
   };
 
   return (
     <>
-      <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <Dialog fullScreen open={open} onClose={handleClose}>
-          <DialogTitle
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              px: 3,
-              py: 2,
-              borderBottom: "1px solid #ddd",
-            }}
-          >
-            <Typography variant="h6" component="p">
-              {organizer?.organizerName || "Organizer"}
-            </Typography>
-            <IconButton edge="end" onClick={handleClose}>
-              <CloseIcon />
-            </IconButton>
-          </DialogTitle>
-          <DialogContent>
-            <FormControl
-              fullWidth
-              sx={{ marginBottom: "10px", marginTop: "10px" }}
-            >
-              <Select
-                value={activeStep}
-                onChange={handleDropdownChange}
-                size="small"
-              >
-                {visibleSections.map((section, index) => {
-                  const visibleElements = section.formElements.filter((el) =>
-                    shouldShowElement(el, section.id)
-                  );
+      {/* Full-screen modal dialog */}
+      {open && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-[1200] bg-black/50"
+            onClick={handleClose}
+          />
 
-                  const answeredCount = visibleElements.reduce(
-                    (count, element) => {
+          {/* Dialog panel — sits above backdrop, does NOT obscure sidebar */}
+          <div className="fixed inset-0 z-[1201] flex items-stretch justify-center pointer-events-none">
+            <div
+              className="pointer-events-auto flex flex-col bg-background shadow-2xl w-full max-w-4xl mx-auto my-0 h-full overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card shrink-0">
+                <h1 className="text-lg font-semibold text-foreground truncate">
+                  {organizer?.organizerName || "Organizer"}
+                </h1>
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Section selector + progress */}
+              <div className="px-6 pt-4 pb-3 border-b border-border bg-card/50 shrink-0 space-y-3">
+                <select
+                  value={activeStep}
+                  onChange={handleDropdownChange}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                >
+                  {visibleSections.map((section, index) => {
+                    const visibleElements = section.formElements.filter((el) =>
+                      shouldShowElement(el, section.id)
+                    );
+                    const answeredCount = visibleElements.reduce((count, element) => {
                       const key = `${section.id}_${element.text}`;
                       return count + (answeredElements[key] ? 1 : 0);
-                    },
-                    0
-                  );
+                    }, 0);
+                    return (
+                      <option key={section.id} value={index}>
+                        {section.text} ({answeredCount}/{visibleElements.length})
+                      </option>
+                    );
+                  })}
+                </select>
 
-                  const totalVisibleElements = visibleElements.length;
+                {/* Progress bar */}
+                <div className="relative w-full h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="absolute left-0 top-0 h-full rounded-full bg-primary transition-all duration-300"
+                    style={{ width: `${((activeStep + 1) / totalSteps) * 100}%` }}
+                  />
+                </div>
+              </div>
 
-                  return (
-                    <MenuItem key={section.id} value={index}>
-                      {section.text} ({answeredCount}/{totalVisibleElements})
-                    </MenuItem>
-                  );
-                })}
-              </Select>
-            </FormControl>
-            <Box mt={2} mb={2}>
-              <LinearProgress
-                variant="determinate"
-                value={((activeStep + 1) / totalSteps) * 100}
-              />
-            </Box>
+              {/* Section content — scrollable */}
+              <div className="flex-1 overflow-y-auto px-6 md:px-12 lg:px-20 py-6">
+                {visibleSections.map(
+                  (section, sectionIndex) =>
+                    sectionIndex === activeStep &&
+                    renderSection(section, section.isRepeated, section.originalSectionId)
+                )}
+              </div>
 
-            <Box sx={{ pl: 20, pr: 20 }}>
-              {visibleSections.map(
-                (section, sectionIndex) =>
-                  sectionIndex === activeStep &&
-                  renderSection(
-                    section,
-                    section.isRepeated,
-                    section.originalSectionId
-                  )
-              )}
-
-              <Box
-                mt={3}
-                display="flex"
-                alignItems="center"
-                justifyContent={"space-between"}
-              >
-                <Box display="flex" gap={3} alignItems="center">
+              {/* Footer nav */}
+              <div className="shrink-0 flex items-center justify-between px-6 py-4 border-t border-border bg-card">
+                <div className="flex items-center gap-3">
                   {activeStep > 0 && (
-                    <Button onClick={handleBack} variant="outlined">
-                      <ArrowBackIcon fontSize="small" />
-                    </Button>
-                  )}
-
-                  {/* NEXT button (except last step optional) */}
-                  {activeStep < totalSteps - 1 && (
-                    <Button
-                      onClick={handleNext}
-                      color="primary"
-                      sx={{
-                        backgroundColor: "text.menu",
-                        color: "primary.contrastText",
-                        "&:hover": {
-                          backgroundColor: "menu.dark",
-                          boxShadow: 1,
-                        },
-                        transition: "background-color 0.2s ease",
-                      }}
+                    <button
+                      type="button"
+                      onClick={handleBack}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
                     >
-                      Next{" "}
-                      <ArrowForwardIcon
-                        fontSize="small"
-                        sx={{ marginLeft: 2 }}
-                      />
-                    </Button>
+                      <ChevronLeft size={16} />
+                      Back
+                    </button>
                   )}
-
-                  {/* SUBMIT is visible on ALL steps */}
-                  {/* <Button
+                  {activeStep < totalSteps - 1 && (
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+                    >
+                      Next
+                      <ChevronRight size={16} />
+                    </button>
+                  )}
+                  <button
+                    type="button"
                     onClick={handleSubmit}
-                    color="primary"
-                    sx={{
-                      backgroundColor: "text.menu",
-                      color: "primary.contrastText",
-                      "&:hover": { backgroundColor: "menu.dark", boxShadow: 1 },
-                      transition: "background-color 0.2s ease",
-                    }}
+                    disabled={organizer?.issealed || organizer?.status === "Completed"}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Submit
-                  </Button> */}
-                  <Button
-  onClick={handleSubmit}
-  color="primary"
-  disabled={organizer?.issealed || organizer?.status === "Completed"}
-  sx={{
-    backgroundColor: organizer?.issealed || organizer?.status === "Completed" 
-      ? "grey.400" 
-      : "text.menu",
-    color: "primary.contrastText",
-    "&:hover": { 
-      backgroundColor: organizer?.issealed || organizer?.status === "Completed" 
-        ? "grey.400" 
-        : "menu.dark", 
-      boxShadow: 1 
-    },
-    transition: "background-color 0.2s ease",
-    "&.Mui-disabled": {
-      color: "white",
-      backgroundColor: "grey.400",
-    }
-  }}
->
-  {organizer?.issealed || organizer?.status === "Completed" ? "Completed" : "Submit"}
-</Button>
-                </Box>
-
-                <Box sx={{ display: "flex", alignItems: "flex-end" }}>
-                  <Typography>
-                    Step {activeStep + 1} of {totalSteps}
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
-          </DialogContent>
-        </Dialog>
-      </LocalizationProvider>
+                    {organizer?.issealed || organizer?.status === "Completed" ? "Completed" : "Submit"}
+                  </button>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Step {activeStep + 1} of {totalSteps}
+                </p>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       <FileUploadDrawer
         isOpen={isDocumentForm}

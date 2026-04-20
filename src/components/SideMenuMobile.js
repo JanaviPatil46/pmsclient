@@ -1,18 +1,11 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
-import Divider from '@mui/material/Divider';
-import Drawer, { drawerClasses } from '@mui/material/Drawer';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
-import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
-import NotificationsRoundedIcon from '@mui/icons-material/NotificationsRounded';
+import { useEffect, useContext, useState } from "react";
+import { LogOut, Bell, User } from 'lucide-react';
 import MenuButton from './MenuButton';
 import MenuContent from './MenuContent';
 import CardAlert from './CardAlert';
 import axios from 'axios';
-import { useEffect,useContext,useState } from "react";
 import { LoginContext } from "../context/Context";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
@@ -162,88 +155,71 @@ const [accounts, setAccounts] = useState(() => {
       ? text.substring(0, maxLength) + "..."
       : text;
   };
-  return (
-    <Drawer
-      anchor="left"
-      open={open}
-      onClose={toggleDrawer(false)}
-      sx={{
-        zIndex: (theme) => theme.zIndex.drawer + 1,
-        [`& .${drawerClasses.paper}`]: {
-          backgroundImage: 'none',
-          backgroundColor: 'background.paper',
-        },
-      }}
-    >
-      <Stack
-        sx={{
-          maxWidth: '70dvw',
-          height: '100%',
-        }}
-      >
-        <Stack direction="row" sx={{ p: 2, pb: 0, gap: 1 }}>
-          <Stack
-            direction="row"
-            sx={{ gap: 1, alignItems: 'center', flexGrow: 1, p: 1 }}
-          >
-            {/* <Avatar
-              sizes="small"
-              alt="Profile"
-               src={profilePicture}
-              // src="/static/images/avatar/7.jpg"
-              sx={{ width: 24, height: 24 }}
-            />
-            <Typography component="p" variant="h6">
-            {username}
-            </Typography> */}
-              {accountInfo ? (
-              <>
-            
-                {/* <Typography
-                  variant="body2"
-                  sx={{ fontWeight: 600, lineHeight: "16px" }}
-                >
-                  {truncate(accountInfo?.accountName)}
-                </Typography> */}
-                 <Avatar
-              sizes="small"
-              alt="Profile"
-              //  src={profilePicture}
-              // src="/static/images/avatar/7.jpg"
-              sx={{ width: 24, height: 24 }}
-            />
+  const avatarSrc = accountInfo?.profilePicture
+    ? `https://www.snptaxes.com/${accountInfo.profilePicture}`
+    : null;
 
-                 <Typography
-                  variant="body2"
-                  sx={{ fontWeight: 600, lineHeight: "16px" }}
-                >
-                  {truncate(accountInfo?.accountName)}
-                </Typography> 
-              </>
-            ) : (
-              <Typography
-                variant="caption"
-                sx={{ color: "text.secondary" }}
-              ></Typography>
-            )}
-          </Stack>
-          <MenuButton showBadge>
-            <NotificationsRoundedIcon />
-          </MenuButton>
-        </Stack>
-        <Divider />
-        <Stack sx={{ flexGrow: 1 }}>
+  return (
+    <>
+      {/* Backdrop */}
+      {open && (
+        <div
+          className="fixed inset-0 z-[1300] bg-black/50"
+          onClick={toggleDrawer(false)}
+        />
+      )}
+
+      {/* Slide-in panel */}
+      <div
+        className={`fixed left-0 top-0 h-full z-[1301] flex flex-col bg-background border-r border-border shadow-xl transition-transform duration-300 ease-in-out ${
+          open ? "translate-x-0" : "-translate-x-full"
+        }`}
+        style={{ maxWidth: "70dvw", width: 280 }}
+      >
+        {/* Top: avatar + account name + notification bell */}
+        <div className="flex items-center gap-2 p-3">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div className="h-7 w-7 rounded-full bg-muted border border-border flex items-center justify-center overflow-hidden shrink-0">
+              {avatarSrc
+                ? <img src={avatarSrc} alt="avatar" className="h-full w-full object-cover" />
+                : <User size={14} className="text-muted-foreground" />}
+            </div>
+            {accountInfo ? (
+              <p className="text-sm font-semibold text-foreground truncate">
+                {truncate(accountInfo.accountName)}
+              </p>
+            ) : null}
+          </div>
+          <div className="relative shrink-0">
+            <MenuButton showBadge>
+              <Bell size={18} />
+            </MenuButton>
+          </div>
+        </div>
+
+        <hr className="border-border" />
+
+        {/* Nav content */}
+        <div className="flex-1 overflow-y-auto">
           <MenuContent />
-          <Divider />
-        </Stack>
+        </div>
+
+        <hr className="border-border" />
+
         <CardAlert />
-        <Stack sx={{ p: 2 }}>
-          <Button variant="outlined" fullWidth startIcon={<LogoutRoundedIcon />}  onClick={logoutuser}>
+
+        {/* Logout button */}
+        <div className="p-3">
+          <button
+            onClick={logoutuser}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+          >
+            <LogOut size={15} />
             Logout
-          </Button>
-        </Stack>
-      </Stack>
-    </Drawer>
+          </button>
+        </div>
+      </div>
+    </>
   );
 }
 

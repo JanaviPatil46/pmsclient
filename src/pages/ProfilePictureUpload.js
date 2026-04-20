@@ -2,17 +2,9 @@
 
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Avatar,
-  Button,
-  CircularProgress,
-  Box,
-  Typography
-} from '@mui/material';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import EditIcon from '@mui/icons-material/Edit';
 import axios from 'axios';
 import { toast } from 'material-react-toastify';
+import { Upload, Pencil, Loader2 } from 'lucide-react';
 
 const ProfilePictureUpload = ({ accountId, currentImage, onUploadSuccess }) => {
   const [image, setImage] = useState(null);
@@ -71,75 +63,50 @@ console.log("Preview Image:", preview);
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-      <Box sx={{ position: 'relative' }}>
-        <Avatar
-          src={preview || currentImage}
-          sx={{ width: 120, height: 120, border: '2px solid #eee' }}
-        />
+    <div className="flex flex-col items-center gap-4">
+      {/* Avatar with edit overlay */}
+      <div className="relative">
+        <div className="h-28 w-28 rounded-full border-2 border-border overflow-hidden bg-muted flex items-center justify-center">
+          {preview ? (
+            <img src={preview} alt="Profile" className="h-full w-full object-cover" />
+          ) : (
+            <span className="text-3xl font-bold text-muted-foreground select-none">?</span>
+          )}
+        </div>
         <input
           accept="image/*"
-          style={{ display: 'none' }}
+          className="hidden"
           id="profile-picture-upload"
           type="file"
           onChange={handleImageChange}
         />
-        <label htmlFor="profile-picture-upload">
-          <Box
-            component="span"
-            sx={{
-              position: 'absolute',
-              bottom: 0,
-              right: 0,
-              borderRadius: '10px',
-              cursor: 'pointer',
-              padding: '6px 8px',
-              backgroundColor: 'primary.main',
-              '&:hover': { backgroundColor: 'primary.dark' },
-            }}
-          >
-            <EditIcon sx={{ color: 'white' }} fontSize="small" />
-          </Box>
+        <label
+          htmlFor="profile-picture-upload"
+          className="absolute bottom-0 right-0 cursor-pointer rounded-lg bg-primary p-1.5 hover:bg-primary/90 transition-colors shadow-md"
+        >
+          <Pencil size={14} className="text-primary-foreground" />
         </label>
-      </Box>
+      </div>
 
       {image && (
-        <>
-          <Typography variant="body2" sx={{ mt: 1 }}>
-            {image.name} ({Math.round(image.size / 1024)} KB)
-          </Typography>
-
-          <Button
-            // variant="contained"
-            color="primary"
-            startIcon={<CloudUploadIcon />}
+        <div className="w-full space-y-2">
+          <p className="text-xs text-muted-foreground text-center">
+            {image.name} &mdash; {Math.round(image.size / 1024)} KB
+          </p>
+          <button
             onClick={handleUpload}
             disabled={isUploading}
-            fullWidth
-            // sx={{ mt: 2 }}
-            sx={{
-              backgroundColor: 'text.menu',
-              mt: 2,
-              color: 'primary.contrastText',
-              '&:hover': {
-                backgroundColor: 'menu.dark',
-                boxShadow: 1,
-              },
-              transition: 'background-color 0.2s ease'
-            }}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {isUploading ? (
-              <>
-                <CircularProgress size={24} color="inherit" />
-                <Box sx={{ ml: 1 }}>Uploading...</Box>
-              </>
+              <><Loader2 size={15} className="animate-spin" /> Uploading...</>
             ) : (
-              'Upload Profile Picture'
+              <><Upload size={15} /> Upload Profile Picture</>
             )}
-          </Button>
-        </>
+          </button>
+        </div>
       )}
-    </Box>
+    </div>
   );
 };
 
