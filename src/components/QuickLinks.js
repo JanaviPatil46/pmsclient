@@ -1,15 +1,6 @@
-// import React from 'react'
-import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
-import Grid from "@mui/material/Grid";
 import React, { useState } from "react";
-import { Divider, Stack, Typography } from "@mui/material";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
-import TelegramIcon from "@mui/icons-material/Telegram";
+import { UploadCloud, MessageCircle, Phone, MapPin, TrendingDown, CreditCard } from "lucide-react";
 import NewChat from "../pages/chats&tasks/NewChat";
-import PhoneAndroidIcon from "@mui/icons-material/PhoneAndroid";
-import LocationPinIcon from "@mui/icons-material/LocationPin";
 const QuickLinks = ({ accountId, accountName }) => {
   const [open, setOpen] = useState(false);
   console.log("accountId from quicklinks",accountId)
@@ -17,186 +8,103 @@ const QuickLinks = ({ accountId, accountName }) => {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   return (
-    <>
-   
-        <Paper sx={{
-                    p: 2,
-                    borderRadius: 2,
-                    boxShadow: 1,
-                    transition: "all 0.3s",
-                    cursor: "pointer",
-                    
-                  }}>
-          <Stack direction="row" sx={{ gap: 1, alignItems: "center", p: 2 }}>
-          <Typography variant="h6" component="p" sx={{ flexGrow: 1 }}>
-            Quick links
-          </Typography>
-        </Stack>
-      
-       
-        <Grid container spacing={2} sx={{ p: 1 }}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Stack>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <UploadFileIcon sx={{ color: "#f0c000" }} fontSize="small" />
-                <Typography variant="body2" sx={{ cursor: "pointer" }}>
-                  Uplaod Documents
-                </Typography>
-              </Box>
-            </Stack>
-          </Grid>
-          
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Stack>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <TelegramIcon fontSize="small" sx={{ color: "text.menu" }} />
-                <Typography
-                  variant="body2"
-                  sx={{ cursor: "pointer" }}
-                  onClick={handleOpen}
-                >
-                  Chats
-                </Typography>
-              </Box>
-            </Stack>
-          </Grid>
-        </Grid>
-        </Paper>
-        
-       
-<Paper sx={{
-                    p: 2,
-                    borderRadius: 2,
-                    boxShadow: 1,
-                    transition: "all 0.3s",
-                    cursor: "pointer",
-                    mt:3
-                    
-                  }}>
-        <Stack direction="row" sx={{ gap: 1, alignItems: "center", p: 2 }}>
-          <Typography variant="h6" component="p" sx={{ flexGrow: 1 }}>
-            Balance
-          </Typography>
-        </Stack>
-   
+    <div className="flex flex-col gap-4 font-sans">
 
-        <Box sx={{ flexGrow: 1, p: 2 }}>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Stack>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 2,
-                    flexDirection: "column",
-                  }}
-                >
-                  <Typography component="h2" variant="subtitle2" gutterBottom>
-                    Credits Available
-                  </Typography>
+      {/* ── Quick Links card ── */}
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border bg-muted/40">
+          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+          <p className="text-[13px] font-semibold text-foreground tracking-tight">Quick Links</p>
+        </div>
+        <div className="grid grid-cols-2 gap-1 p-3">
+          <button
+            type="button"
+            className="group flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-150"
+          >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-500/10 text-amber-500 group-hover:bg-amber-500/20 transition-colors">
+              <UploadCloud size={15} strokeWidth={1.8} />
+            </span>
+            Upload Documents
+          </button>
 
-                  <Typography
-                    component="h2"
-                    variant="subtitle2"
-                    gutterBottom
-                    sx={{ color: "success.main" }}
-                  >
-                    $0.00
-                  </Typography>
-                </Box>
-              </Stack>
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Stack>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 2,
-                    flexDirection: "column",
-                  }}
-                >
-                  <Typography component="h2" variant="subtitle2" gutterBottom>
-                    Outstanding Balance
-                  </Typography>
-                  <Typography
-                    component="h2"
-                    variant="subtitle2"
-                    gutterBottom
-                    sx={{ color: "warning.main" }}
-                  >
-                    $0.00
-                  </Typography>
-                </Box>
-              </Stack>
-            </Grid>
-          </Grid>
-        </Box>
-          </Paper>
-<Paper sx={{
-                    p: 2,
-                    borderRadius: 2,
-                    boxShadow: 1,
-                    transition: "all 0.3s",
-                    cursor: "pointer",
-                    mt:3
-                    
-                  }}>
-        <Stack direction="row" sx={{ gap: 1, alignItems: "center", p: 2 }}>
-          <Typography variant="h6" component="p" sx={{ flexGrow: 1 }}>
-            Contact info
-          </Typography>
-        </Stack>
+          <button
+            type="button"
+            onClick={handleOpen}
+            className="group flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-150"
+          >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+              <MessageCircle size={15} strokeWidth={1.8} />
+            </span>
+            Chats
+          </button>
+        </div>
+      </div>
 
-      
-        <Stack p={2}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <PhoneAndroidIcon fontSize="small" />
-            <Box>
-              <Typography
-                variant="subtitle2"
-                component="p"
-                sx={{ flexGrow: 1 }}
-              >
-                Phone
-              </Typography>
-              <Typography
-                variant="subtitle2"
-                component="p"
-                sx={{ flexGrow: 1 }}
-              >
-                (925) 800-3561
-              </Typography>
-            </Box>
-          </Box>
-        </Stack>
-        <Stack p={2}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <LocationPinIcon fontSize="small" sx={{ color: "#f0c000" }}/>
-            <Box>
-            {" "}
-            <Typography variant="subtitle2" component="p" sx={{ flexGrow: 1 }}>
-              Address
-            </Typography>
-            <Typography variant="subtitle2" component="p" sx={{ flexGrow: 1 }}>
-              3015 Hopyard Rd, Ste M, Pleasanton, CA 94588
-            </Typography>
-          </Box>
-          </Box>
-          
-        </Stack>
-        </Paper>
-      
+      {/* ── Balance card ── */}
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border bg-muted/40">
+          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+          <p className="text-[13px] font-semibold text-foreground tracking-tight">Balance</p>
+        </div>
+        <div className="grid grid-cols-2 divide-x divide-border">
+          {/* Credits Available */}
+          <div className="flex flex-col items-center gap-2 px-4 py-5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-500/10">
+              <CreditCard size={16} className="text-green-600 dark:text-green-400" strokeWidth={1.8} />
+            </div>
+            <p className="text-[11px] font-medium text-muted-foreground text-center">Credits Available</p>
+            <p className="text-base font-bold text-green-600 dark:text-green-400">$0.00</p>
+          </div>
+          {/* Outstanding Balance */}
+          <div className="flex flex-col items-center gap-2 px-4 py-5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-warning/10">
+              <TrendingDown size={16} className="text-warning" strokeWidth={1.8} />
+            </div>
+            <p className="text-[11px] font-medium text-muted-foreground text-center">Outstanding Balance</p>
+            <p className="text-base font-bold text-warning">$0.00</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Contact Info card ── */}
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border bg-muted/40">
+          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+          <p className="text-[13px] font-semibold text-foreground tracking-tight">Contact Info</p>
+        </div>
+        <div className="divide-y divide-border">
+          {/* Phone */}
+          <div className="flex items-center gap-3 px-5 py-3.5">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10">
+              <Phone size={14} className="text-primary" strokeWidth={1.8} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[11px] font-medium text-muted-foreground">Phone</p>
+              <p className="text-[13px] font-semibold text-foreground">(925) 800-3561</p>
+            </div>
+          </div>
+          {/* Address */}
+          <div className="flex items-start gap-3 px-5 py-3.5">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-amber-500/10 mt-0.5">
+              <MapPin size={14} className="text-amber-500" strokeWidth={1.8} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[11px] font-medium text-muted-foreground">Address</p>
+              <p className="text-[13px] font-semibold text-foreground leading-snug">
+                3015 Hopyard Rd, Ste M,<br />Pleasanton, CA 94588
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <NewChat
         open={open}
         close={handleClose}
         accId={accountId}
         accountName={accountName}
-        // loginuserid={loginUserId}
       />
-    </>
+    </div>
   );
 };
 

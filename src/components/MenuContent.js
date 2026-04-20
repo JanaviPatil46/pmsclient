@@ -111,28 +111,32 @@ const SIDEBAR_API = process.env.REACT_APP_SIDEBAR_URL
       location.pathname === item.path ||
       location.pathname.startsWith(item.path + "/");
     const IconComponent = iconMapping[item.icon];
-    
+
     return (
       <div key={item._id} title={collapsed ? item.label : ""}>
         <button
           onClick={() => navigate(item.path)}
           className={[
-            "w-full flex items-center rounded-lg mb-[6px] min-h-[48px] px-2.5 gap-3 transition-colors text-sm",
-            collapsed ? "justify-center" : "justify-start",
+            "group w-full flex items-center rounded-lg mb-0.5 gap-3 transition-all duration-200 ease-in-out text-[13px] font-medium font-sans outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+            collapsed ? "justify-center p-2.5" : "justify-start px-3 py-2.5",
             isActive
-              ? "bg-primary/10 text-primary border-l-2 border-primary"
-              : "text-foreground hover:bg-muted",
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground",
           ].join(" ")}
         >
           {IconComponent && (
-            <span className="flex-shrink-0 flex items-center justify-center">
-              <IconComponent size={20} />
+            <span className={[
+              "flex-shrink-0 flex items-center justify-center transition-transform duration-200",
+              isActive ? "" : "group-hover:scale-110",
+            ].join(" ")}>
+              <IconComponent
+                size={17}
+                strokeWidth={isActive ? 2.2 : 1.8}
+              />
             </span>
           )}
           {!collapsed && (
-            <span className="font-medium transition-opacity duration-200">
-              {item.label}
-            </span>
+            <span className="truncate tracking-[-0.01em]">{item.label}</span>
           )}
         </button>
       </div>
@@ -140,8 +144,8 @@ const SIDEBAR_API = process.env.REACT_APP_SIDEBAR_URL
   };
 
   return (
-    <div className="flex flex-col flex-1 p-1 justify-between overflow-hidden">
-      <nav className="overflow-hidden">
+    <div className="flex flex-col flex-1 px-1 py-2">
+      <nav className="space-y-0.5">
         {menuItems.map(renderMenuItem)}
       </nav>
     </div>

@@ -5,6 +5,7 @@ import MenuButton from "./MenuButton";
 import Search from "./Search";
 import SecondSidebar from "./SecondSidebar";
 import ThirdSidebar from "./ThirdSidebar";
+import ColorModeIconDropdown from "../shared-theme/ColorModeIconDropdown";
 export default function Header() {
   const [openNewDrawer, setOpenNewDrawer] = React.useState(false);
 
@@ -20,11 +21,13 @@ export default function Header() {
   };
 
   return (
-    <div>
-      <div className="hidden md:flex flex-row w-full items-center justify-between max-w-[1700px] pt-3 mb-[10px] gap-4">
+    <div className="font-sans w-full">
+      <div className="hidden md:flex flex-row w-full items-center justify-between max-w-[1700px] py-2.5 gap-4">
+        {/* Left: breadcrumbs */}
         <NavbarBreadcrumbs />
 
-        <div className="flex flex-row items-center gap-1">
+        {/* Right: toolbar */}
+        <div className="flex flex-row items-center gap-2">
           <SecondSidebar
             open={openNewDrawer}
             toggleDrawer={toggleNewDrawer}
@@ -37,13 +40,25 @@ export default function Header() {
             title={activeMenuItem}
           />
 
+          {/* Search */}
           <Search />
 
-          <div className="relative">
-            <MenuButton aria-label="Open notifications">
-              <Bell size={20} />
-            </MenuButton>
-            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-warning text-warning-foreground text-[10px] font-semibold flex items-center justify-center px-1 pointer-events-none">
+          {/* Divider */}
+          <div className="h-5 w-px bg-border shrink-0" />
+
+          {/* Theme toggle */}
+          <ColorModeIconDropdown />
+
+          {/* Notification bell */}
+          <div className="relative shrink-0">
+            <button
+              aria-label="Open notifications"
+              className="flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted active:scale-95 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+            >
+              <Bell size={17} strokeWidth={1.8} />
+            </button>
+            {/* Badge */}
+            <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center px-1 pointer-events-none ring-2 ring-background">
               4
             </span>
           </div>

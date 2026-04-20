@@ -33,6 +33,24 @@
     <title>Client Portal</title>
   </head>
   <body>
+    <!--
+      Blocking theme script — runs before React to prevent dark-mode flash.
+      Reads localStorage and applies .dark class to <html> immediately.
+    -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('theme');
+          if (saved === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else if (!saved || saved === 'system') {
+            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+              document.documentElement.classList.add('dark');
+            }
+          }
+        } catch (e) {}
+      })();
+    </script>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
     <!--

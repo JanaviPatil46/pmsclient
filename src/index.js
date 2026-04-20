@@ -4,26 +4,29 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import Context from "./context/Context";
+import AppTheme from "./shared-theme/AppTheme";
 import { ToastContainer } from "material-react-toastify";
 import "material-react-toastify/dist/ReactToastify.css";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <Context>
-    <React.StrictMode>
-      <App />
-      <ToastContainer
-        position="top-right"
-        theme="light"
-        autoClose={3000}
-        hideProgressBar
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
-    </React.StrictMode>
+    <AppTheme>
+      <React.StrictMode>
+        <App />
+        <ToastContainer
+          position="top-right"
+          theme="colored"
+          autoClose={3000}
+          hideProgressBar
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
+      </React.StrictMode>
+    </AppTheme>
   </Context>
 );
 

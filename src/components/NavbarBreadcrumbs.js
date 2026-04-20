@@ -1,26 +1,10 @@
-
-import { styled } from '@mui/material/styles';
-import Typography from '@mui/material/Typography';
-import { Box } from '@mui/material';
-import Breadcrumbs, { breadcrumbsClasses } from '@mui/material/Breadcrumbs';
-import NavigateNextRoundedIcon from '@mui/icons-material/NavigateNextRounded';
 import { Link, useLocation } from 'react-router-dom';
-import HomeFilledIcon from "@mui/icons-material/Home";
-const StyledBreadcrumbs = styled(Breadcrumbs)(({ theme }) => ({
-  margin: theme.spacing(1, 0),
-  [`& .${breadcrumbsClasses.separator}`]: {
-    color: (theme.vars || theme).palette.action.disabled,
-    margin: 1,
-  },
-  [`& .${breadcrumbsClasses.ol}`]: {
-    alignItems: 'center',
-  },
-}));
+import { Home, ChevronRight } from 'lucide-react';
 
 const customBreadcrumbMap = {
-  updatechat: ['chatstasks', 'updatechat'], // special case: show as Chats > Chat
+  updatechat: ['chatstasks', 'updatechat'],
   payinvoice: ['billing', 'payinvoice'],
-  trashDocs: ['document', 'trashDocs'], // special case: show as Documents > Trash
+  trashDocs: ['document', 'trashDocs'],
 };
 
 const pathToName = {
@@ -32,65 +16,52 @@ const pathToName = {
   billing: 'Invoices',
   settings: 'Settings',
   updatechat: 'Chat',
-  payinvoice:'Invoice'
+  payinvoice: 'Invoice',
 };
 
 export default function NavbarBreadcrumbs() {
-  // const location = useLocation();
-  // let pathnames = location.pathname.split('/').filter((x) => x);
+  const location = useLocation();
 
-  // if (customBreadcrumbMap[pathnames[0]]) {
-  //   pathnames = customBreadcrumbMap[pathnames[0]];
-  // }
-const location = useLocation();
-
-  // Remove the `/client` prefix
   let pathnames = location.pathname.replace(/^\/client/, '').split('/').filter(x => x);
 
-  // Apply custom mapping for special cases
   if (pathnames[0] && customBreadcrumbMap[pathnames[0]]) {
     pathnames = customBreadcrumbMap[pathnames[0]];
   }
+
   return (
-    <StyledBreadcrumbs
-      aria-label="breadcrumb"
-      separator={<NavigateNextRoundedIcon fontSize="small" />}
-    >
-      <Link to="/client/home" style={{ textDecoration: 'none', color: 'inherit' }}>
-      <Box mt={0.5}>
-      <HomeFilledIcon fontSize="small"  />
-      </Box>
-        
+    <nav aria-label="breadcrumb" className="flex items-center gap-1 font-sans">
+      {/* Home icon */}
+      <Link
+        to="/client/home"
+        className="flex items-center text-muted-foreground hover:text-foreground transition-colors duration-150"
+      >
+        <Home size={15} strokeWidth={1.8} />
       </Link>
 
       {pathnames.map((value, index) => {
-        const to = `/${pathnames.slice(0, index + 1).join('/')}`;
+        const to = `/client/${pathnames.slice(0, index + 1).join('/')}`;
         const isLast = index === pathnames.length - 1;
+        const label = pathToName[value] || value;
 
-        return isLast ? (
-          <Typography
-            key={to}
-            variant="body1"
-            sx={{ color: 'text.primary', fontWeight: 600 }}
-          >
-            {pathToName[value] || value}
-          </Typography>
-        ) : (
-          <Link
-            key={to}
-            to={to}
-            style={{
-              textDecoration: 'none',
-              color: 'inherit',
-            }}
-          >
-            <Typography variant="body1">
-              {pathToName[value] || value}
-            </Typography>
-          </Link>
+        return (
+          <span key={to} className="flex items-center gap-1">
+            <ChevronRight size={13} className="text-muted-foreground/50 shrink-0" />
+            {isLast ? (
+              <span className="text-[13px] font-semibold text-foreground tracking-[-0.01em]">
+                {label}
+              </span>
+            ) : (
+              <Link
+                to={to}
+                className="text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors duration-150 tracking-[-0.01em]"
+              >
+                {label}
+              </Link>
+            )}
+          </span>
         );
       })}
-    </StyledBreadcrumbs>
+    </nav>
   );
 }
 

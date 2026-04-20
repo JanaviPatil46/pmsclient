@@ -171,36 +171,41 @@ const [accounts, setAccounts] = useState(() => {
 
       {/* Slide-in panel */}
       <div
-        className={`fixed left-0 top-0 h-full z-[1301] flex flex-col bg-background border-r border-border shadow-xl transition-transform duration-300 ease-in-out ${
+        className={`fixed left-0 top-0 h-full z-[1301] flex flex-col bg-card border-r border-border shadow-xl transition-transform duration-300 ease-in-out font-sans ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
-        style={{ maxWidth: "70dvw", width: 280 }}
+        style={{ maxWidth: "80dvw", width: 280 }}
       >
-        {/* Top: avatar + account name + notification bell */}
-        <div className="flex items-center gap-2 p-3">
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <div className="h-7 w-7 rounded-full bg-muted border border-border flex items-center justify-center overflow-hidden shrink-0">
+        {/* Header: avatar + name + bell */}
+        <div className="flex items-center gap-3 px-3 h-14 shrink-0">
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden shrink-0 ring-2 ring-primary/20">
               {avatarSrc
                 ? <img src={avatarSrc} alt="avatar" className="h-full w-full object-cover" />
-                : <User size={14} className="text-muted-foreground" />}
+                : <User size={14} className="text-primary" />}
             </div>
-            {accountInfo ? (
-              <p className="text-sm font-semibold text-foreground truncate">
-                {truncate(accountInfo.accountName)}
-              </p>
-            ) : null}
+            <div className="min-w-0">
+              {accountInfo ? (
+                <>
+                  <p className="text-[13px] font-semibold text-foreground truncate leading-tight">
+                    {truncate(accountInfo.accountName)}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground truncate leading-tight">
+                    {truncate(email)}
+                  </p>
+                </>
+              ) : null}
+            </div>
           </div>
-          <div className="relative shrink-0">
-            <MenuButton showBadge>
-              <Bell size={18} />
-            </MenuButton>
-          </div>
+          <MenuButton showBadge>
+            <Bell size={17} />
+          </MenuButton>
         </div>
 
         <hr className="border-border" />
 
         {/* Nav content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto px-1.5 scrollbar-sidebar">
           <MenuContent />
         </div>
 
@@ -208,13 +213,13 @@ const [accounts, setAccounts] = useState(() => {
 
         <CardAlert />
 
-        {/* Logout button */}
+        {/* Logout */}
         <div className="p-3">
           <button
             onClick={logoutuser}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-border px-4 py-2.5 text-[13px] font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-colors"
           >
-            <LogOut size={15} />
+            <LogOut size={14} />
             Logout
           </button>
         </div>

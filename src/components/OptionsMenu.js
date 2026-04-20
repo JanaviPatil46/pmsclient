@@ -1,33 +1,10 @@
 import * as React from "react";
-
-import { useContext, useState,useEffect } from "react";
-import { styled } from "@mui/material/styles";
-import Divider, { dividerClasses } from "@mui/material/Divider";
-import Menu from "@mui/material/Menu";
-import MuiMenuItem from "@mui/material/MenuItem";
-import { paperClasses } from "@mui/material/Paper";
-import { listClasses } from "@mui/material/List";
-import ListItemText from "@mui/material/ListItemText";
-import ListItemIcon, { listItemIconClasses } from "@mui/material/ListItemIcon";
-import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
-import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
-import MenuButton from "./MenuButton";
+import { useContext, useState, useEffect, useRef } from "react";
+import { LogOut, MoreVertical, ArrowLeftRight, X, Check, Settings } from "lucide-react";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import { LoginContext } from "../context/Context";
 import { toast } from "material-react-toastify";
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Stack,
-} from "@mui/material";
-
-const MenuItem = styled(MuiMenuItem)({
-  margin: "2px 0",
-});
 
 export default function OptionsMenu({ email }) {
   console.log("{email}", email);
@@ -293,131 +270,146 @@ const [accounts, setAccounts] = useState([]);
   toast.success("Logout Successfully");
 
   };
+  const menuRef = useRef(null);
+  const triggerRef = useRef(null);
+  const [menuPos, setMenuPos] = useState(null);
+  const menuOpen = Boolean(menuPos);
+
+  const openMenu = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMenuPos({ bottom: window.innerHeight - rect.top + 6, right: window.innerWidth - rect.right });
+  };
+  const closeMenu = () => setMenuPos(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handleOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target) &&
+          triggerRef.current && !triggerRef.current.contains(e.target)) {
+        closeMenu();
+      }
+    };
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [menuOpen]);
+
   return (
-    <React.Fragment>
-      {/* Your JSX remains the same... */}
-      <MenuButton
+    <>
+      {/* Trigger button */}
+      <button
+        ref={triggerRef}
         aria-label="Open menu"
-        onClick={handleClick}
-        sx={{ borderColor: "transparent" }}
+        onClick={openMenu}
+        className="flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted active:scale-95 transition-all duration-150 shrink-0"
       >
-        <MoreVertRoundedIcon />
-      </MenuButton>
-      <Menu
-        anchorEl={anchorEl}
-        id="menu"
-        open={open}
-        onClose={handleClose}
-        onClick={handleClose}
-        transformOrigin={{ horizontal: "right", vertical: "top" }}
-        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-        sx={{
-          [`& .${listClasses.root}`]: {
-            padding: "4px",
-          },
-          [`& .${paperClasses.root}`]: {
-            padding: 0,
-          },
-          [`& .${dividerClasses.root}`]: {
-            margin: "4px -4px",
-          },
-        }}
-      >
-        {/* <MenuItem onClick={handleClose}>Profile</MenuItem> */}
-        {/* <MenuItem onClick={handleClose}>My account</MenuItem> */}
-        {/* <Divider /> */}
-     
-<MenuItem
-        disabled={accounts.length <= 1}
-        onClick={() => setOpenSwitchDialog(true)}
-      >
-        Switch Account
-      </MenuItem>
-        {/* <MenuItem onClick={handleClose}>Settings</MenuItem> */}
-        <Divider />
-        <MenuItem
-          onClick={logoutuser}
-          sx={{
-            [`& .${listItemIconClasses.root}`]: {
-              ml: "auto",
-              minWidth: 0,
-            },
+        <MoreVertical size={15} />
+      </button>
+
+      {/* Dropdown menu — fixed portal, opens upward */}
+      {menuOpen && menuPos && (
+        <div
+          ref={menuRef}
+          style={{
+            position: "fixed",
+            bottom: menuPos.bottom,
+            right: menuPos.right,
+            zIndex: 9999,
+            animation: "fadeInUp 0.15s ease-out both",
           }}
+          className="w-48 rounded-xl border border-border bg-card shadow-2xl py-1.5 overflow-hidden"
         >
-          <ListItemText>Logout</ListItemText>
-          <ListItemIcon>
-            <LogoutRoundedIcon fontSize="small" />
-          </ListItemIcon>
-        </MenuItem>
-      </Menu>
+          {/* Profile section */}
+          <div className="px-3 py-2 border-b border-border mb-1">
+            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Account</p>
+          </div>
 
-      {/* <Dialog
-        open={openSwitchDialog}
-        onClose={() => setOpenSwitchDialog(false)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>Switch Account</DialogTitle>
-        <DialogContent dividers>
-          <Stack spacing={2}>
-            {accountUsers.length > 0 ? (
-              accountUsers
-                .filter((user) => user._id !== logindata?.user?.id)
-                .map((user) => (
-                  <Button
-                    key={user._id}
-                    variant={selectedUser && selectedUser._id === user._id ? "contained" : "outlined"}
-                    fullWidth
-                    onClick={() => handleSwitchAccount(user)}
-                  >
-                    {user.accountName
-                      ? `${user.accountName} `
-                      : `${user.username} (${user.role})`}
-                  </Button>
-                ))
-            ) : (
-              <p>No accounts available</p>
-            )}
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenSwitchDialog(false)}>Cancel</Button>
-        </DialogActions>
-      </Dialog> */}
-     <Dialog open={openSwitchDialog} onClose={() => setOpenSwitchDialog(false)}>
-  <DialogTitle>Switch Account</DialogTitle>
-  <DialogContent dividers>
-    {accounts.length > 1 ? (
-      accounts.map(acc => {
-        const isCurrent = selectedAccount === acc._id;
-        return (
-          <Button
-            key={acc._id}
-            fullWidth
-            sx={{ mb: 1, justifyContent: "space-between" }}
-            variant={isCurrent ? "contained" : "outlined"}
-            // disabled={isCurrent} // prevent switching on same account
-            onClick={() => !isCurrent && handleSwitchAccount(acc._id)}
+          <button
+            disabled={accounts.length <= 1}
+            onClick={() => { closeMenu(); setOpenSwitchDialog(true); }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-foreground hover:bg-muted transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed rounded-none"
           >
-            {acc.accountName}
-            {isCurrent && (
-              <span style={{ fontSize: "12px", opacity: 0.8 }}>
-                (Current)
-              </span>
-            )}
-          </Button>
-        );
-      })
-    ) : (
-      <p>No other accounts available</p>
-    )}
-  </DialogContent>
+            <ArrowLeftRight size={13} className="text-muted-foreground shrink-0" />
+            <span>Switch Account</span>
+          </button>
 
-  <DialogActions>
-    <Button onClick={() => setOpenSwitchDialog(false)}>Close</Button>
-  </DialogActions>
-</Dialog>
+          <button
+            onClick={() => { closeMenu(); navigate("/client/settings"); }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-foreground hover:bg-muted transition-colors duration-150"
+          >
+            <Settings size={13} className="text-muted-foreground shrink-0" />
+            <span>Settings</span>
+          </button>
 
-    </React.Fragment>
+          <hr className="border-border my-1" />
+
+          <button
+            onClick={() => { closeMenu(); logoutuser(); }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-destructive hover:bg-destructive/10 transition-colors duration-150"
+          >
+            <LogOut size={13} className="shrink-0" />
+            <span>Logout</span>
+          </button>
+        </div>
+      )}
+
+      {/* Switch Account modal */}
+      {openSwitchDialog && (
+        <div className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/50">
+          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <h2 className="text-base font-semibold text-foreground">Switch Account</h2>
+              <button
+                onClick={() => setOpenSwitchDialog(false)}
+                className="flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            {/* Modal body */}
+            <div className="px-5 py-4 space-y-2 max-h-72 overflow-y-auto">
+              {accounts.length > 1 ? (
+                accounts.map((acc) => {
+                  const isCurrent = selectedAccount === acc._id;
+                  return (
+                    <button
+                      key={acc._id}
+                      onClick={() => !isCurrent && handleSwitchAccount(acc._id)}
+                      className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg border text-sm font-medium transition-colors ${
+                        isCurrent
+                          ? "bg-primary/10 border-primary/30 text-primary cursor-default"
+                          : "border-border text-foreground hover:bg-muted cursor-pointer"
+                      }`}
+                    >
+                      <span className="truncate">{acc.accountName}</span>
+                      {isCurrent && (
+                        <span className="flex items-center gap-1 text-[10px] text-primary shrink-0">
+                          <Check size={11} /> Current
+                        </span>
+                      )}
+                    </button>
+                  );
+                })
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No other accounts available
+                </p>
+              )}
+            </div>
+
+            {/* Modal footer */}
+            <div className="px-5 py-3 border-t border-border flex justify-end">
+              <button
+                onClick={() => setOpenSwitchDialog(false)}
+                className="px-4 py-2 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

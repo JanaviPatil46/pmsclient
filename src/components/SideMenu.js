@@ -94,80 +94,83 @@ export default function SideMenu({ collapsed: collapsedProp, onCollapseToggle })
 
   return (
     <aside
-      className="hidden md:flex flex-col fixed left-0 top-0 h-screen bg-background border-r border-border z-40 shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out"
+      className="hidden md:flex flex-col fixed left-0 top-0 h-screen bg-card border-r border-border z-40 shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out shadow-sm font-sans"
       style={{ width: collapsed ? collapsedWidth : drawerWidth }}
     >
-      {/* Header: logo + collapse toggle */}
-      <div className={`flex items-center p-2 mt-1 ${collapsed ? "justify-center" : "justify-between"}`}>
+      {/* ── Header ── */}
+      <div className={`flex items-center px-3 py-3 h-14 shrink-0 ${collapsed ? "justify-center" : "justify-between"}`}>
         {!collapsed && (
-          <div className="flex items-center ml-1">
-            <img src={Logo} alt="Company Logo" className="h-14 object-contain" />
-          </div>
+          <img src={Logo} alt="Logo" className="h-9 object-contain shrink-0 max-w-[140px]" />
         )}
         <button
           onClick={toggleCollapse}
           title={collapsed ? "Expand" : "Collapse"}
-          className="flex items-center justify-center rounded-full bg-primary p-0.5 text-primary-foreground hover:bg-primary/90 transition-colors shrink-0"
+          className="flex items-center justify-center rounded-full h-6 w-6 bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200 shrink-0"
         >
-          {collapsed
-            ? <ChevronRight size={22} />
-            : <ChevronLeft size={22} />}
+          {collapsed ? <ChevronRight size={13} /> : <ChevronLeft size={13} />}
         </button>
       </div>
 
       <hr className="border-border" />
 
-      {/* Nav content — scrollable */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+      {/* ── Nav ── */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-1.5 scrollbar-sidebar">
         <MenuContent collapsed={collapsed} />
       </div>
 
-      {/* Collapsed icon actions */}
+      {/* ── Collapsed quick-actions ── */}
       {collapsed && (
-        <div className="flex flex-col items-center gap-2 p-2">
-          <MenuButton>
-            <ArrowLeftRight size={18} />
+        <div className="flex flex-col items-center gap-1 px-1.5 py-2 border-t border-border">
+          <MenuButton title="Switch Account">
+            <ArrowLeftRight size={15} />
           </MenuButton>
-          <MenuButton onClick={logoutuser}>
-            <LogOut size={18} />
+          <MenuButton onClick={logoutuser} title="Logout">
+            <LogOut size={15} />
           </MenuButton>
         </div>
       )}
 
-      {/* Footer: avatar + account info (expanded) OR avatar only (collapsed) */}
+      {/* ── Footer ── */}
       {!collapsed ? (
-        <div className="flex items-center gap-2 p-3 border-t border-border">
+        <div className="group flex items-center gap-2.5 px-3 py-3 border-t border-border hover:bg-muted/40 transition-colors duration-200 shrink-0 cursor-default">
+          {/* Avatar */}
           <div
-            className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden border border-border"
+            className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-primary/20"
             title={accountInfo ? `${accountInfo.accountName} • ${accountInfo.clientType}` : "Account"}
           >
             {avatarSrc
               ? <img src={avatarSrc} alt="avatar" className="h-full w-full object-cover" />
-              : <User size={16} className="text-muted-foreground" />}
+              : <User size={14} className="text-primary" />}
           </div>
-          <div className="flex-1 min-w-0 mr-auto">
+          {/* Name + email */}
+          <div className="flex-1 min-w-0">
             {accountInfo ? (
               <>
-                <p className="text-xs font-semibold text-foreground truncate leading-4">
+                <p className="text-[13px] font-semibold text-foreground truncate leading-tight">
                   {truncate(accountInfo.accountName)}
                 </p>
-                <p className="text-[11px] text-muted-foreground truncate">
+                <p className="text-[11px] text-muted-foreground truncate leading-tight">
                   {truncate(email)}
                 </p>
               </>
-            ) : null}
+            ) : (
+              <p className="text-[11px] text-muted-foreground">Loading…</p>
+            )}
           </div>
-          <OptionsMenu email={email} />
+          {/* 3-dot menu — visible on hover */}
+          <div className="opacity-60 group-hover:opacity-100 transition-opacity duration-150">
+            <OptionsMenu email={email} />
+          </div>
         </div>
       ) : (
-        <div className="flex justify-center p-2 border-t border-border">
+        <div className="flex justify-center px-1.5 py-3 border-t border-border shrink-0">
           <div
-            className="h-9 w-9 rounded-full bg-muted flex items-center justify-center overflow-hidden border border-border"
-            title={accountInfo ? `${accountInfo.accountName} • ${accountInfo.clientType}` : "No account info"}
+            className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden ring-2 ring-primary/20 cursor-pointer hover:ring-primary/50 transition-all duration-200"
+            title={accountInfo ? `${accountInfo.accountName} • ${accountInfo.clientType}` : "No account"}
           >
             {avatarSrc
               ? <img src={avatarSrc} alt="avatar" className="h-full w-full object-cover" />
-              : <User size={16} className="text-muted-foreground" />}
+              : <User size={14} className="text-primary" />}
           </div>
         </div>
       )}
