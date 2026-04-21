@@ -192,16 +192,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import {
-  Box,
-  Paper,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  CircularProgress,
-  Container
-} from '@mui/material';
+import { Mail, ArrowLeft, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import logo from '../Images/snplogo-removebg-preview.png';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -224,9 +216,8 @@ const ForgotPassword = () => {
     try {
       await axios.post(
         'https://www.snptaxes.com/api/auth/forgot-password',
-        { email:email }
+        { email: email }
       );
-      
       setSuccess('Password reset instructions have been sent to your email.');
       setEmail('');
     } catch (error) {
@@ -237,72 +228,95 @@ const ForgotPassword = () => {
   };
 
   return (
-    <Container component="main" maxWidth="sm">
-      <Box
-        sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
-          <Typography component="h1" variant="h4" align="center" gutterBottom>
-            Forgot Password
-          </Typography>
-          
-          <Typography variant="body1" align="center" sx={{ mb: 3, color: 'text.secondary' }}>
-            Enter your email address and we'll send you instructions to reset your password.
-          </Typography>
+    <div className="min-h-screen flex flex-col bg-background font-sans">
+      {/* Top bar with logo */}
+      <header className="flex items-center px-6 py-4 border-b border-border shrink-0">
+        <img src={logo} alt="SNP Tax & Financials" className="h-8 w-auto" />
+      </header>
 
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
+      {/* Centered card */}
+      <main className="flex flex-1 items-center justify-center p-4">
+        <div className="w-full max-w-sm flex flex-col gap-6">
 
-          {success && (
-            <Alert severity="success" sx={{ mb: 2 }}>
-              {success}
-            </Alert>
-          )}
+          {/* Icon + heading */}
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <Mail size={22} className="text-primary" strokeWidth={1.8} />
+            </div>
+            <div>
+              <h1 className="text-2xl font-semibold text-foreground tracking-tight">Reset your password</h1>
+              <p className="mt-1 text-[13px] text-muted-foreground">
+                Enter your email and we'll send you reset instructions.
+              </p>
+            </div>
+          </div>
 
-          <form onSubmit={handleSubmit}>
-            <TextField
-              fullWidth
-              margin="normal"
-              label="Email Address"
-              name="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={loading}
-              autoComplete="email"
-            />
-            
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-              disabled={loading}
-              size="large"
-            >
-              {loading ? <CircularProgress size={24} /> : 'Send Reset Instructions'}
-            </Button>
+          {/* Card */}
+          <div className="rounded-xl border border-border bg-card shadow-sm p-6 flex flex-col gap-4">
 
-            <Box textAlign="center">
-              <Link to="/client/login" style={{ textDecoration: 'none' }}>
-                <Button color="primary">
-                  Back to Login
-                </Button>
-              </Link>
-            </Box>
-          </form>
-        </Paper>
-      </Box>
-    </Container>
+            {/* Error alert */}
+            {error && (
+              <div className="flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/10 px-3.5 py-3">
+                <AlertCircle size={15} className="text-destructive shrink-0 mt-0.5" />
+                <p className="text-[13px] text-destructive font-medium">{error}</p>
+              </div>
+            )}
+
+            {/* Success alert */}
+            {success && (
+              <div className="flex items-start gap-2.5 rounded-lg border border-green-500/30 bg-green-500/10 px-3.5 py-3">
+                <CheckCircle size={15} className="text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                <p className="text-[13px] text-green-700 dark:text-green-400 font-medium">{success}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="email" className="text-[13px] font-medium text-foreground">
+                  Email Address
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 size={15} className="animate-spin" />
+                    Sending…
+                  </>
+                ) : (
+                  'Send Reset Instructions'
+                )}
+              </button>
+            </form>
+          </div>
+
+          {/* Back to login */}
+          <Link
+            to="/client/login"
+            className="flex items-center justify-center gap-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors duration-150"
+          >
+            <ArrowLeft size={14} strokeWidth={2} />
+            Back to Login
+          </Link>
+        </div>
+      </main>
+    </div>
   );
 };
 

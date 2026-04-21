@@ -331,6 +331,7 @@ import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 import { Link as RouterLink } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import logo from "../Images/snplogo-removebg-preview.png";
 
 
 const setupAutoLogout = (token, logoutFunc) => {
@@ -481,81 +482,111 @@ const LoginPage = () => {
 
   // Login Form UI
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-sm flex flex-col gap-5 rounded-xl border border-border bg-card p-8 shadow-sm">
-        <h1 className="text-2xl font-semibold text-foreground">Login</h1>
+    <div className="min-h-screen flex flex-col bg-background font-sans">
+      {/* Top bar with logo */}
+      <header className="flex items-center px-6 py-4 border-b border-border shrink-0">
+        <img src={logo} alt="SNP Tax & Financials" className="h-8 w-auto" />
+      </header>
 
-        <form onSubmit={handleLogin} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <label htmlFor="email" className="text-sm font-medium text-foreground">Email</label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={`w-full rounded-lg border px-3 py-2 text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 ${
-                emailError ? "border-destructive" : "border-border"
-              }`}
-            />
-            {emailError && <p className="text-xs text-destructive">{emailErrorMsg}</p>}
+      {/* Centered content */}
+      <main className="flex flex-1 items-center justify-center p-4">
+        <div className="w-full max-w-sm flex flex-col gap-6">
+
+          {/* Title + subtitle */}
+          <div className="text-center">
+            <h1 className="text-[28px] font-bold text-foreground tracking-tight">Login</h1>
+            <p className="mt-1 text-[13px] text-muted-foreground">Hi, Welcome back 👋</p>
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label htmlFor="password" className="text-sm font-medium text-foreground">Password</label>
-            <div className="relative">
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={`w-full rounded-lg border px-3 py-2 pr-10 text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 ${
-                  passwordError ? "border-destructive" : "border-border"
-                }`}
-              />
-              {password.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  tabIndex={-1}
+          {/* Card */}
+          <div className="rounded-xl border border-border bg-card shadow-sm p-6 flex flex-col gap-5">
+
+            <form onSubmit={handleLogin} className="flex flex-col gap-4">
+              {/* Email */}
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="email" className="text-[13px] font-medium text-foreground">Email</label>
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={`w-full rounded-lg border px-3 py-2.5 text-[13px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all duration-200 ${
+                    emailError ? "border-destructive" : "border-border"
+                  }`}
+                />
+                {emailError && (
+                  <p className="text-[11px] text-destructive font-medium">{emailErrorMsg}</p>
+                )}
+              </div>
+
+              {/* Password */}
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="password" className="text-[13px] font-medium text-foreground">Password</label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={`w-full rounded-lg border px-3 py-2.5 pr-10 text-[13px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all duration-200 ${
+                      passwordError ? "border-destructive" : "border-border"
+                    }`}
+                  />
+                  {password.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff size={15} strokeWidth={1.8} /> : <Eye size={15} strokeWidth={1.8} />}
+                    </button>
+                  )}
+                </div>
+                {passwordError && (
+                  <p className="text-[11px] text-destructive font-medium">{passwordErrorMsg}</p>
+                )}
+              </div>
+
+              {/* Remember me + Forgot password row */}
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    className="h-3.5 w-3.5 rounded border-border accent-primary"
+                  />
+                  <span className="text-[13px] text-muted-foreground">Remember Me</span>
+                </label>
+                <RouterLink
+                  to="/client/forgot-password"
+                  className="text-[13px] font-medium text-primary hover:underline transition-colors"
                 >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              )}
-            </div>
-            {passwordError && <p className="text-xs text-destructive">{passwordErrorMsg}</p>}
+                  Forgot Password?
+                </RouterLink>
+              </div>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                className="w-full rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-150 shadow-sm"
+              >
+                Login
+              </button>
+            </form>
           </div>
 
-          <button
-            type="submit"
-            className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            Login
-          </button>
-
-          <RouterLink
-            to="/client/forgot-password"
-            className="self-center text-sm text-primary hover:underline"
-          >
-            Forgot your password?
-          </RouterLink>
-        </form>
-
-        <div className="flex items-center gap-2">
-          <hr className="flex-1 border-border" />
-          <span className="text-xs text-muted-foreground">or</span>
-          <hr className="flex-1 border-border" />
+          {/* Sign up footer */}
+          <p className="text-center text-[13px] text-muted-foreground">
+            Not registered yet?{" "}
+            <RouterLink to="/signup" className="text-primary hover:underline font-semibold">
+              Create an account ↗
+            </RouterLink>
+          </p>
         </div>
-
-        <p className="text-center text-sm text-foreground">
-          Don't have an account?{" "}
-          <RouterLink to="/signup" className="text-primary hover:underline font-medium">
-            Sign Up
-          </RouterLink>
-        </p>
-      </div>
+      </main>
     </div>
   );
 };

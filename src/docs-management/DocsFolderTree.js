@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import {
-  Eye, PenTool, Stamp, Lock,
+  Eye, Lock,
   Folder as FolderClosedIcon,
   FolderOpen as FolderOpenIcon,
   X as CloseIcon,
@@ -13,6 +13,14 @@ import {
   Download as DownloadIcon,
   Trash2 as DeleteIcon,
   FolderInput as DriveFileMoveIcon,
+  FileText as FilePdfIcon,
+  Image as FileImageIcon,
+  FileType2 as FileWordIcon,
+  Sheet as FileExcelIcon,
+  AlignLeft as FileAltIcon,
+  File as FileUnknownIcon,
+  Loader2,
+  Files,
 } from "lucide-react";
 import FileUploadDrawer from "./drawers/FileUploadDrawer";
 import CreteFolderDrawer from "./drawers/CreteFolderDrawer";
@@ -23,15 +31,7 @@ import { useNavigate } from "react-router-dom";
 import ParentFolderMenu from "./ParentFolderMenu";
 import FolderMenu from "./FolderMenu";
 import FileMenu from "./FileMenu";
-import {
-  FaFilePdf,
-  FaFileWord,
-  FaFileExcel,
-  FaFileImage,
-  FaFileAlt,
-} from "react-icons/fa";
 import axios from "axios";
-import { AiFillFileUnknown } from "react-icons/ai";
 import { DocusealForm } from "@docuseal/react";
 import { toast } from "material-react-toastify";
 
@@ -1023,27 +1023,26 @@ const trashItem = async (item) => {
       }
     };
     const getFileIcon = (fileName) => {
-      const ext = fileName.split(".").pop().toLowerCase();
-
+      const ext = fileName?.split(".").pop().toLowerCase();
       switch (ext) {
         case "pdf":
-          return <FaFilePdf color="#d32f2f" size={18} />;
+          return <FilePdfIcon size={16} className="shrink-0 text-red-500" strokeWidth={1.8} />;
         case "jpg":
         case "jpeg":
         case "png":
         case "gif":
-          return <FaFileImage color="#1976d2" size={18} />;
+          return <FileImageIcon size={16} className="shrink-0 text-blue-500" strokeWidth={1.8} />;
         case "doc":
         case "docx":
-          return <FaFileWord color="#1565c0" size={18} />;
+          return <FileWordIcon size={16} className="shrink-0 text-blue-700" strokeWidth={1.8} />;
         case "xls":
         case "xlsx":
-          return <FaFileExcel color="#2e7d32" size={18} />;
+          return <FileExcelIcon size={16} className="shrink-0 text-green-600" strokeWidth={1.8} />;
         case "txt":
         case "md":
-          return <FaFileAlt color="#616161" size={18} />;
+          return <FileAltIcon size={16} className="shrink-0 text-muted-foreground" strokeWidth={1.8} />;
         default:
-          return <AiFillFileUnknown color="#757575" size={18} />;
+          return <FileUnknownIcon size={16} className="shrink-0 text-muted-foreground" strokeWidth={1.8} />;
       }
     };
     const INVOICE_LOCK_STATUSES = ["pendingpayment", "paymentcompleted"];
@@ -1239,14 +1238,14 @@ const trashItem = async (item) => {
         return (
           <React.Fragment key={fullPath}>
             <tr
-              className={`border-t border-border transition-colors ${
-                isSelected ? "bg-primary/10" : ""
-              } hover:bg-primary/5 ${
+              className={`group border-t border-border transition-all duration-150 ${
+                isSelected ? "bg-primary/8" : ""
+              } hover:bg-muted/40 ${
                 item.meta?.readOnly ? "cursor-not-allowed" : "cursor-pointer"
               } ${isFolder ? "folder-row" : ""}`}
             >
               {/* Checkbox Column */}
-              <td className="w-[50px] pl-3 py-2">
+              <td className="w-[50px] pl-3 py-3">
                 <input
                   type="checkbox"
                   className="h-4 w-4 rounded accent-primary"
@@ -1261,7 +1260,7 @@ const trashItem = async (item) => {
               </td>
 
               {/* Name Column with indentation */}
-              <td className="py-2" style={{ paddingLeft: `${level * 16 + 8}px` }}>
+              <td className="py-3" style={{ paddingLeft: `${level * 16 + 8}px` }}>
                 <div className="flex items-center">
                   {isFolder ? (
                     <>
@@ -1272,8 +1271,8 @@ const trashItem = async (item) => {
                         disabled={meta.readOnly}
                       >
                         {expandedFolders[fullPath]
-                          ? <FolderOpenIcon size={16} color="#1976d2" />
-                          : <FolderClosedIcon size={16} color="#757575" />}
+                          ? <FolderOpenIcon size={16} className="text-primary" />
+                          : <FolderClosedIcon size={16} className="text-amber-500" />}
                       </button>
                       <span
                         className={`text-sm font-medium cursor-pointer ml-0.5 ${
@@ -1324,26 +1323,25 @@ const trashItem = async (item) => {
                 </div>
               </td>
 
-              <td className="py-2 px-2">
-                <div className="mt-0.5">{getStatusChip(meta, isFolder)}</div>
+              <td className="py-3 px-3">
+                <div>{getStatusChip(meta, isFolder)}</div>
               </td>
 
-              {/* Last Modified Column */}
-              <td className="py-2 px-2">
+              <td className="py-3 px-3">
                 <UploadedInfo meta={meta} />
               </td>
-              <td className="py-2 px-2">
-                <span className="text-xs font-bold text-foreground">{meta.uploadedBy}</span>
+              <td className="py-3 px-3">
+                <span className="text-[12px] font-medium text-muted-foreground">{meta.uploadedBy}</span>
               </td>
 
-              <td className="py-2 px-2 text-right">
+              <td className="py-3 px-3 text-right">
                 {!hideMenu && (
                   <button
                     type="button"
-                    className="p-1 rounded hover:bg-muted text-foreground"
+                    className="inline-flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-muted hover:text-foreground transition-all duration-150"
                     onClick={(e) => handleMenuOpen(e, { ...item, fullPath })}
                   >
-                    <MoreVertIcon size={16} />
+                    <MoreVertIcon size={14} />
                   </button>
                 )}
               </td>
@@ -1366,54 +1364,71 @@ const trashItem = async (item) => {
     };
 
     return (
-      <div className="w-full max-w-[1700px] overflow-auto p-2">
-        {/* Page header */}
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-xl font-bold text-foreground tracking-tight">Documents</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Manage your files and folders</p>
+      <div className="w-full max-w-[1700px] flex-1 h-[90vh] overflow-auto font-sans">
+        <div className="p-4 sm:p-6 flex flex-col gap-5">
+
+        {/* ── Page header ── */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 shrink-0">
+                <Files size={16} className="text-primary" strokeWidth={1.8} />
+              </div>
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground">Documents</h1>
+            </div>
+            <p className="text-[13px] text-muted-foreground pl-10">
+              Manage your files and folders.
+            </p>
           </div>
-          {/* Toolbar */}
-          <div className="flex items-center gap-2 flex-wrap justify-end">
+
+          {/* ── Toolbar ── */}
+          <div className="flex items-center gap-2 flex-wrap shrink-0">
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition-colors shadow-sm"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-[13px] font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-150"
               onClick={() => { setNewFolderDrawerOpen(true); handleMenuClose(); }}
             >
-              <FolderIcon size={13} /> New Folder
+              <FolderIcon size={14} strokeWidth={2} /> New Folder
             </button>
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition-colors shadow-sm"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-2 text-[13px] font-semibold text-foreground hover:bg-muted hover:scale-[1.02] active:scale-[0.98] transition-all duration-150 shadow-sm"
               onClick={() => setFileUploadDrawerOpen(true)}
             >
-              <UploadFileIcon size={13} /> Upload File
+              <UploadFileIcon size={14} strokeWidth={2} /> Upload File
             </button>
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition-colors shadow-sm"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-2 text-[13px] font-semibold text-foreground hover:bg-muted hover:scale-[1.02] active:scale-[0.98] transition-all duration-150 shadow-sm"
               onClick={() => setFolderUploaDrawerOpen(true)}
             >
-              <DriveFolderUploadIcon size={13} /> Upload Folder
+              <DriveFolderUploadIcon size={14} strokeWidth={2} /> Upload Folder
             </button>
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/10 transition-colors shadow-sm"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/40 bg-destructive/5 px-3.5 py-2 text-[13px] font-semibold text-destructive hover:bg-destructive/10 hover:scale-[1.02] active:scale-[0.98] transition-all duration-150 shadow-sm"
               onClick={handleTrashClick}
             >
-              <DeleteIcon size={13} /> View Trash
+              <DeleteIcon size={14} strokeWidth={2} /> View Trash
             </button>
           </div>
         </div>
 
-        {/* Bulk selection bar */}
+        {/* ── Bulk selection bar ── */}
         {selectedItems.size > 0 && (
-          <div className="flex items-center justify-between flex-wrap gap-2 px-4 py-2.5 mb-3 rounded-lg border border-primary/30 bg-primary/5 shadow-sm">
-            <p className="text-sm font-semibold text-primary">{selectedItems.size} item{selectedItems.size !== 1 ? "s" : ""} selected</p>
+          <div className="flex items-center justify-between flex-wrap gap-2 px-4 py-3 rounded-xl border border-primary/25 bg-primary/5 shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                {selectedItems.size}
+              </span>
+              <p className="text-[13px] font-semibold text-primary">
+                item{selectedItems.size !== 1 ? "s" : ""} selected
+              </p>
+            </div>
             <div className="flex gap-2 flex-wrap">
               <button
                 type="button"
-                className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-[12px] font-semibold text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-150 disabled:opacity-50"
                 onClick={() => setBulkMoveDrawerOpen(true)}
                 disabled={bulkOperationLoading}
               >
@@ -1421,15 +1436,7 @@ const trashItem = async (item) => {
               </button>
               <button
                 type="button"
-                className="inline-flex items-center gap-1 rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
-                onClick={handleBulkTrash}
-                disabled={bulkOperationLoading}
-              >
-                <DeleteIcon size={12} /> Delete
-              </button>
-              <button
-                type="button"
-                className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-[12px] font-semibold text-foreground hover:bg-muted active:scale-[0.98] transition-all duration-150 disabled:opacity-50"
                 onClick={handleBulkDownload}
                 disabled={bulkOperationLoading}
               >
@@ -1437,7 +1444,15 @@ const trashItem = async (item) => {
               </button>
               <button
                 type="button"
-                className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-1.5 text-[12px] font-semibold text-destructive hover:bg-destructive/10 active:scale-[0.98] transition-all duration-150 disabled:opacity-50"
+                onClick={handleBulkTrash}
+                disabled={bulkOperationLoading}
+              >
+                <DeleteIcon size={12} /> Delete
+              </button>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-[12px] font-semibold text-muted-foreground hover:bg-muted active:scale-[0.98] transition-all duration-150 disabled:opacity-50"
                 onClick={() => setSelectedItems(new Set())}
                 disabled={bulkOperationLoading}
               >
@@ -1724,31 +1739,51 @@ const trashItem = async (item) => {
           </div>
         )}
 
-        {/* Folder Explorer */}
+        {/* ── Folder Explorer card ── */}
         <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-          <div className="px-4 py-3 border-b border-border bg-muted/40">
-            <h2 className="text-sm font-semibold text-foreground tracking-tight">Folder Explorer</h2>
+          {/* Card header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
+            <div className="flex items-center gap-2">
+              <FolderClosedIcon size={14} className="text-amber-500 shrink-0" />
+              <p className="text-[13px] font-semibold text-foreground tracking-tight">Folder Explorer</p>
+              {folderTree.length > 0 && (
+                <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground border border-border">
+                  {folderTree.length}
+                </span>
+              )}
+            </div>
           </div>
+
           {folderTree && folderTree.length > 0 ? (
             <div className="overflow-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border bg-muted/60">
-                    <th className="w-[50px] px-3 py-2.5"></th>
-                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Name</th>
-                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Status</th>
-                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Uploaded</th>
-                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">User</th>
-                    <th className="px-3 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actions</th>
+                  <tr className="border-b border-border bg-muted/40">
+                    <th className="w-10 pl-3 py-3">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded accent-primary cursor-pointer"
+                        checked={selectAll}
+                        onChange={handleSelectAll}
+                      />
+                    </th>
+                    <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Name</th>
+                    <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Status</th>
+                    <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Uploaded</th>
+                    <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">User</th>
+                    <th className="px-3 py-3 text-right text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">{renderTableRows(folderTree)}</tbody>
+                <tbody className="divide-y divide-border/60">{renderTableRows(folderTree)}</tbody>
               </table>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-              <FolderClosedIcon size={32} className="mb-3 opacity-20" />
-              <p className="text-sm">No files or folders yet</p>
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                <FolderClosedIcon size={22} className="text-muted-foreground" strokeWidth={1.5} />
+              </div>
+              <p className="text-sm font-medium text-foreground">No files or folders yet</p>
+              <p className="text-[13px] text-muted-foreground">Use the buttons above to create a folder or upload files.</p>
             </div>
           )}
         </div>
@@ -1792,6 +1827,8 @@ const trashItem = async (item) => {
             />
           )
         ) : null}
+
+        </div>
       </div>
     );
   };

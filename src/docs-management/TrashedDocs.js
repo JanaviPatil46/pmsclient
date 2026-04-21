@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Folder as FolderClosedIcon, FolderOpen as FolderOpenIcon, MoreVertical, Trash2, RotateCcw, Download, ChevronRight } from "lucide-react";
-import { toast } from "material-react-toastify";
 import {
-  FaFilePdf,
-  FaFileWord,
-  FaFileExcel,
-  FaFileImage,
-  FaFileAlt,
-} from "react-icons/fa";
-import { AiFillFileUnknown } from "react-icons/ai";
+  Folder as FolderClosedIcon,
+  FolderOpen as FolderOpenIcon,
+  MoreVertical, Trash2, RotateCcw, Download, ChevronRight,
+  FileText as FaFilePdf,
+  Image as FaFileImage,
+  FileType2 as FaFileWord,
+  AlignLeft as FaFileAlt,
+  File as AiFillFileUnknown,
+} from "lucide-react";
+import { toast } from "material-react-toastify";
 const TrashedDocs = () => {
    const [accountId, setAccountId] = useState(
       sessionStorage.getItem("accountId")
@@ -177,23 +178,23 @@ const TrashedDocs = () => {
 
       switch (ext) {
         case "pdf":
-          return <FaFilePdf color="#d32f2f" size={18} />;
+          return <FaFilePdf size={16} className="shrink-0 text-red-500" strokeWidth={1.8} />;
         case "jpg":
         case "jpeg":
         case "png":
         case "gif":
-          return <FaFileImage color="#1976d2" size={18} />;
+          return <FaFileImage size={16} className="shrink-0 text-blue-500" strokeWidth={1.8} />;
         case "doc":
         case "docx":
-          return <FaFileWord color="#1565c0" size={18} />;
+          return <FaFileWord size={16} className="shrink-0 text-blue-700" strokeWidth={1.8} />;
         case "xls":
         case "xlsx":
-          return <FaFileExcel color="#2e7d32" size={18} />;
+          return <FaFilePdf size={16} className="shrink-0 text-green-600" strokeWidth={1.8} />;
         case "txt":
         case "md":
-          return <FaFileAlt color="#616161" size={18} />;
+          return <FaFileAlt size={16} className="shrink-0 text-muted-foreground" strokeWidth={1.8} />;
         default:
-          return <AiFillFileUnknown color="#757575" size={18} />;
+          return <AiFillFileUnknown size={16} className="shrink-0 text-muted-foreground" strokeWidth={1.8} />;
       }
     };
 

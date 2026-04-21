@@ -2,7 +2,7 @@ import axios from "axios";
 import React, { useState, useContext, useEffect, useRef } from "react";
 import { LoginContext } from "../../context/Context";
 import { useNavigate } from "react-router-dom";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Receipt, CreditCard } from "lucide-react";
 import { toast } from "material-react-toastify";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -576,23 +576,36 @@ const hasPaidInvoiceSelected = BillingInvoice
   };
 
   return (
-    <div className="w-full max-w-[1700px] flex-1 h-[90vh] overflow-auto p-2">
+    <div className="w-full max-w-[1700px] flex-1 h-[90vh] overflow-auto">
+      <div className="p-4 sm:p-6 flex flex-col gap-5">
+
       {/* Page header */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-xl font-bold text-foreground tracking-tight">Billing</h1>
-          {BillingInvoice.length > 0 && (
-            <p className="text-xs text-muted-foreground mt-0.5">{BillingInvoice.length} invoice{BillingInvoice.length !== 1 ? "s" : ""}</p>
-          )}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+              <Receipt size={16} className="text-primary" strokeWidth={1.8} />
+            </div>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Billing</h1>
+            {BillingInvoice.length > 0 && (
+              <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground border border-border">
+                {BillingInvoice.length}
+              </span>
+            )}
+          </div>
+          <p className="text-[13px] text-muted-foreground pl-10">
+            Manage and pay your outstanding invoices.
+          </p>
         </div>
         {selected.length > 0 && (
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground">{selected.length} selected</span>
+          <div className="flex items-center gap-3 shrink-0">
+            <span className="text-[12px] text-muted-foreground font-medium">{selected.length} selected</span>
             <button
               onClick={handlePayInvoice}
               disabled={hasPaidInvoiceSelected}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-[13px] font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-[0.98] transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
             >
+              <CreditCard size={14} />
               Pay Invoice
             </button>
           </div>
@@ -603,11 +616,11 @@ const hasPaidInvoiceSelected = BillingInvoice
         <div className="overflow-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border bg-muted/60">
-                <th className="sticky left-0 z-10 bg-muted/60 px-3 py-3 text-center">
+              <tr className="border-b border-border bg-muted/40">
+                <th className="sticky left-0 z-10 bg-muted/40 px-3 py-3.5 text-center w-10">
                   <input
                     type="checkbox"
-                    className="h-4 w-4 rounded accent-primary"
+                    className="h-4 w-4 rounded accent-primary cursor-pointer"
                     checked={selected.length === BillingInvoice.length && BillingInvoice.length > 0}
                     onChange={() => {
                       if (selected.length === BillingInvoice.length) {
@@ -619,12 +632,24 @@ const hasPaidInvoiceSelected = BillingInvoice
                   />
                 </th>
                 {["Invoice #", "Status", "Posted", "Total", "Amount Paid", "Balance Due", "Last Paid", "Description", ""].map((label, index) => (
-                  <th key={index} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide min-w-[100px]">{label}</th>
+                  <th key={index} className="px-4 py-3.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-widest min-w-[100px]">{label}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
-              {BillingInvoice.map((invoice) => {
+            <tbody className="divide-y divide-border/60">
+              {BillingInvoice.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="py-16 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                        <Receipt size={22} className="text-muted-foreground" strokeWidth={1.5} />
+                      </div>
+                      <p className="text-sm font-medium text-foreground">No invoices found</p>
+                      <p className="text-[13px] text-muted-foreground">Your invoices will appear here once created.</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : BillingInvoice.map((invoice) => {
                 const isSelected = selected.indexOf(invoice._id) !== -1;
                 return (
                   <tr
@@ -672,6 +697,7 @@ const hasPaidInvoiceSelected = BillingInvoice
             </tbody>
           </table>
         </div>
+      </div>
       </div>
       {/* Fixed dropdown — renders outside overflow containers */}
       {open && menuPos && selectedInvoice && (

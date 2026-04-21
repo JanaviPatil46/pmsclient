@@ -21,7 +21,7 @@ export default function Header() {
   };
 
   return (
-    <div className="font-sans w-full">
+    <div className="font-sans w-full sticky top-0 z-30 bg-background/80 backdrop-blur-md">
       <div className="hidden md:flex flex-row w-full items-center justify-between max-w-[1700px] py-2.5 gap-4">
         {/* Left: breadcrumbs */}
         <NavbarBreadcrumbs />

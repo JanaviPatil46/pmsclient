@@ -1,15 +1,5 @@
-
 import React, { useEffect, useState } from "react";
-import {
-  Box,
-  Typography,
-  Drawer,
-  IconButton,
-  CircularProgress,
-  TextField,
-  Button,
-} from "@mui/material";
-import { MdClose } from "react-icons/md";
+import { X, FolderPlus, Folder, FolderOpen, FileText } from "lucide-react";
 import axios from "axios";
 
 const CreateFolder = ({
@@ -120,52 +110,24 @@ const CreateFolder = ({
         };
 
         return (
-          <div key={index} style={{ marginLeft: "20px", marginBottom: "4px" }}>
+          <div key={index} className="ml-4 mb-0.5">
             <div
-              style={{
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                padding: "6px 8px",
-                borderRadius: "4px",
-                // backgroundColor:
-                //   selectedFolderId === item.id ? "#f0f7ff" : "transparent",
-                backgroundColor:
-                  selectedFolderId === item.id && selectedType === "public"
-                    ? "#f0f7ff"
-                    : "transparent",
-
-                transition: "background-color 0.2s ease",
-                "&:hover": {
-                  backgroundColor: "#f5f5f5",
-                },
-              }}
+              className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${
+                selectedFolderId === item.id && selectedType === "public"
+                  ? "bg-primary/10 border border-primary/25"
+                  : "hover:bg-muted/60"
+              }`}
               onClick={selectFolder}
             >
-              <div
-                onClick={toggleFolder}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  width: "100%",
-                }}
-              >
-                <span style={{ marginRight: "8px" }}>
-                  {item.isOpen ? "📂" : "📁"}
-                </span>
-                <strong
-                  style={{
-                    fontWeight: 500,
-                    color: "#333",
-                    fontSize: "14px",
-                  }}
-                >
-                  {item.folder}
-                </strong>
-              </div>
+              <button type="button" onClick={(e) => { e.stopPropagation(); toggleFolder(); }} className="shrink-0">
+                {item.isOpen ? <FolderOpen size={15} className="text-primary" /> : <Folder size={15} className="text-amber-500" />}
+              </button>
+              <span className={`text-[13px] font-medium truncate ${
+                selectedFolderId === item.id && selectedType === "public" ? "text-primary" : "text-foreground"
+              }`}>{item.folder}</span>
             </div>
             {item.isOpen && item.contents && item.contents.length > 0 && (
-              <div style={{ marginTop: "4px" }}>
+              <div className="ml-2">
                 {renderContents(item.contents, (newContents) => {
                   const updatedFolders = contents.map((folder, i) =>
                     i === index ? { ...folder, contents: newContents } : folder
@@ -178,18 +140,8 @@ const CreateFolder = ({
         );
       } else if (item.file) {
         return (
-          <div
-            key={index}
-            style={{
-              marginLeft: "40px",
-              padding: "4px 8px",
-              fontSize: "14px",
-              color: "#555",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <span style={{ marginRight: "8px" }}>📄</span>
+          <div key={index} className="ml-8 flex items-center gap-2 px-2 py-1 text-[13px] text-muted-foreground">
+            <FileText size={13} className="shrink-0" />
             {item.file}
           </div>
         );
@@ -215,49 +167,24 @@ const CreateFolder = ({
         };
 
         return (
-          <div key={index} style={{ marginLeft: "20px", marginBottom: "4px" }}>
+          <div key={index} className="ml-4 mb-0.5">
             <div
-              style={{
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                padding: "6px 8px",
-                borderRadius: "4px",
-                backgroundColor:
-                  selectedFolderId === item.id && selectedType === "private"
-                    ? "#f0f7ff"
-                    : "transparent",
-
-                // backgroundColor:
-                //   selectedFolderId === item.id ? "#f0f7ff" : "transparent",
-                transition: "background-color 0.2s ease",
-              }}
+              className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${
+                selectedFolderId === item.id && selectedType === "private"
+                  ? "bg-primary/10 border border-primary/25"
+                  : "hover:bg-muted/60"
+              }`}
               onClick={selectFolder}
             >
-              <div
-                onClick={toggleFolder}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  width: "100%",
-                }}
-              >
-                <span style={{ marginRight: "8px" }}>
-                  {item.isOpen ? "📂" : "📁"}
-                </span>
-                <strong
-                  style={{
-                    fontWeight: 500,
-                    color: "#333",
-                    fontSize: "14px",
-                  }}
-                >
-                  {item.folder}
-                </strong>
-              </div>
+              <button type="button" onClick={(e) => { e.stopPropagation(); toggleFolder(); }} className="shrink-0">
+                {item.isOpen ? <FolderOpen size={15} className="text-primary" /> : <Folder size={15} className="text-amber-500" />}
+              </button>
+              <span className={`text-[13px] font-medium truncate ${
+                selectedFolderId === item.id && selectedType === "private" ? "text-primary" : "text-foreground"
+              }`}>{item.folder}</span>
             </div>
             {item.isOpen && item.contents && item.contents.length > 0 && (
-              <div style={{ marginTop: "4px" }}>
+              <div className="ml-2">
                 {renderPrivateContents(item.contents, (newContents) => {
                   const updatedFolders = contents.map((folder, i) =>
                     i === index ? { ...folder, contents: newContents } : folder
@@ -270,18 +197,8 @@ const CreateFolder = ({
         );
       } else if (item.file) {
         return (
-          <div
-            key={index}
-            style={{
-              marginLeft: "40px",
-              padding: "4px 8px",
-              fontSize: "14px",
-              color: "#555",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <span style={{ marginRight: "8px" }}>📄</span>
+          <div key={index} className="ml-8 flex items-center gap-2 px-2 py-1 text-[13px] text-muted-foreground">
+            <FileText size={13} className="shrink-0" />
             {item.file}
           </div>
         );
@@ -407,71 +324,82 @@ const CreateFolder = ({
   }, [privateFolderPath, selectedType]);
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return <div className="p-4 text-sm text-destructive">Error: {error}</div>;
   }
 
   if (!structFolder || !privateStructFolder) {
-    return <div></div>;
+    return null;
   }
 
   return (
-    <Box>
-      <Drawer anchor="right" open={open} onClose={onClose}>
-        
-        <Box
-          sx={{
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-
-            padding: 2,
-            width: 600,
-            fontFamily:
-              "'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif",
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
+    <>
+      {open && (
+        <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      )}
+      <div
+        className={`fixed top-0 right-0 z-50 h-full w-full max-w-lg bg-background border-l border-border shadow-xl flex flex-col transition-transform duration-300 ease-in-out ${
+          open ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-muted/40 shrink-0">
+          <div className="flex items-center gap-2">
+            <FolderPlus size={16} className="text-primary" />
+            <h2 className="text-base font-semibold text-foreground">Create New Folder</h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           >
-            <Typography variant="h6">Create folder new </Typography>
-            <IconButton onClick={onClose}>
-              <MdClose />
-            </IconButton>
-          </Box>
-          <TextField
-            fullWidth
-            size="small"
-            variant="outlined"
-            placeholder="Folder Name"
-            value={newFolderName}
-            onChange={(e) => setNewFolderName(e.target.value)}
-          />
-          <Button
-            variant="contained"
-            sx={{ mt: 2 }}
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Folder Name</label>
+            <input
+              type="text"
+              placeholder="Enter folder name"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Select Destination</p>
+            <div className="rounded-lg border border-border bg-muted/20 py-2">
+              {renderContents(structFolder.folders, (newFolders) =>
+                setStructFolder({ ...structFolder, folders: newFolders })
+              )}
+              {renderPrivateContents(privateStructFolder.folders, (newFolders) =>
+                setPrivateStructFolder({ ...privateStructFolder, folders: newFolders })
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="shrink-0 flex gap-2 px-5 py-4 border-t border-border bg-muted/20">
+          <button
+            type="button"
             onClick={createFolderAPI}
+            className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
           >
             Create Folder
-          </Button>
-
-          <Box sx={{ maxHeight: "500px", overflowY: "auto" }}>
-            {renderContents(structFolder.folders, (newFolders) =>
-              setStructFolder({ ...structFolder, folders: newFolders })
-            )}
-
-            {renderPrivateContents(privateStructFolder.folders, (newFolders) =>
-              setPrivateStructFolder({
-                ...privateStructFolder,
-                folders: newFolders,
-              })
-            )}
-          </Box>
-        </Box>
-      </Drawer>
-    </Box>
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </>
   );
 };
 

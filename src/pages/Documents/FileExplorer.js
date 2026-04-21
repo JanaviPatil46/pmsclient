@@ -45,10 +45,9 @@ import React, { useEffect, useState } from "react";
 // };
 
 // import React, { useState } from "react";
-import { IconButton, Menu, MenuItem } from "@mui/material";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
+import { Folder as FolderIcon, FolderOpen as FolderOpenIcon, FileText, MoreVertical } from "lucide-react";
 const DOCS_API = process.env.REACT_APP_CLIENT_DOCS_MANAGE
-const Folder = ({ name, content, onSelectPath, currentPath = "" }) => {
+const FolderItem = ({ name, content, onSelectPath, currentPath = "" }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const isFile = content.filename;
@@ -113,42 +112,69 @@ const handleAction = (action) => {
   // ========== RENDER FILE ==========
   if (isFile) {
     const { permissions = {} } = content;
+    const hasAnyPermission = permissions.canView || permissions.canUpdate || permissions.canDownload || permissions.canDelete;
 
     return (
-      <div style={{ paddingLeft: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>📄 <span>{content.filename}</span></div>
-        <div>
-          {/* <IconButton  size="small"> */}
-            <MoreVertIcon fontSize="small" onClick={handleMenuOpen} sx={{cursor:'pointer'}}/>
-          {/* </IconButton> */}
-          <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-            {permissions.canView && (
-              <MenuItem onClick={() => handleAction("view")}>View</MenuItem>
-            )}
-            {permissions.canUpdate && (
-              <MenuItem onClick={() => handleAction("edit")}>Edit</MenuItem>
-            )}
-            {permissions.canDownload && (
-              <MenuItem onClick={() => handleAction("download")}>Download</MenuItem>
-            )}
-            {permissions.canDelete && (
-              <MenuItem onClick={() => handleAction("delete")}>Delete</MenuItem>
-            )}
-          </Menu>
+      <div className="group flex items-center justify-between gap-2 pl-5 pr-2 py-1 rounded-md hover:bg-muted/50 transition-colors">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <FileText size={13} className="shrink-0 text-muted-foreground" />
+          <span className="text-[13px] text-foreground truncate">{content.filename}</span>
         </div>
+        {hasAnyPermission && (
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={handleMenuOpen}
+              className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+            >
+              <MoreVertical size={13} />
+            </button>
+            {Boolean(anchorEl) && (
+              <div className="absolute right-0 z-50 mt-1 min-w-[130px] rounded-lg border border-border bg-popover shadow-lg p-1">
+                {permissions.canView && (
+                  <button type="button" onClick={() => handleAction("view")}
+                    className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">
+                    View
+                  </button>
+                )}
+                {permissions.canUpdate && (
+                  <button type="button" onClick={() => handleAction("edit")}
+                    className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">
+                    Edit
+                  </button>
+                )}
+                {permissions.canDownload && (
+                  <button type="button" onClick={() => handleAction("download")}
+                    className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">
+                    Download
+                  </button>
+                )}
+                {permissions.canDelete && (
+                  <button type="button" onClick={() => handleAction("delete")}
+                    className="w-full text-left px-3 py-1.5 text-[13px] text-destructive hover:bg-destructive/10 rounded-md transition-colors">
+                    Delete
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     );
   }
 
   // ========== RENDER FOLDER ==========
   return (
-    <div style={{ paddingLeft: 20 }}>
-      <div onClick={handleClick} style={{ cursor: "pointer" }}>
-        {isOpen ? "📂" : "📁"} <span>{name}</span>
+    <div className="pl-4">
+      <div onClick={handleClick} className="flex items-center gap-1.5 py-1 px-2 rounded-md cursor-pointer hover:bg-muted/50 transition-colors">
+        {isOpen
+          ? <FolderOpenIcon size={14} className="shrink-0 text-primary" />
+          : <FolderIcon size={14} className="shrink-0 text-amber-500" />}
+        <span className="text-[13px] font-medium text-foreground">{name}</span>
       </div>
       {isOpen &&
         Object.entries(content).map(([childName, childContent]) => (
-          <Folder
+          <FolderItem
             key={childName}
             name={childName}
             content={childContent}
@@ -232,7 +258,7 @@ const FileExplorer = ({ onPathSelect,accountId }) => {
   return (
     <div>
       {Object.entries(fileTree).map(([name, content]) => (
-        <Folder
+        <FolderItem
           key={name}
           name={name}
           content={content}

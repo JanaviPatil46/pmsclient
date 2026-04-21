@@ -2,8 +2,6 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "material-react-toastify";
 import { Folder, FolderOpen, ChevronDown, ChevronRight, Upload, X } from "lucide-react";
-import { FaFilePdf, FaFileWord, FaFileExcel, FaFileImage, FaFileAlt } from "react-icons/fa";
-import { AiFillFileUnknown } from "react-icons/ai";
 const FileUploadDrawer = ({
   isOpen,
   onClose,

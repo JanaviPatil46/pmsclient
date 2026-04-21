@@ -110,29 +110,63 @@ const Home = () => {
       fetchAccountDetails();
     // }
   }, [accountId]);
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 17) return "Good afternoon";
+    return "Good evening";
+  })();
+
   return (
-    <div className="w-full max-w-[1700px] flex-1 h-[90vh] overflow-auto p-2">
-      <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-5">
-        <div className="flex flex-col gap-4">
-          <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-            <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border bg-muted/40">
-              <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-              <p className="text-sm font-semibold text-foreground tracking-tight">Waiting for action</p>
-            </div>
-            <div className="divide-y divide-border">
-              <OrganizersList accountId={accountId} />
-              <BillingList accountId={accountId} />
-              <ChatsList accountId={accountId} />
-              <ProposalsList accountId={accountId} />
-              <DocuSealWrapper accountId={accountId} />
-              <DocuSealMultiSigner accountId={accountId} />
-              <DocumnetApprovals accountId={accountId} adminUserId={adminUserId} />
-              <PendingApprovals accountId={accountId} adminUserId={adminUserId} />
+    <div className="w-full max-w-[1700px] flex-1 h-[90vh] overflow-auto">
+      <div className="p-4 sm:p-6 flex flex-col gap-6">
+
+        {/* Page greeting */}
+        <div className="flex flex-col gap-0.5">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            {greeting}{accountName ? `, ${accountName}` : ""} 
+          </h1>
+          <p className="text-[13px] text-muted-foreground">
+            Here's what needs your attention today.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-5 items-start">
+
+          {/* Action items card */}
+          <div className="flex flex-col gap-0">
+            <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+              {/* Card header */}
+              <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/30">
+                <div className="flex items-center gap-2.5">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-60" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+                  </span>
+                  <p className="text-[13px] font-semibold text-foreground tracking-tight">
+                    Waiting for action
+                  </p>
+                </div>
+              </div>
+
+              {/* List items */}
+              <div className="divide-y divide-border/60">
+                <OrganizersList accountId={accountId} />
+                <BillingList accountId={accountId} />
+                <ChatsList accountId={accountId} />
+                <ProposalsList accountId={accountId} />
+                <DocuSealWrapper accountId={accountId} />
+                <DocuSealMultiSigner accountId={accountId} />
+                <DocumnetApprovals accountId={accountId} adminUserId={adminUserId} />
+                <PendingApprovals accountId={accountId} adminUserId={adminUserId} />
+              </div>
             </div>
           </div>
-        </div>
-        <div>
-          <QuickLinks accountId={accountId} accountName={accountName} />
+
+          {/* Quick Links sidebar */}
+          <div className="sticky top-0">
+            <QuickLinks accountId={accountId} accountName={accountName} />
+          </div>
         </div>
       </div>
     </div>

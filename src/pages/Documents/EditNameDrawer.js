@@ -1,7 +1,6 @@
 // components/EditNameDrawer.jsx
 import React, { useState, useEffect } from "react";
-import { Drawer, TextField, Button, Box, Typography,IconButton } from "@mui/material";
-import { MdClose } from "react-icons/md";
+import { X, Pencil } from "lucide-react";
 const EditNameDrawer = ({ open, onClose, item, onRename }) => {
   const [newName, setNewName] = useState("");
   const [ itemPath, setItemPath]= useState("")
@@ -29,38 +28,67 @@ useEffect(() => {
   };
 
   return (
-    <Drawer anchor="right" open={open} onClose={onClose}>
-      <Box sx={{ width: 300, p: 3 }}>
-        <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-        <Typography variant="h6" gutterBottom>
-          Rename {item?.type === "folder" ? "Folder" : "File"}
-        </Typography>
-        <IconButton onClick={onClose}>
-              <MdClose />
-            </IconButton>
-            </Box>
-        <TextField
-          fullWidth
-          placeholder="New Name"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          sx={{ mb: 2 }}
-        />
-        <Button
-          variant="contained"
-          fullWidth
-          onClick={handleRename}
-        >
-          Save
-        </Button>
-      </Box>
-    </Drawer>
+    <>
+      {open && (
+        <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      )}
+      <div
+        className={`fixed top-0 right-0 z-50 h-full w-full max-w-xs bg-background border-l border-border shadow-xl flex flex-col transition-transform duration-300 ease-in-out ${
+          open ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-muted/40 shrink-0">
+          <div className="flex items-center gap-2">
+            <Pencil size={16} className="text-primary" />
+            <h2 className="text-base font-semibold text-foreground">
+              Rename {item?.type === "folder" ? "Folder" : "File"}
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 px-5 py-4 space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              New Name
+            </label>
+            <input
+              type="text"
+              placeholder="Enter new name"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
+            />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="shrink-0 flex gap-2 px-5 py-4 border-t border-border bg-muted/20">
+          <button
+            type="button"
+            onClick={handleRename}
+            className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </>
   );
 };
 

@@ -176,20 +176,7 @@
 // export default UploadDrawer;
 
 import React, { useEffect, useState } from "react";
-import {
-  Stack,
-  Typography,
-  Drawer,
-  IconButton,
-  CircularProgress,
-  TextField,
-  Button,
-  useMediaQuery,
-  useTheme,
-  Box,
-} from "@mui/material";
-import { drawerClasses } from "@mui/material/Drawer";
-import { MdClose } from "react-icons/md";
+import { X, FolderPlus } from "lucide-react";
 import axios from "axios";
 import FileExplorer from "./FileExplorer";
 const CreateFolder = ({ open, onClose, accountId }) => {
@@ -263,99 +250,65 @@ const CreateFolder = ({ open, onClose, accountId }) => {
     setSelectedPath(path);
     setDestinationPath(path);
   };
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
-  // Determine drawer width based on screen size
-  const getDrawerWidth = () => {
-    if (isMobile) return "100vw";
-    if (isTablet) return "70vw";
-    return "40vw";
-  };
-
   return (
-    <Stack>
-      <Drawer
-        anchor="right"
-        open={open}
-        onClose={onClose}
-        sx={{
-          zIndex: (theme) => theme.zIndex.drawer + 1,
-          [`& .${drawerClasses.paper}`]: {
-            width: getDrawerWidth(),
-            backgroundImage: "none",
-            backgroundColor: "background.paper",
-          },
-        }}
+    <>
+      {open && (
+        <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      )}
+      <div
+        className={`fixed top-0 right-0 z-50 h-full w-full sm:max-w-lg bg-background border-l border-border shadow-xl flex flex-col transition-transform duration-300 ease-in-out ${
+          open ? "translate-x-0" : "translate-x-full"
+        }`}
       >
-        <Stack
-          sx={{
-            width: "100%",
-            height: "100%",
-            overflow: "auto",
-          }}
-        >
-          <Stack
-            direction="row"
-            sx={{ p: 2, pb: 0, gap: 1, alignItems: "center" }}
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-muted/40 shrink-0">
+          <div className="flex items-center gap-2">
+            <FolderPlus size={16} className="text-primary" />
+            <h2 className="text-base font-semibold text-foreground">Create Folder</h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           >
-            <Stack
-              direction="row"
-              sx={{
-                gap: 1,
-                alignItems: "center",
-                flexGrow: 1,
-                p: 1.5,
-                justifyContent: "space-between",
-              }}
-            >
-              <Typography component="p" variant="h6">
-                Create Folder
-              </Typography>
-              <IconButton onClick={onClose}>
-                <MdClose />
-              </IconButton>
-            </Stack>
-          </Stack>
+            <X size={16} />
+          </button>
+        </div>
 
-          <Box sx={{ p: isMobile ? 2 : 3, flex: 1, overflow: "auto" }}>
-            <Stack>
-              <Typography
-                                  variant="subtitle2"
-                                  component="p"
-                                  gutterBottom
-                                  sx={{ fontWeight: "550" }}
-                                >Folder Name</Typography>
-              <TextField
-                fullWidth
-                size="small"
-                variant="outlined"
-                placeholder="Folder Name"
-                value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
-              />
-              <Button
-                variant="contained"
-                fullWidth={isMobile}
-                size={isMobile ? "large" : "medium"}
-                onClick={handleCreateFolder}
-                sx={{mt:3}}
-              >
-                Create Folder
-              </Button>
-            </Stack>
-             <Stack sx={{ mt: 3 }}>
-            <FileExplorer
-              onPathSelect={handlePathSelect}
-              accountId={accountId}
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Folder Name</label>
+            <input
+              type="text"
+              placeholder="Folder Name"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
             />
-          </Stack>
-          </Box>
+          </div>
+          <FileExplorer onPathSelect={handlePathSelect} accountId={accountId} />
+        </div>
 
-         
-        </Stack>
-      </Drawer>
-    </Stack>
+        {/* Footer */}
+        <div className="shrink-0 flex gap-2 px-5 py-4 border-t border-border bg-muted/20">
+          <button
+            type="button"
+            onClick={handleCreateFolder}
+            className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+          >
+            Create Folder
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </>
   );
 };
 

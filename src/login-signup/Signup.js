@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import OtpInput from "react-otp-input";
 import { Eye, EyeOff } from "lucide-react";
-import logo from "../Images/snplogo.png";
+import logo from "../Images/snplogo-removebg-preview.png";
 import { toast } from "material-react-toastify";
 import axios from "axios";
 import PhoneInput from "react-phone-input-2";
@@ -711,51 +711,56 @@ console.log("User Signup Response:", userResult);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background py-8 px-4">
-      <div className="w-full max-w-lg rounded-xl border border-border bg-card p-8 shadow-sm flex flex-col gap-5">
-        <div className="flex gap-1 mb-2">
-          {steps.map((label, index) => (
-            <div key={label} className="flex items-center gap-1 flex-1">
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 ${
-                index < activeStep
-                  ? "bg-primary text-primary-foreground"
-                  : index === activeStep
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground border border-border"
-              }`}>
-                {index < activeStep ? "✓" : index + 1}
+    <div className="min-h-screen flex flex-col bg-background font-sans">
+      {/* Top bar with logo */}
+      <header className="flex items-center px-6 py-4 border-b border-border shrink-0">
+        <img src={logo} alt="SNP Tax & Financials" className="h-8 w-auto" />
+      </header>
+
+      <main className="flex flex-1 items-center justify-center p-4 py-8">
+        <div className="w-full max-w-md flex flex-col gap-5">
+
+          {/* Step indicator */}
+          <div className="flex items-center gap-1">
+            {steps.map((label, index) => (
+              <div key={label} className="flex items-center gap-1 flex-1">
+                <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 transition-colors ${
+                  index <= activeStep
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground border border-border"
+                }`}>
+                  {index < activeStep ? "✓" : index + 1}
+                </div>
+                <span className={`text-[11px] hidden sm:inline truncate ${
+                  index === activeStep ? "text-foreground font-semibold" : "text-muted-foreground"
+                }`}>{label}</span>
+                {index < steps.length - 1 && (
+                  <div className={`flex-1 h-px mx-1 transition-colors ${
+                    index < activeStep ? "bg-primary" : "bg-border"
+                  }`} />
+                )}
               </div>
-              <span className={`text-xs hidden sm:inline ${
-                index === activeStep ? "text-foreground font-medium" : "text-muted-foreground"
-              }`}>{label}</span>
-              {index < steps.length - 1 && (
-                <div className={`flex-1 h-px mx-1 ${
-                  index < activeStep ? "bg-primary" : "bg-border"
-                }`} />
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
+
+          {/* Step content card */}
+          <div className="rounded-xl border border-border bg-card shadow-sm p-6">
+            {getStepContent(activeStep)}
+          </div>
+
+          {/* Sign in footer */}
+          <p className="text-center text-[13px] text-muted-foreground">
+            Already have an account?{" "}
+            <button
+              type="button"
+              onClick={handleSignInClick}
+              className="text-primary hover:underline font-semibold"
+            >
+              Sign in
+            </button>
+          </p>
         </div>
-
-        {getStepContent(activeStep)}
-
-        <div className="flex items-center gap-2">
-          <hr className="flex-1 border-border" />
-          <span className="text-xs text-muted-foreground">or</span>
-          <hr className="flex-1 border-border" />
-        </div>
-
-        <p className="text-center text-sm text-foreground">
-          Already have an account?{" "}
-          <button
-            type="button"
-            onClick={handleSignInClick}
-            className="text-primary hover:underline font-medium"
-          >
-            Sign in
-          </button>
-        </p>
-      </div>
+      </main>
     </div>
   );
 };

@@ -51,11 +51,23 @@ fetchPrprosalsAllData(accountId);
   };
 
   return (
-    <div className="w-full max-w-[1700px] p-4 space-y-6">
+    <div className="w-full max-w-[1700px] flex-1 h-[90vh] overflow-auto">
+      <div className="p-4 sm:p-6 flex flex-col gap-5">
+
       {/* Page heading */}
-      <div className="flex items-center gap-2">
-        <FileText size={22} className="text-primary shrink-0" />
-        <h1 className="text-2xl font-bold text-foreground">Proposals & ELs</h1>
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+            <FileText size={16} className="text-primary" strokeWidth={1.8} />
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Proposals & ELs</h1>
+          {proposalsList.length > 0 && (
+            <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground border border-border">
+              {proposalsList.length}
+            </span>
+          )}
+        </div>
+        <p className="text-[13px] text-muted-foreground pl-10">Review and sign your engagement letters and proposals.</p>
       </div>
 
       {/* Table card */}
@@ -67,47 +79,53 @@ fetchPrprosalsAllData(accountId);
                 {["Proposal Name", "Status", "Date"].map((label) => (
                   <th
                     key={label}
-                    className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide"
+                    className="px-4 py-3.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-widest"
                   >
                     {label}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-y divide-border/60">
               {proposalsList.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-4 py-10 text-center text-sm text-muted-foreground">
-                    No proposals found.
+                  <td colSpan={3} className="py-16 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                        <FileText size={22} className="text-muted-foreground" strokeWidth={1.5} />
+                      </div>
+                      <p className="text-sm font-medium text-foreground">No proposals found</p>
+                      <p className="text-[13px] text-muted-foreground">Your proposals and engagement letters will appear here.</p>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 proposalsList.map((row) => (
                   <tr
                     key={row._id}
-                    className="hover:bg-muted/40 transition-colors cursor-pointer"
+                    className="hover:bg-muted/40 transition-all duration-150 cursor-pointer group"
                     onClick={() => handleOpenDialog(row)}
                   >
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3.5">
                       <span
                         title="View Details"
-                        className="font-medium text-foreground hover:text-primary transition-colors"
+                        className="font-medium text-foreground group-hover:text-primary transition-colors"
                       >
                         {row.general.proposalName || "Untitled"}
                       </span>
                     </td>
 
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3.5">
                       <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                          statusConfig[row.status] ?? "bg-muted text-muted-foreground"
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold border ${
+                          statusConfig[row.status] ?? "bg-muted text-muted-foreground border-border"
                         }`}
                       >
                         {row.status}
                       </span>
                     </td>
 
-                    <td className="px-4 py-3 text-muted-foreground">
+                    <td className="px-4 py-3.5 text-[13px] text-muted-foreground">
                       {new Date(row.createdAt).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
@@ -120,6 +138,7 @@ fetchPrprosalsAllData(accountId);
             </tbody>
           </table>
         </div>
+      </div>
       </div>
 
       <ProposalPreviewDialog

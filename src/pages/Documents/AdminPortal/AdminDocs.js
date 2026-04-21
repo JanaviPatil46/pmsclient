@@ -1,18 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import {
-  Box,
-  Typography,
-  IconButton,
-  Input,
-  Menu,
-  MenuItem,
-  Divider,
-} from "@mui/material";
-import { HiDocumentArrowUp } from "react-icons/hi2";
-import { FaRegFolderClosed } from "react-icons/fa6";
-import { MdOutlineDriveFolderUpload } from "react-icons/md";
-import { BsThreeDotsVertical } from "react-icons/bs";
+  Upload,
+  FolderPlus,
+  FolderUp,
+  MoreVertical,
+  Folder,
+  FolderOpen,
+  FileText,
+  ShieldAlert,
+} from "lucide-react";
 
 // Dummy components - replace these with your actual components
 import UploadDrawer from "./uploadDocumentWorking";
@@ -375,40 +372,57 @@ const App = () => {
     return items.map((item) => {
       if (item.folder) {
         return (
-          <div key={item.id} style={{ paddingLeft: "20px" }}>
-            <div
-              style={{
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                paddingRight: "8px",
-              }}
-            >
+          <div key={item.id} className="pl-5">
+            <div className="group flex items-center justify-between pr-2 rounded-md hover:bg-muted/50 transition-colors">
               <div
-                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                className="flex items-center gap-2 py-1.5 px-2 cursor-pointer flex-1 min-w-0"
                 onClick={() => handleToggle(item.id)}
               >
-                <span>{item.isOpen ? "📂" : "📁"}</span>
-                <span>{item.folder}</span>
+                {item.isOpen
+                  ? <FolderOpen size={15} className="shrink-0 text-primary" />
+                  : <Folder size={15} className="shrink-0 text-amber-500" />}
+                <span className="text-[13px] font-medium text-foreground truncate">{item.folder}</span>
                 {item.sealed && (
-                  <span
-                    style={{
-                      backgroundColor: "#d50000",
-                      color: "#fff",
-                      padding: "2px 6px",
-                      borderRadius: "8px",
-                      fontSize: "12px",
-                    }}
-                  >
-                    Sealed
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-destructive/15 text-destructive border border-destructive/25">
+                    <ShieldAlert size={10} /> Sealed
                   </span>
                 )}
               </div>
-              <div style={{ position: "relative" }}>
-                <IconButton onClick={(e) => handleMenuOpen(e, item)}>
-                  <BsThreeDotsVertical />
-                </IconButton>
+              <div className="relative shrink-0">
+                <button
+                  type="button"
+                  onClick={(e) => handleMenuOpen(e, item)}
+                  className="opacity-0 group-hover:opacity-100 p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                >
+                  <MoreVertical size={14} />
+                </button>
+                {activeMenu === item.id && Boolean(anchorEl) && (
+                  <div className="absolute right-0 z-50 mt-1 min-w-[150px] rounded-lg border border-border bg-popover shadow-lg p-1">
+                    {item.folder === "Client Uploaded Documents" ? (
+                      <>
+                        <button type="button" onClick={() => handleMenuAction("new-folder")}
+                          className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">New Folder</button>
+                        <button type="button" onClick={() => handleMenuAction("edit")}
+                          className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">Edit</button>
+                      </>
+                    ) : (
+                      <>
+                        <button type="button" onClick={() => handleMenuAction("new-folder")}
+                          className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">New Folder</button>
+                        <button type="button" onClick={() => handleMenuAction("edit")}
+                          className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">Edit</button>
+                        <button type="button" onClick={() => handleMenuAction("delete")}
+                          className="w-full text-left px-3 py-1.5 text-[13px] text-destructive hover:bg-destructive/10 rounded-md transition-colors">Delete</button>
+                        <button type="button" onClick={() => handleMenuAction("move")}
+                          className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">Move</button>
+                        <button type="button" onClick={() => handleMenuAction(item.sealed ? "unseal" : "seal")}
+                          className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">
+                          {item.sealed ? "Unseal" : "Seal"}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
             {item.isOpen && item.contents?.length > 0 && (
@@ -418,48 +432,45 @@ const App = () => {
         );
       } else {
         return (
-          <div
-            key={item.id}
-            style={{
-              paddingLeft: "40px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              paddingRight: "8px",
-              fontSize: "14px",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span>📄</span>
+          <div key={item.id} className="group flex items-center justify-between pl-10 pr-2 py-1 rounded-md hover:bg-muted/50 transition-colors">
+            <div className="flex items-center gap-2 min-w-0">
+              <FileText size={13} className="shrink-0 text-muted-foreground" />
               <span
                 onClick={() => handleFileOpen(item)}
-                style={{
-                  cursor: "pointer",
-                  // textDecoration: "underline",
-                  // color: "red",
-                }}
+                className="text-[13px] text-foreground cursor-pointer hover:text-primary transition-colors truncate"
               >
                 {item.file}
               </span>
-
               {item.sealed && (
-                <span
-                  style={{
-                    backgroundColor: "#d50000",
-                    color: "#fff",
-                    padding: "2px 6px",
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                  }}
-                >
-                  Sealed
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-destructive/15 text-destructive border border-destructive/25">
+                  <ShieldAlert size={10} /> Sealed
                 </span>
               )}
             </div>
-            <div style={{ position: "relative" }}>
-              <IconButton onClick={(e) => handleMenuOpen(e, item)}>
-                <BsThreeDotsVertical />
-              </IconButton>
+            <div className="relative shrink-0">
+              <button
+                type="button"
+                onClick={(e) => handleMenuOpen(e, item)}
+                className="opacity-0 group-hover:opacity-100 p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+              >
+                <MoreVertical size={14} />
+              </button>
+              {activeMenu === item.id && Boolean(anchorEl) && (
+                <div className="absolute right-0 z-50 mt-1 min-w-[150px] rounded-lg border border-border bg-popover shadow-lg p-1">
+                  <button type="button" onClick={() => handleMenuAction("new-folder")}
+                    className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">New Folder</button>
+                  <button type="button" onClick={() => handleMenuAction("edit")}
+                    className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">Edit</button>
+                  <button type="button" onClick={() => handleMenuAction("delete")}
+                    className="w-full text-left px-3 py-1.5 text-[13px] text-destructive hover:bg-destructive/10 rounded-md transition-colors">Delete</button>
+                  <button type="button" onClick={() => handleMenuAction("move")}
+                    className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">Move</button>
+                  <button type="button" onClick={() => handleMenuAction(item.sealed ? "unseal" : "seal")}
+                    className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">
+                    {item.sealed ? "Unseal" : "Seal"}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -614,30 +625,20 @@ const App = () => {
         const selectFolder = () => setSelectedFolderId(item.id);
 
         return (
-          <div key={index} style={{ marginLeft: "20px", marginBottom: "4px" }}>
+          <div key={index} className="ml-4 mb-0.5">
             <div
-              style={{
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                padding: "6px 8px",
-                borderRadius: "4px",
-              }}
+              className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${
+                selectedFolderId === item.id ? "bg-primary/10 border border-primary/25" : "hover:bg-muted/50"
+              }`}
               onClick={selectFolder}
             >
-              <div
-                onClick={toggleFolder}
-                style={{ display: "flex", alignItems: "center", width: "100%" }}
-              >
-                <span style={{ marginRight: "8px" }}>
-                  {item.isOpen ? "📂" : "📁"}
-                </span>
-                <strong style={{ fontWeight: 500 }}>{item.folder}</strong>
-                {/* <SealedChip sealed={item.sealed} /> */}
-              </div>
+              <button type="button" onClick={(e) => { e.stopPropagation(); toggleFolder(); }} className="shrink-0">
+                {item.isOpen ? <FolderOpen size={14} className="text-primary" /> : <Folder size={14} className="text-amber-500" />}
+              </button>
+              <span className="text-[13px] font-medium text-foreground">{item.folder}</span>
             </div>
             {item.isOpen && item.contents?.length > 0 && (
-              <div style={{ marginTop: "4px" }}>
+              <div className="ml-2">
                 {renderPrivateFolderContents(item.contents, (newContents) => {
                   const updated = contents.map((f, i) =>
                     i === index ? { ...f, contents: newContents } : f
@@ -650,30 +651,11 @@ const App = () => {
         );
       } else if (item.file) {
         return (
-          <div
-            key={index}
-            style={{
-              marginLeft: "40px",
-              padding: "4px 8px",
-              fontSize: "14px",
-              color: "#555",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <span style={{ marginRight: "8px" }}>📄</span>
-            {/* <span style={{ fontWeight: 500 }}>{item.file}</span> */}
-            <span
-              onClick={() => handleFileOpen(item)}
-              style={{
-                cursor: "pointer",
-                // textDecoration: "underline",
-                // color: "red",
-              }}
-            >
+          <div key={index} className="ml-8 flex items-center gap-2 px-2 py-1 text-[13px] text-muted-foreground">
+            <FileText size={13} className="shrink-0" />
+            <span onClick={() => handleFileOpen(item)} className="cursor-pointer hover:text-primary transition-colors">
               {item.file}
             </span>
-            {/* <SealedChip sealed={item.sealed} /> */}
           </div>
         );
       }
@@ -692,30 +674,20 @@ const App = () => {
         const selectFolder = () => setSelectedFolderId(item.id);
 
         return (
-          <div key={index} style={{ marginLeft: "20px", marginBottom: "4px" }}>
+          <div key={index} className="ml-4 mb-0.5">
             <div
-              style={{
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                padding: "6px 8px",
-                borderRadius: "4px",
-              }}
+              className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${
+                selectedFolderId === item.id ? "bg-primary/10 border border-primary/25" : "hover:bg-muted/50"
+              }`}
               onClick={selectFolder}
             >
-              <div
-                onClick={toggleFolder}
-                style={{ display: "flex", alignItems: "center", width: "100%" }}
-              >
-                <span style={{ marginRight: "8px" }}>
-                  {item.isOpen ? "📂" : "📁"}
-                </span>
-                <strong style={{ fontWeight: 500 }}>{item.folder}</strong>
-                {/* <SealedChip sealed={item.sealed} /> */}
-              </div>
+              <button type="button" onClick={(e) => { e.stopPropagation(); toggleFolder(); }} className="shrink-0">
+                {item.isOpen ? <FolderOpen size={14} className="text-primary" /> : <Folder size={14} className="text-amber-500" />}
+              </button>
+              <span className="text-[13px] font-medium text-foreground">{item.folder}</span>
             </div>
             {item.isOpen && item.contents?.length > 0 && (
-              <div style={{ marginTop: "4px" }}>
+              <div className="ml-2">
                 {renderFirmDocsFolderContents(item.contents, (newContents) => {
                   const updated = contents.map((f, i) =>
                     i === index ? { ...f, contents: newContents } : f
@@ -728,20 +700,9 @@ const App = () => {
         );
       } else if (item.file) {
         return (
-          <div
-            key={index}
-            style={{
-              marginLeft: "40px",
-              padding: "4px 8px",
-              fontSize: "14px",
-              color: "#555",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <span style={{ marginRight: "8px" }}>📄</span>
-            <span style={{ fontWeight: 500 }}>{item.file}</span>
-            {/* <SealedChip sealed={item.sealed} /> */}
+          <div key={index} className="ml-8 flex items-center gap-2 px-2 py-1 text-[13px] text-muted-foreground">
+            <FileText size={13} className="shrink-0" />
+            <span className="font-medium">{item.file}</span>
           </div>
         );
       }
@@ -767,191 +728,97 @@ const App = () => {
     fetchData();
   }, []);
 
-  if (error) return <div>Error: {error}</div>;
+  if (error) return <div className="p-4 text-sm text-destructive">Error: {error}</div>;
   if (!combinedFolderStructure || !privateStructFolder)
-    return <div>Loading...</div>;
+    return <div className="p-4 text-sm text-muted-foreground">Loading...</div>;
 
   return (
     <>
-      <Typography variant="h2">ADMIN PORTAL</Typography>
+      <h1 className="text-2xl font-bold text-foreground mb-4">Admin Portal</h1>
 
-      <Box
-        sx={{
-          backgroundColor: "#fff",
-          borderRadius: "8px",
-          padding: "16px",
-          maxWidth: "800px",
-        }}
-      >
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <IconButton
-              component="label"
-              htmlFor="fileInput"
-              sx={{ color: "#e87800" }}
-            >
-              <HiDocumentArrowUp size={24} />
-            </IconButton>
-            <Typography
-              variant="body1"
-              component="label"
-              htmlFor="fileInput"
-              sx={{ cursor: "pointer" }}
-            >
-              Upload Document
-            </Typography>
-            <Input
-              type="file"
-              id="fileInput"
-              onChange={(e) => {
-                handleFileChange(e);
-                handleFileUpload();
-              }}
-              sx={{ display: "none" }}
-            />
-          </Box>
+      {/* Client Docs Toolbar */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <label
+          htmlFor="fileInput"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted cursor-pointer transition-colors"
+        >
+          <Upload size={15} className="text-primary" />
+          Upload Document
+          <input
+            type="file"
+            id="fileInput"
+            className="hidden"
+            onChange={(e) => { handleFileChange(e); handleFileUpload(); }}
+          />
+        </label>
 
-          <Box
-            sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            onClick={handleCreateFolderClick}
-          >
-            <IconButton sx={{ color: "#e87800" }}>
-              <FaRegFolderClosed size={20} />
-            </IconButton>
-            <Typography variant="body1" sx={{ cursor: "pointer" }}>
-              Create Folder
-            </Typography>
-          </Box>
+        <button
+          type="button"
+          onClick={handleCreateFolderClick}
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors"
+        >
+          <FolderPlus size={15} className="text-primary" />
+          Create Folder
+        </button>
 
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-              cursor: "pointer",
-            }}
-            onClick={() => folderInputRef.current.click()}
-          >
-            <IconButton sx={{ color: "#e87800" }}>
-              <MdOutlineDriveFolderUpload size={24} />
-            </IconButton>
-            <Typography variant="body1">Upload Folder</Typography>
-            <input
-              type="file"
-              ref={folderInputRef}
-              style={{ display: "none" }}
-              webkitdirectory="true"
-              directory="true"
-              onChange={handleFolderSelection}
-            />
-          </Box>
-        </Box>
-      </Box>
+        <button
+          type="button"
+          onClick={() => folderInputRef.current.click()}
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors"
+        >
+          <FolderUp size={15} className="text-primary" />
+          Upload Folder
+          <input
+            type="file"
+            ref={folderInputRef}
+            className="hidden"
+            webkitdirectory="true"
+            directory="true"
+            onChange={handleFolderSelection}
+          />
+        </button>
+      </div>
 
-      <Box>
-        <div>{renderTree(combinedFolderStructure)}</div>
-      </Box>
-      <Box>
-        {/* <Typography variant="h6">Private</Typography> */}
+      {/* Combined folder tree */}
+      <div className="rounded-lg border border-border bg-card p-2 mb-4">
+        {renderTree(combinedFolderStructure)}
+      </div>
 
+      {/* Private folders */}
+      <div className="rounded-lg border border-border bg-card p-2 mb-4">
         {renderPrivateFolderContents(
           privateStructFolder.folders,
-          (newFolders) =>
-            setPrivateStructFolder({
-              ...privateStructFolder,
-              folders: newFolders,
-            })
+          (newFolders) => setPrivateStructFolder({ ...privateStructFolder, folders: newFolders })
         )}
-      </Box>
-      {/* <Divider /> */}
-      <Box sx={{ mt: 2, borderBottom: "2px solid grey" }}></Box>
-      <Box>
-        <Box
-          sx={{
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            padding: "16px",
-            maxWidth: "800px",
-          }}
+      </div>
+
+      <div className="my-4 border-t border-border" />
+
+      {/* Firm Docs Toolbar */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <label
+          htmlFor="firmDocFileInput"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted cursor-pointer transition-colors"
         >
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <IconButton
-                component="label"
-                htmlFor="firmDocFileInput"
-                sx={{ color: "#e87800" }}
-              >
-                <HiDocumentArrowUp size={24} />
-              </IconButton>
-              <Typography
-                variant="body1"
-                component="label"
-                htmlFor="firmDocFileInput"
-                sx={{ cursor: "pointer" }}
-              >
-                Upload Document in firm
-              </Typography>
-              <Input
-                type="file"
-                id="firmDocFileInput"
-                onChange={(e) => {
-                  handleNewFileChange(e);
-                  handleOpenDrawer();
-                }}
-                sx={{ display: "none" }}
-              />
-            </Box>
+          <Upload size={15} className="text-primary" />
+          Upload Document in Firm
+          <input
+            type="file"
+            id="firmDocFileInput"
+            className="hidden"
+            onChange={(e) => { handleNewFileChange(e); handleOpenDrawer(); }}
+          />
+        </label>
 
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <IconButton
-                onClick={handleNewFolderClick}
-                sx={{ color: "#e87800" }}
-              >
-                <FaRegFolderClosed size={20} />
-              </IconButton>
-              <Typography variant="body1" sx={{ cursor: "pointer" }}>
-                Create Folder in firm
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
-       
-      </Box>
-
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        transformOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        {selectedItem?.folder === "Client Uploaded Documents" ? (
-          <>
-            <MenuItem onClick={() => handleMenuAction("new-folder")}>
-              New Folder
-            </MenuItem>
-            <MenuItem onClick={() => handleMenuAction("edit")}>Edit</MenuItem>
-          </>
-        ) : (
-          <>
-            <MenuItem onClick={() => handleMenuAction("new-folder")}>
-              New Folder
-            </MenuItem>
-            <MenuItem onClick={() => handleMenuAction("edit")}>Edit</MenuItem>
-            <MenuItem onClick={() => handleMenuAction("delete")}>
-              Delete
-            </MenuItem>
-            <MenuItem onClick={() => handleMenuAction("move")}>Move</MenuItem>
-            <MenuItem
-              onClick={() =>
-                handleMenuAction(selectedItem?.sealed ? "unseal" : "seal")
-              }
-            >
-              {selectedItem?.sealed ? "Unseal" : "Seal"}
-            </MenuItem>
-          </>
-        )}
-      </Menu>
+        <button
+          type="button"
+          onClick={handleNewFolderClick}
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors"
+        >
+          <FolderPlus size={15} className="text-primary" />
+          Create Folder in Firm
+        </button>
+      </div>
 
       {/* ADMIN UPLAOD DOC DRAER */}
       <UploadDrawer

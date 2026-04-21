@@ -178,29 +178,35 @@ navigate("/client/billing")
   const totalAmount = selectedInvoices.reduce((sum, row) => sum + row.summary.total, 0);
 
   return (
-    <div className="w-full max-w-[1700px] p-4 space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-2">
-        <CreditCard size={22} className="text-primary shrink-0" />
-        <h1 className="text-2xl font-bold text-foreground">Pay Invoices</h1>
-      </div>
+    <div className="w-full max-w-[1700px] flex-1 h-[90vh] overflow-auto">
+      <div className="p-4 sm:p-6 flex flex-col gap-6">
 
-      {/* Client */}
-      {accountName && (
-        <div>
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">Client</p>
-          <p className="text-sm font-medium text-foreground">{accountName}</p>
+      {/* Header */}
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+            <CreditCard size={16} className="text-primary" strokeWidth={1.8} />
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Pay Invoices</h1>
         </div>
-      )}
+        {accountName && (
+          <p className="text-[13px] text-muted-foreground pl-10">
+            Paying as <span className="font-semibold text-foreground">{accountName}</span>
+          </p>
+        )}
+      </div>
 
       {/* Invoice table */}
       <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="px-4 py-3 border-b border-border bg-muted/30">
+          <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-widest">Selected Invoices</p>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border bg-muted/40">
+              <tr className="border-b border-border bg-muted/20">
                 {["Invoice #", "Status", "Amount"].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">{h}</th>
+                  <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -220,11 +226,12 @@ navigate("/client/billing")
         </div>
       </div>
 
-      <hr className="border-border" />
-
       {/* Payment Details */}
-      <div className="rounded-xl border border-border bg-card shadow-sm p-5 space-y-4 max-w-lg">
-        <h2 className="text-base font-semibold text-foreground">Payment Details</h2>
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden max-w-lg">
+        <div className="px-5 py-3.5 border-b border-border bg-muted/30">
+          <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-widest">Payment Details</p>
+        </div>
+        <div className="p-5 space-y-4">
 
         {/* Routing Number */}
         <div>
@@ -352,26 +359,28 @@ navigate("/client/billing")
             ))}
           </select>
         </div>
+        </div>
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-3 pt-2">
+      <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={() => window.history.back()}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border px-4 py-2.5 text-[13px] font-medium text-foreground hover:bg-muted active:scale-[0.98] transition-all duration-150"
         >
-          <ChevronLeft size={15} />
+          <ChevronLeft size={14} />
           Cancel
         </button>
         <button
           type="button"
           onClick={handleConfirmPayment}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 text-[13px] font-semibold text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-150 shadow-sm"
         >
-          <CreditCard size={15} />
+          <CreditCard size={14} />
           Confirm Payment
         </button>
+      </div>
       </div>
     </div>
   );
