@@ -1,17 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { DocusealForm } from "@docuseal/react";
 import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
   Dialog,
   DialogTitle,
   DialogContent,
   IconButton,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import { PenLine, CheckCircle2, Clock, ArrowRight } from "lucide-react";
 
 // const DocuSealMultiSigner = ({ accountId }) => {
 //   const [submissions, setSubmissions] = useState([]);
@@ -918,7 +914,7 @@ const DocuSealMultiSigner = ({ accountId }) => {
 
   console.log("matchingSubmitters", matchingSubmitters);
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return null;
 
   // Show all documents related to the user with their status
   const allUserSubmissions = submissions
@@ -948,105 +944,68 @@ const DocuSealMultiSigner = ({ accountId }) => {
 
   return (
     <>
-      <Box>
+      <div>
         {/* Pending Signatures */}
         {matchingSubmitters.length > 0 && (
-          <>
-            <Typography
-              component="h2"
-              variant="subtitle2"
-              gutterBottom
-              sx={{ fontWeight: "600" }}
-            >
-              Documents
-            </Typography>
-            <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
-              Pending Your Signature ({matchingSubmitters.length})
-            </Typography>
-            <Box
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "20px",
-                marginTop: "5px",
-              }}
-            >
+          <div className="px-5 py-3">
+            <div className="flex items-center gap-2 mb-2.5">
+              <PenLine size={13} className="text-primary shrink-0" />
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Pending Your Signature</span>
+              <span className="ml-auto text-[11px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                {matchingSubmitters.length}
+              </span>
+            </div>
+            <div className="flex flex-col gap-1.5">
               {matchingSubmitters.map((s, index) => (
-                <Card key={index} style={{ minWidth: 200 }}>
-                  <CardContent>
-                    <Typography variant="body2">
-                      Template: {s.templateName}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      Role: {s.role}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      Progress:{" "}
-                      {
-                        s.submissionData.submitters.filter(
-                          (sub) => sub.completed_at
-                        ).length
-                      }{" "}
-                      of {s.submissionData.submitters.length} signed
-                    </Typography>
-                    <br />
-                    <Button
-                      size="small"
-                      color="primary"
-                      onClick={() => handleOpenDialog(s.slug)}
-                      sx={{
-                        backgroundColor: "text.menu",
-                        color: "primary.contrastText",
-                        "&:hover": {
-                          backgroundColor: "menu.dark",
-                        },
-                        transition: "background-color 0.2s ease",
-                      }}
-                    >
-                      Review and Sign
-                    </Button>
-                  </CardContent>
-                </Card>
+                <div
+                  key={index}
+                  className="group flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-background px-3.5 py-2.5 hover:bg-muted/50 hover:border-border transition-all duration-200"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[12px] font-semibold text-foreground truncate">{s.templateName}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Role: {s.role} &middot; {s.submissionData.submitters.filter(sub => sub.completed_at).length}/{s.submissionData.submitters.length} signed
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenDialog(s.slug)}
+                    className="shrink-0 text-[11px] font-semibold text-primary hover:text-primary/80 transition-colors"
+                  >
+                    Sign
+                  </button>
+                </div>
               ))}
-            </Box>
-          </>
+            </div>
+          </div>
         )}
 
-        <Box
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "20px",
-            marginTop: "5px",
-          }}
-        >
-          {allUserSubmissions.map((s, index) => (
-            <Card key={index} style={{ minWidth: 200 }}>
-              <CardContent>
-                <Typography variant="body2">
-                  Template: {s.templateName}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  Your Status: {s.completed_at ? "✓ Signed" : "⏳ Pending"}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  Overall:{" "}
-                  {s.allCompleted
-                    ? "✓ All Signed"
-                    : ` ${s.completedCount}/${s.totalSubmitters} signed`}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  Role: {s.role}
-                </Typography>
-                {s.completed_at && (
-                  <Typography variant="body2" color="success.main">
-                    ✓ Document Updated with Your Signature
-                  </Typography>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </Box>
+        {allUserSubmissions.length > 0 && (
+          <div className="px-5 py-3">
+            <div className="flex items-center gap-2 mb-2.5">
+              <PenLine size={13} className="text-muted-foreground shrink-0" />
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">E-Signatures</span>
+              <span className="ml-auto text-[11px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                {allUserSubmissions.length}
+              </span>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              {allUserSubmissions.map((s, index) => (
+                <div key={index} className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-background px-3.5 py-2.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[12px] font-semibold text-foreground truncate">{s.templateName}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {s.allCompleted ? `${s.completedCount}/${s.totalSubmitters} signed` : `${s.completedCount}/${s.totalSubmitters} signed`}
+                    </p>
+                  </div>
+                  {s.completed_at
+                    ? <CheckCircle2 size={13} className="shrink-0 text-emerald-500" />
+                    : <Clock size={13} className="shrink-0 text-muted-foreground" />}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <Dialog
           open={dialogOpen}
@@ -1160,7 +1119,7 @@ const DocuSealMultiSigner = ({ accountId }) => {
             )}
           </DialogContent>
         </Dialog>
-      </Box>
+      </div>
     </>
   );
 };

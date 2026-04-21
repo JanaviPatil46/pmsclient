@@ -2,30 +2,27 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
-  Card,
-  CardContent,
-  CircularProgress,
-  Grid,
-  Chip,
   Dialog,
   DialogTitle,
   DialogContent,
-  Tooltip,
   DialogActions,
+  DialogContentText,
   Button,
   IconButton,
-  DialogContentText,
+  Tooltip,
   TextField,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableRow,
+  CircularProgress,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import DescriptionIcon from "@mui/icons-material/Description";
 import axios from "axios";
-import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import { FileWarning, ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "material-react-toastify";
 import { useNavigate } from "react-router-dom";
 const PendingApprovals = ({ accountId, adminUserId }) => {
@@ -538,52 +535,46 @@ const PendingApprovals = ({ accountId, adminUserId }) => {
   // );
 
 return (
-  <Box>
+  <div>
     {documents.length > 0 && (
-      <Box p={3}>
+      <div className="px-5 py-3">
         {/* Header */}
-        <Box mb={3} display="flex" alignItems="center" gap={1}>
-          <Typography variant="h6" fontWeight={600}>
-            Pending Approvals ({documents.length})
-          </Typography>
-        </Box>
+        <div className="flex items-center gap-2 mb-2.5">
+          <FileWarning size={13} className="text-orange-400 shrink-0" />
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Pending Approvals</span>
+          <span className="ml-auto text-[11px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+            {documents.length}
+          </span>
+        </div>
 
         {/* Loading */}
         {loading && (
-          <Box display="flex" justifyContent="center" mt={4}>
-            <CircularProgress />
-          </Box>
+          <div className="flex justify-center py-4">
+            <Loader2 size={18} className="animate-spin text-muted-foreground" />
+          </div>
         )}
 
-        {/* Cards */}
-        <Grid container spacing={2}>
+        {/* Rows */}
+        <div className="flex flex-col gap-1.5">
           {documents.map((doc, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
-              <Card
-                elevation={2}
-                sx={{
-                  height: "100%",
-                  borderRadius: 2,
-                  transition: "0.2s",
-                  "&:hover": { boxShadow: 6 },
-                }}
-                onClick={() => handleOpenViewer(doc)}
-              >
-                <CardContent>
-                  <Box display="flex" alignItems="center" gap={1} mb={1}>
-                    <DescriptionIcon color="warning" />
-                    <Typography variant="subtitle1" fontWeight={600} noWrap>
-                      {doc.name}
-                    </Typography>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+            <div
+              key={index}
+              onClick={() => handleOpenViewer(doc)}
+              className="group flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-background px-3.5 py-2.5 cursor-pointer hover:bg-muted/50 hover:border-border transition-all duration-200"
+            >
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <FileWarning size={11} className="text-orange-400 shrink-0" />
+                  <p className="text-[12px] font-semibold text-foreground truncate">{doc.name}</p>
+                </div>
+              </div>
+              <ArrowRight size={13} className="shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
           ))}
-        </Grid>
+        </div>
 
         {/* All Dialogs */}
-        <Box>
+        <div>
           {/* Viewer Dialog */}
           <Dialog
             open={openViewer}
@@ -733,10 +724,10 @@ return (
               )}
             </DialogActions>
           </Dialog>
-        </Box>
-      </Box>
+        </div>
+      </div>
     )}
-  </Box>
+  </div>
 );
 
 

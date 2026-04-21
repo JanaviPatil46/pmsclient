@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { X, FolderPlus, Folder, FolderOpen, FileText } from "lucide-react";
+import { X, FolderPlus, Folder, FolderOpen, FileText, Loader2 } from "lucide-react";
 import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
+import { Skeleton } from "../../../components/ui/motion";
 
 const CreateFolder = ({
   open,
@@ -22,11 +24,14 @@ const CreateFolder = ({
   const [privateFolderPath, setPrivateFolderPath] = useState("");
   const [error, setError] = useState(null);
   const [selectedFolderId, setSelectedFolderId] = useState(null);
-  const [newFolderPath, setNewFolderPath] = useState("");
+  const [newFolderPath, setNewFolderPath] = useState("")
   const [destinationPath, setDestinationPath] = useState("");
+  const [isLoadingFolders, setIsLoadingFolders] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const DOCS_MANAGMENTS = process.env.REACT_APP_CLIENT_DOCS_MANAGE;
   const fetchFolders = async () => {
     try {
+      setIsLoadingFolders(true);
       const url = `${DOCS_MANAGMENTS}/admindocs/clientDocs/${accountId}`;
       const response = await axios.get(url);
       const addIsOpenProperty = (folders, parentId = null) =>
@@ -51,6 +56,8 @@ const CreateFolder = ({
     } catch (err) {
       console.error("Error fetching all folders:", err);
       setError(err.message || "An error occurred");
+    } finally {
+      setIsLoadingFolders(false);
     }
   };
   const fetchPrivateFolders = async () => {
@@ -112,7 +119,7 @@ const CreateFolder = ({
         return (
           <div key={index} className="ml-4 mb-0.5">
             <div
-              className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${
+              className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors duration-150 ${
                 selectedFolderId === item.id && selectedType === "public"
                   ? "bg-primary/10 border border-primary/25"
                   : "hover:bg-muted/60"
@@ -126,16 +133,25 @@ const CreateFolder = ({
                 selectedFolderId === item.id && selectedType === "public" ? "text-primary" : "text-foreground"
               }`}>{item.folder}</span>
             </div>
-            {item.isOpen && item.contents && item.contents.length > 0 && (
-              <div className="ml-2">
-                {renderContents(item.contents, (newContents) => {
-                  const updatedFolders = contents.map((folder, i) =>
-                    i === index ? { ...folder, contents: newContents } : folder
-                  );
-                  setContents(updatedFolders);
-                })}
-              </div>
-            )}
+            <AnimatePresence initial={false}>
+              {item.isOpen && item.contents && item.contents.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ overflow: "hidden" }}
+                  className="ml-2"
+                >
+                  {renderContents(item.contents, (newContents) => {
+                    const updatedFolders = contents.map((folder, i) =>
+                      i === index ? { ...folder, contents: newContents } : folder
+                    );
+                    setContents(updatedFolders);
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         );
       } else if (item.file) {
@@ -169,7 +185,7 @@ const CreateFolder = ({
         return (
           <div key={index} className="ml-4 mb-0.5">
             <div
-              className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${
+              className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors duration-150 ${
                 selectedFolderId === item.id && selectedType === "private"
                   ? "bg-primary/10 border border-primary/25"
                   : "hover:bg-muted/60"
@@ -183,16 +199,25 @@ const CreateFolder = ({
                 selectedFolderId === item.id && selectedType === "private" ? "text-primary" : "text-foreground"
               }`}>{item.folder}</span>
             </div>
-            {item.isOpen && item.contents && item.contents.length > 0 && (
-              <div className="ml-2">
-                {renderPrivateContents(item.contents, (newContents) => {
-                  const updatedFolders = contents.map((folder, i) =>
-                    i === index ? { ...folder, contents: newContents } : folder
-                  );
-                  setContents(updatedFolders);
-                })}
-              </div>
-            )}
+            <AnimatePresence initial={false}>
+              {item.isOpen && item.contents && item.contents.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ overflow: "hidden" }}
+                  className="ml-2"
+                >
+                  {renderPrivateContents(item.contents, (newContents) => {
+                    const updatedFolders = contents.map((folder, i) =>
+                      i === index ? { ...folder, contents: newContents } : folder
+                    );
+                    setContents(updatedFolders);
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         );
       } else if (item.file) {
@@ -224,30 +249,29 @@ const CreateFolder = ({
   //     });
   // };
   // const DOCS_MANAGMENTS = process.env.REACT_APP_CLIENT_DOCS_MANAGE;
-  const createFolderAPI = () => {
+  const createFolderAPI = async () => {
     if (!destinationPath || !newFolderName) {
       console.log("Missing path or folder name.");
       return;
     }
-  
-    return axios
-      .get(
+    setIsSubmitting(true);
+    try {
+      const response = await axios.get(
         `${DOCS_MANAGMENTS}/createnewFolder/?path=${destinationPath}&foldername=${newFolderName}`
-      )
-      .then((response) => {
-        console.log("API Response:", response.data);
-        setNewFolderName(""); // Clear input
-        fetchBothFolders()
-        onClose()
-        fetchUnSealedFolders()
-        fetchAdminPrivateFolders()
-
-        return response.data;
-      })
-      .catch((error) => {
-        console.log("API Error:", error);
-        throw error;
-      });
+      );
+      console.log("API Response:", response.data);
+      setNewFolderName("");
+      fetchBothFolders();
+      onClose();
+      fetchUnSealedFolders();
+      fetchAdminPrivateFolders();
+      return response.data;
+    } catch (error) {
+      console.log("API Error:", error);
+      throw error;
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
 
@@ -327,79 +351,108 @@ const CreateFolder = ({
     return <div className="p-4 text-sm text-destructive">Error: {error}</div>;
   }
 
-  if (!structFolder || !privateStructFolder) {
-    return null;
-  }
-
   return (
-    <>
+    <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      )}
-      <div
-        className={`fixed top-0 right-0 z-50 h-full w-full max-w-lg bg-background border-l border-border shadow-xl flex flex-col transition-transform duration-300 ease-in-out ${
-          open ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-muted/40 shrink-0">
-          <div className="flex items-center gap-2">
-            <FolderPlus size={16} className="text-primary" />
-            <h2 className="text-base font-semibold text-foreground">Create New Folder</h2>
-          </div>
-          <button
-            type="button"
+        <>
+          {/* Backdrop */}
+          <motion.div
+            key="backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
             onClick={onClose}
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          />
+          {/* Drawer */}
+          <motion.div
+            key="drawer"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed top-0 right-0 z-50 h-full w-full max-w-lg bg-background border-l border-border shadow-xl flex flex-col"
           >
-            <X size={16} />
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Folder Name</label>
-            <input
-              type="text"
-              placeholder="Enter folder name"
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Select Destination</p>
-            <div className="rounded-lg border border-border bg-muted/20 py-2">
-              {renderContents(structFolder.folders, (newFolders) =>
-                setStructFolder({ ...structFolder, folders: newFolders })
-              )}
-              {renderPrivateContents(privateStructFolder.folders, (newFolders) =>
-                setPrivateStructFolder({ ...privateStructFolder, folders: newFolders })
-              )}
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-muted/40 shrink-0">
+              <div className="flex items-center gap-2">
+                <FolderPlus size={16} className="text-primary" />
+                <h2 className="text-base font-semibold text-foreground">Create New Folder</h2>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              >
+                <X size={16} />
+              </button>
             </div>
-          </div>
-        </div>
 
-        {/* Footer */}
-        <div className="shrink-0 flex gap-2 px-5 py-4 border-t border-border bg-muted/20">
-          <button
-            type="button"
-            onClick={createFolderAPI}
-            className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
-          >
-            Create Folder
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted transition-colors"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </>
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Folder Name</label>
+                <input
+                  type="text"
+                  placeholder="Enter folder name"
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Select Destination</p>
+                <div className="rounded-lg border border-border bg-muted/20 py-2 min-h-[80px]">
+                  {isLoadingFolders ? (
+                    <div className="space-y-1.5 px-3 py-1">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <div key={i} className="flex items-center gap-2 py-1" style={{ paddingLeft: `${(i % 3) * 12}px` }}>
+                          <Skeleton className="h-3.5 w-3.5 rounded shrink-0" />
+                          <Skeleton className={`h-3 rounded ${i % 2 === 0 ? "w-32" : "w-24"}`} />
+                        </div>
+                      ))}
+                    </div>
+                  ) : structFolder && privateStructFolder ? (
+                    <>
+                      {renderContents(structFolder.folders, (newFolders) =>
+                        setStructFolder({ ...structFolder, folders: newFolders })
+                      )}
+                      {renderPrivateContents(privateStructFolder.folders, (newFolders) =>
+                        setPrivateStructFolder({ ...privateStructFolder, folders: newFolders })
+                      )}
+                    </>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="shrink-0 flex gap-2 px-5 py-4 border-t border-border bg-muted/20">
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={createFolderAPI}
+                disabled={isSubmitting || !newFolderName.trim() || !destinationPath}
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? (
+                  <><Loader2 size={14} className="animate-spin" /> Creating…</>
+                ) : "Create Folder"}
+              </motion.button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 };
 

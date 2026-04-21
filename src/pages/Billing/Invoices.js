@@ -7,6 +7,8 @@ import { toast } from "material-react-toastify";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import "jspdf-autotable";
+import { motion } from "framer-motion";
+import { PageTransition, TableSkeletonRows } from "../../components/ui/motion";
 const Invoices = () => {
   const INVOICE_API = process.env.REACT_APP_INVOICES_URL;
     const ACCOUNT_API = process.env.REACT_APP_ACCOUNTS_URL;
@@ -19,6 +21,7 @@ const Invoices = () => {
 const [menuPos, setMenuPos] = useState(null);
 const [selectedInvoice, setSelectedInvoice] = useState(null);
 const menuRef = useRef(null);
+const [isLoading, setIsLoading] = useState(true);
 
 const open = Boolean(menuPos);
 
@@ -536,18 +539,19 @@ doc.text(
   
   const fetchidwiseData = async (accountId) => {
     try {
+      setIsLoading(true);
       const url = `${INVOICE_API}/workflow/invoices/invoice/invoicelistby/accountid/${accountId}`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Failed to fetch task templates");
       }
       const data = await response.json();
-
-      // Correct key to access invoices
       console.log("invoices", data);
       setBillingInvoice(data.invoice);
     } catch (error) {
       console.error("Error fetching task templates:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
    useEffect(() => {
@@ -576,7 +580,7 @@ const hasPaidInvoiceSelected = BillingInvoice
   };
 
   return (
-    <div className="w-full max-w-[1700px] flex-1 h-[90vh] overflow-auto">
+    <PageTransition className="w-full max-w-[1700px] flex-1 h-[90vh] overflow-auto">
       <div className="p-4 sm:p-6 flex flex-col gap-5">
 
       {/* Page header */}
@@ -637,7 +641,9 @@ const hasPaidInvoiceSelected = BillingInvoice
               </tr>
             </thead>
             <tbody className="divide-y divide-border/60">
-              {BillingInvoice.length === 0 ? (
+              {isLoading ? (
+                <TableSkeletonRows rows={7} cols={10} />
+              ) : BillingInvoice.length === 0 ? (
                 <tr>
                   <td colSpan={10} className="py-16 text-center">
                     <div className="flex flex-col items-center gap-3">
@@ -649,13 +655,16 @@ const hasPaidInvoiceSelected = BillingInvoice
                     </div>
                   </td>
                 </tr>
-              ) : BillingInvoice.map((invoice) => {
+              ) : BillingInvoice.map((invoice, rowIndex) => {
                 const isSelected = selected.indexOf(invoice._id) !== -1;
                 return (
-                  <tr
+                  <motion.tr
                     key={invoice._id}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2, delay: rowIndex * 0.035, ease: [0.16, 1, 0.3, 1] }}
                     onClick={() => handleSelect(invoice._id)}
-                    className={`cursor-pointer transition-colors hover:bg-muted/40 ${
+                    className={`cursor-pointer transition-colors duration-150 hover:bg-muted/40 ${
                       isSelected ? "bg-primary/[0.06]" : ""
                     }`}
                   >
@@ -691,7 +700,7 @@ const hasPaidInvoiceSelected = BillingInvoice
                         <MoreVertical size={15} />
                       </button>
                     </td>
-                  </tr>
+                  </motion.tr>
                 );
               })}
             </tbody>
@@ -727,7 +736,7 @@ const hasPaidInvoiceSelected = BillingInvoice
           </button>
         </div>
       )}
-    </div>
+    </PageTransition>
   );
 };
 

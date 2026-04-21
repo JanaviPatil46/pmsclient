@@ -1,4 +1,7 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Skeleton } from "../components/ui/motion";
+import useShortcuts from "../src/hooks/useShortcuts";
 import {
   Eye, Lock,
   Folder as FolderClosedIcon,
@@ -60,6 +63,7 @@ const DocsFolderTree = () => {
     const [moveDrawerOpen, setMoveDrawerOpen] = useState(null);
 
     const [folderTree, setFolderTree] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
     // State for document approval dialog
     const [openViewer, setOpenViewer] = useState(false);
     const [selectedDoc, setSelectedDoc] = useState(null);
@@ -188,6 +192,7 @@ const DocsFolderTree = () => {
     }, [accountId]);
     // API call to fetch folder tree for a given template ID
     const fetchFolderTree = async (accountId) => {
+      setIsLoading(true);
       try {
         const res = await fetch(
           `https://www.snptaxes.com/api/accountsdoc/files/list/clientView?folderPath=${accountId}`
@@ -197,13 +202,14 @@ const DocsFolderTree = () => {
         console.log("janavi patil", data.contents);
         if (res.ok) {
           setFolderTree(data.contents);
-          // Check for pending approval documents
           checkForPendingApprovals(data.contents);
         } else {
           setError("Failed to fetch folder tree");
         }
       } catch (err) {
         setError("Error fetching folder tree");
+      } finally {
+        setIsLoading(false);
       }
     };
     // Function to check for pending approval documents in the folder tree
@@ -734,6 +740,22 @@ const trashItem = async (item) => {
     };
     const navigate = useNavigate();
 
+    const kbNewFolder = useCallback(() => { setNewFolderDrawerOpen(true); handleMenuClose(); }, []);
+    const kbUploadFile = useCallback(() => setFileUploadDrawerOpen(true), []);
+    const kbUploadFolder = useCallback(() => setFolderUploaDrawerOpen(true), []);
+    const kbDelete = useCallback(() => { if (selectedItems.size > 0) handleBulkTrash(); }, [selectedItems]);
+    const kbSelectAll = useCallback(() => handleSelectAll({ target: { checked: true } }), []);
+    const kbClearSelection = useCallback(() => setSelectedItems(new Set()), []);
+
+    useShortcuts([
+      { id: "docs_new_folder",    keys: ["n"],           action: kbNewFolder,      scope: "documents", description: "New folder",              group: "Documents" },
+      { id: "docs_upload_file",   keys: ["u"],           action: kbUploadFile,     scope: "documents", description: "Upload file",             group: "Documents" },
+      { id: "docs_upload_folder", keys: ["shift", "u"],  action: kbUploadFolder,   scope: "documents", description: "Upload folder",           group: "Documents" },
+      { id: "docs_trash",         keys: ["delete"],      action: kbDelete,         scope: "documents", description: "Move selected to trash",   group: "Documents" },
+      { id: "docs_select_all",    keys: ["meta", "a"],   action: kbSelectAll,      scope: "documents", description: "Select all items",         group: "Documents" },
+      { id: "docs_clear",         keys: ["escape"],      action: kbClearSelection, scope: "documents", description: "Clear selection",          group: "Documents", preventDefault: false },
+    ]);
+
     const handlePayInvoice = () => {
       if (!selectedInvoiceFile?.meta?.invoices?.length) return;
 
@@ -1245,18 +1267,20 @@ const trashItem = async (item) => {
               } ${isFolder ? "folder-row" : ""}`}
             >
               {/* Checkbox Column */}
-              <td className="w-[50px] pl-3 py-3">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded accent-primary"
-                  checked={isSelected}
-                  disabled={insideRestricted || meta.readOnly}
-                  ref={el => { if (el) el.indeterminate = isPartiallySelected; }}
-                  onChange={() => {
-                    if (insideRestricted || meta.readOnly) return;
-                    isFolder ? handleFolderSelect(item) : handleSelectItem(fullPath);
-                  }}
-                />
+              <td className="w-12 px-4 py-3">
+                <div className="flex items-center justify-center">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded accent-primary"
+                    checked={isSelected}
+                    disabled={insideRestricted || meta.readOnly}
+                    ref={el => { if (el) el.indeterminate = isPartiallySelected; }}
+                    onChange={() => {
+                      if (insideRestricted || meta.readOnly) return;
+                      isFolder ? handleFolderSelect(item) : handleSelectItem(fullPath);
+                    }}
+                  />
+                </div>
               </td>
 
               {/* Name Column with indentation */}
@@ -1348,27 +1372,57 @@ const trashItem = async (item) => {
             </tr>
 
             {/* Render children if folder is expanded */}
-            {isFolder &&
-              expandedFolders[fullPath] &&
-              item.children &&
-              item.children.length > 0 &&
-              renderTableRows(
-                item.children,
-                level + 1,
-                fullPath,
-                insideRestricted
-              )}
+            {isFolder && item.children && item.children.length > 0 && (
+              <AnimatePresence initial={false}>
+                {expandedFolders[fullPath] && (
+                  <motion.tr
+                    key={`expand-${fullPath}`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.18 }}
+                    style={{ display: "contents" }}
+                  >
+                    <td colSpan={6} style={{ padding: 0 }}>
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        style={{ overflow: "hidden" }}
+                      >
+                        <table className="w-full text-sm">
+                          <tbody>
+                            {renderTableRows(item.children, level + 1, fullPath, insideRestricted)}
+                          </tbody>
+                        </table>
+                      </motion.div>
+                    </td>
+                  </motion.tr>
+                )}
+              </AnimatePresence>
+            )}
           </React.Fragment>
         );
       });
     };
 
     return (
-      <div className="w-full max-w-[1700px] flex-1 h-[90vh] overflow-auto font-sans">
+      <motion.div
+        className="w-full max-w-[1700px] flex-1 h-[90vh] overflow-auto font-sans"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+      >
         <div className="p-4 sm:p-6 flex flex-col gap-5">
 
         {/* ── Page header ── */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <motion.div
+          className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4"
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+        >
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2.5">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 shrink-0">
@@ -1383,40 +1437,56 @@ const trashItem = async (item) => {
 
           {/* ── Toolbar ── */}
           <div className="flex items-center gap-2 flex-wrap shrink-0">
-            <button
+            <motion.button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-[13px] font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-150"
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+              title="New Folder (N)"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-[13px] font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors duration-150"
               onClick={() => { setNewFolderDrawerOpen(true); handleMenuClose(); }}
             >
               <FolderIcon size={14} strokeWidth={2} /> New Folder
-            </button>
-            <button
+              <kbd className="ml-1 rounded border border-primary-foreground/30 bg-primary-foreground/10 px-1 py-0 text-[10px] font-bold leading-none">N</kbd>
+            </motion.button>
+            <motion.button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-2 text-[13px] font-semibold text-foreground hover:bg-muted hover:scale-[1.02] active:scale-[0.98] transition-all duration-150 shadow-sm"
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+              title="Upload File (U)"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-2 text-[13px] font-semibold text-foreground hover:bg-muted transition-colors duration-150 shadow-sm"
               onClick={() => setFileUploadDrawerOpen(true)}
             >
               <UploadFileIcon size={14} strokeWidth={2} /> Upload File
-            </button>
-            <button
+              <kbd className="ml-1 rounded border border-border bg-muted px-1 py-0 text-[10px] font-bold leading-none text-muted-foreground">U</kbd>
+            </motion.button>
+            <motion.button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-2 text-[13px] font-semibold text-foreground hover:bg-muted hover:scale-[1.02] active:scale-[0.98] transition-all duration-150 shadow-sm"
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+              title="Upload Folder (⇧U)"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-2 text-[13px] font-semibold text-foreground hover:bg-muted transition-colors duration-150 shadow-sm"
               onClick={() => setFolderUploaDrawerOpen(true)}
             >
               <DriveFolderUploadIcon size={14} strokeWidth={2} /> Upload Folder
-            </button>
-            <button
+              <kbd className="ml-1 rounded border border-border bg-muted px-1 py-0 text-[10px] font-bold leading-none text-muted-foreground">⇧U</kbd>
+            </motion.button>
+            <motion.button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/40 bg-destructive/5 px-3.5 py-2 text-[13px] font-semibold text-destructive hover:bg-destructive/10 hover:scale-[1.02] active:scale-[0.98] transition-all duration-150 shadow-sm"
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/40 bg-destructive/5 px-3.5 py-2 text-[13px] font-semibold text-destructive hover:bg-destructive/10 transition-colors duration-150 shadow-sm"
               onClick={handleTrashClick}
             >
               <DeleteIcon size={14} strokeWidth={2} /> View Trash
-            </button>
+            </motion.button>
           </div>
-        </div>
+        </motion.div>
 
         {/* ── Bulk selection bar ── */}
+        <AnimatePresence>
         {selectedItems.size > 0 && (
-          <div className="flex items-center justify-between flex-wrap gap-2 px-4 py-3 rounded-xl border border-primary/25 bg-primary/5 shadow-sm">
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="flex items-center justify-between flex-wrap gap-2 px-4 py-3 rounded-xl border border-primary/25 bg-primary/5 shadow-sm">
             <div className="flex items-center gap-2">
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
                 {selectedItems.size}
@@ -1459,8 +1529,9 @@ const trashItem = async (item) => {
                 Clear
               </button>
             </div>
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
           {/* Drawers */}
           <FileUploadDrawer
@@ -1524,9 +1595,24 @@ const trashItem = async (item) => {
               setSelectedItems(new Set()); // Clear selection
             }}
           />
+        <AnimatePresence>
         {openViewer && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="relative w-full max-w-3xl bg-card rounded-xl shadow-xl flex flex-col max-h-[90vh]">
+          <motion.div
+            key="viewer-backdrop"
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          >
+            <motion.div
+              className="relative w-full max-w-3xl bg-card rounded-xl shadow-xl flex flex-col max-h-[90vh]"
+              initial={{ opacity: 0, scale: 0.97, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: 8 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            >
               <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-border">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <DescriptionIcon size={16} className="text-amber-400 shrink-0" />
@@ -1574,14 +1660,30 @@ const trashItem = async (item) => {
                   </button>
                 </div>
               )}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
         {/* Cancel Reason Dialog */}
+        <AnimatePresence>
         {cancelDialogOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="w-full max-w-sm bg-card rounded-xl shadow-xl">
+          <motion.div
+            key="cancel-backdrop"
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          >
+            <motion.div
+              className="w-full max-w-sm bg-card rounded-xl shadow-xl"
+              initial={{ opacity: 0, scale: 0.97, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: 8 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            >
               <div className="px-4 py-3 border-b border-border">
                 <h3 className="text-sm font-semibold text-foreground">Cancel Document Approval</h3>
               </div>
@@ -1612,13 +1714,29 @@ const trashItem = async (item) => {
                   Submit
                 </button>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
+        <AnimatePresence>
         {dialogOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="relative w-full max-w-4xl bg-card rounded-xl shadow-xl flex flex-col max-h-[90vh]">
+          <motion.div
+            key="dialog-backdrop"
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          >
+            <motion.div
+              className="relative w-full max-w-4xl bg-card rounded-xl shadow-xl flex flex-col max-h-[90vh]"
+              initial={{ opacity: 0, scale: 0.97, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: 8 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            >
               <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                 <h3 className="text-sm font-semibold text-foreground">Signing Form</h3>
                 <button type="button" onClick={handleCloseDialog} className="p-1 rounded hover:bg-muted text-foreground">
@@ -1683,13 +1801,29 @@ const trashItem = async (item) => {
                   />
                 )}
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
+        <AnimatePresence>
         {invoiceDialogOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="w-full max-w-sm bg-card rounded-xl shadow-xl">
+          <motion.div
+            key="invoice-backdrop"
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          >
+            <motion.div
+              className="w-full max-w-sm bg-card rounded-xl shadow-xl"
+              initial={{ opacity: 0, scale: 0.97, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: 8 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            >
               <div className="px-4 py-3 border-b border-border">
                 <h3 className="text-sm font-semibold text-foreground">Invoice Details</h3>
               </div>
@@ -1735,9 +1869,10 @@ const trashItem = async (item) => {
                   </button>
                 )}
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
         {/* ── Folder Explorer card ── */}
         <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
@@ -1754,18 +1889,52 @@ const trashItem = async (item) => {
             </div>
           </div>
 
-          {folderTree && folderTree.length > 0 ? (
+          {isLoading ? (
             <div className="overflow-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/40">
-                    <th className="w-10 pl-3 py-3">
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 rounded accent-primary cursor-pointer"
-                        checked={selectAll}
-                        onChange={handleSelectAll}
-                      />
+                    <th className="w-12 px-4 py-3"><div className="flex items-center justify-center"><Skeleton className="h-4 w-4 rounded" /></div></th>
+                    <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Name</th>
+                    <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Status</th>
+                    <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Uploaded</th>
+                    <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">User</th>
+                    <th className="px-3 py-3 text-right text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Array.from({ length: 7 }).map((_, i) => (
+                    <tr key={i} className="border-b border-border/60">
+                      <td className="w-12 px-4 py-3"><div className="flex items-center justify-center"><Skeleton className="h-4 w-4 rounded" /></div></td>
+                      <td className="py-3" style={{ paddingLeft: `${(i % 3) * 16 + 8}px` }}>
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="h-4 w-4 rounded shrink-0" />
+                          <Skeleton className={`h-3 rounded ${i % 2 === 0 ? "w-40" : "w-28"}`} />
+                        </div>
+                      </td>
+                      <td className="py-3 px-3"><Skeleton className="h-5 w-24 rounded-full" /></td>
+                      <td className="py-3 px-3"><Skeleton className="h-3 w-20 rounded" /></td>
+                      <td className="py-3 px-3"><Skeleton className="h-3 w-16 rounded" /></td>
+                      <td className="py-3 px-3"><Skeleton className="h-5 w-5 rounded ml-auto" /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : folderTree && folderTree.length > 0 ? (
+            <div className="overflow-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-muted/40">
+                    <th className="w-12 px-4 py-3">
+                      <div className="flex items-center justify-center">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 rounded accent-primary cursor-pointer"
+                          checked={selectAll}
+                          onChange={handleSelectAll}
+                        />
+                      </div>
                     </th>
                     <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Name</th>
                     <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Status</th>
@@ -1829,7 +1998,7 @@ const trashItem = async (item) => {
         ) : null}
 
         </div>
-      </div>
+      </motion.div>
     );
   };
   return <FolderTreeView accountId={accountId} />;

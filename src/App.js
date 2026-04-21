@@ -1,5 +1,8 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ShortcutProvider } from "./context/ShortcutContext";
+import CommandPalette from "./components/CommandPalette";
+import ShortcutsModal from "./components/ShortcutsModal";
 import Dashboard from "./Dashboard";
 import SignIn from "./login-signup/Signin";
 import Home from "./pages/Home";
@@ -19,8 +22,10 @@ import DocsFolderTree from "./docs-management/DocsFolderTree";
 import TrashedDocs from "./docs-management/TrashedDocs";
 const App = () => {
   return (
-    <>
+    <ShortcutProvider>
       <BrowserRouter basename="/client">
+        <CommandPalette />
+        <ShortcutsModal />
        
         <Routes>
           <Route path="/client/login" element={<SignIn />} />
@@ -51,7 +56,7 @@ const App = () => {
           </Route>
         </Routes>
       </BrowserRouter>
-    </>
+    </ShortcutProvider>
   );
 };
 

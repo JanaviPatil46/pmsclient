@@ -10,6 +10,8 @@ import {
   FileText,
   ShieldAlert,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Skeleton } from "../../../components/ui/motion";
 
 // Dummy components - replace these with your actual components
 import UploadDrawer from "./uploadDocumentWorking";
@@ -396,38 +398,56 @@ const App = () => {
                 >
                   <MoreVertical size={14} />
                 </button>
-                {activeMenu === item.id && Boolean(anchorEl) && (
-                  <div className="absolute right-0 z-50 mt-1 min-w-[150px] rounded-lg border border-border bg-popover shadow-lg p-1">
-                    {item.folder === "Client Uploaded Documents" ? (
-                      <>
-                        <button type="button" onClick={() => handleMenuAction("new-folder")}
-                          className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">New Folder</button>
-                        <button type="button" onClick={() => handleMenuAction("edit")}
-                          className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">Edit</button>
-                      </>
-                    ) : (
-                      <>
-                        <button type="button" onClick={() => handleMenuAction("new-folder")}
-                          className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">New Folder</button>
-                        <button type="button" onClick={() => handleMenuAction("edit")}
-                          className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">Edit</button>
-                        <button type="button" onClick={() => handleMenuAction("delete")}
-                          className="w-full text-left px-3 py-1.5 text-[13px] text-destructive hover:bg-destructive/10 rounded-md transition-colors">Delete</button>
-                        <button type="button" onClick={() => handleMenuAction("move")}
-                          className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">Move</button>
-                        <button type="button" onClick={() => handleMenuAction(item.sealed ? "unseal" : "seal")}
-                          className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">
-                          {item.sealed ? "Unseal" : "Seal"}
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
+                <AnimatePresence>
+                  {activeMenu === item.id && Boolean(anchorEl) && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                      transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
+                      className="absolute right-0 z-50 mt-1 min-w-[150px] rounded-lg border border-border bg-popover shadow-lg p-1 origin-top-right"
+                    >
+                      {item.folder === "Client Uploaded Documents" ? (
+                        <>
+                          <button type="button" onClick={() => handleMenuAction("new-folder")}
+                            className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">New Folder</button>
+                          <button type="button" onClick={() => handleMenuAction("edit")}
+                            className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">Edit</button>
+                        </>
+                      ) : (
+                        <>
+                          <button type="button" onClick={() => handleMenuAction("new-folder")}
+                            className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">New Folder</button>
+                          <button type="button" onClick={() => handleMenuAction("edit")}
+                            className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">Edit</button>
+                          <button type="button" onClick={() => handleMenuAction("delete")}
+                            className="w-full text-left px-3 py-1.5 text-[13px] text-destructive hover:bg-destructive/10 rounded-md transition-colors">Delete</button>
+                          <button type="button" onClick={() => handleMenuAction("move")}
+                            className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">Move</button>
+                          <button type="button" onClick={() => handleMenuAction(item.sealed ? "unseal" : "seal")}
+                            className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">
+                            {item.sealed ? "Unseal" : "Seal"}
+                          </button>
+                        </>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
+            <AnimatePresence initial={false}>
             {item.isOpen && item.contents?.length > 0 && (
-              <div>{renderTree(item.contents)}</div>
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                style={{ overflow: "hidden" }}
+              >
+                {renderTree(item.contents)}
+              </motion.div>
             )}
+          </AnimatePresence>
           </div>
         );
       } else {
@@ -455,22 +475,30 @@ const App = () => {
               >
                 <MoreVertical size={14} />
               </button>
-              {activeMenu === item.id && Boolean(anchorEl) && (
-                <div className="absolute right-0 z-50 mt-1 min-w-[150px] rounded-lg border border-border bg-popover shadow-lg p-1">
-                  <button type="button" onClick={() => handleMenuAction("new-folder")}
-                    className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">New Folder</button>
-                  <button type="button" onClick={() => handleMenuAction("edit")}
-                    className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">Edit</button>
-                  <button type="button" onClick={() => handleMenuAction("delete")}
-                    className="w-full text-left px-3 py-1.5 text-[13px] text-destructive hover:bg-destructive/10 rounded-md transition-colors">Delete</button>
-                  <button type="button" onClick={() => handleMenuAction("move")}
-                    className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">Move</button>
-                  <button type="button" onClick={() => handleMenuAction(item.sealed ? "unseal" : "seal")}
-                    className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">
-                    {item.sealed ? "Unseal" : "Seal"}
-                  </button>
-                </div>
-              )}
+              <AnimatePresence>
+                {activeMenu === item.id && Boolean(anchorEl) && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                    transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute right-0 z-50 mt-1 min-w-[150px] rounded-lg border border-border bg-popover shadow-lg p-1 origin-top-right"
+                  >
+                    <button type="button" onClick={() => handleMenuAction("new-folder")}
+                      className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">New Folder</button>
+                    <button type="button" onClick={() => handleMenuAction("edit")}
+                      className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">Edit</button>
+                    <button type="button" onClick={() => handleMenuAction("delete")}
+                      className="w-full text-left px-3 py-1.5 text-[13px] text-destructive hover:bg-destructive/10 rounded-md transition-colors">Delete</button>
+                    <button type="button" onClick={() => handleMenuAction("move")}
+                      className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">Move</button>
+                    <button type="button" onClick={() => handleMenuAction(item.sealed ? "unseal" : "seal")}
+                      className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">
+                      {item.sealed ? "Unseal" : "Seal"}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         );
@@ -730,7 +758,32 @@ const App = () => {
 
   if (error) return <div className="p-4 text-sm text-destructive">Error: {error}</div>;
   if (!combinedFolderStructure || !privateStructFolder)
-    return <div className="p-4 text-sm text-muted-foreground">Loading...</div>;
+    return (
+      <div className="space-y-4">
+        <div className="h-8 w-40 rounded-lg bg-muted animate-pulse" />
+        <div className="flex gap-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-9 w-36 rounded-lg" />
+          ))}
+        </div>
+        <div className="rounded-lg border border-border bg-card p-3 space-y-1.5">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-2 py-1" style={{ paddingLeft: `${(i % 3) * 16 + 8}px` }}>
+              <Skeleton className="h-3.5 w-3.5 rounded shrink-0" />
+              <Skeleton className={`h-3 rounded ${i % 2 === 0 ? "w-44" : "w-28"}`} />
+            </div>
+          ))}
+        </div>
+        <div className="rounded-lg border border-border bg-card p-3 space-y-1.5">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-2 py-1" style={{ paddingLeft: `${(i % 2) * 16 + 8}px` }}>
+              <Skeleton className="h-3.5 w-3.5 rounded shrink-0" />
+              <Skeleton className={`h-3 rounded ${i % 2 === 0 ? "w-36" : "w-24"}`} />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
 
   return (
     <>
@@ -738,9 +791,11 @@ const App = () => {
 
       {/* Client Docs Toolbar */}
       <div className="flex flex-wrap gap-2 mb-4">
-        <label
+        <motion.label
           htmlFor="fileInput"
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted cursor-pointer transition-colors"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted cursor-pointer transition-colors duration-150"
         >
           <Upload size={15} className="text-primary" />
           Upload Document
@@ -750,21 +805,25 @@ const App = () => {
             className="hidden"
             onChange={(e) => { handleFileChange(e); handleFileUpload(); }}
           />
-        </label>
+        </motion.label>
 
-        <button
+        <motion.button
           type="button"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
           onClick={handleCreateFolderClick}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors duration-150"
         >
           <FolderPlus size={15} className="text-primary" />
           Create Folder
-        </button>
+        </motion.button>
 
-        <button
+        <motion.button
           type="button"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
           onClick={() => folderInputRef.current.click()}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors duration-150"
         >
           <FolderUp size={15} className="text-primary" />
           Upload Folder
@@ -776,7 +835,7 @@ const App = () => {
             directory="true"
             onChange={handleFolderSelection}
           />
-        </button>
+        </motion.button>
       </div>
 
       {/* Combined folder tree */}
@@ -796,9 +855,11 @@ const App = () => {
 
       {/* Firm Docs Toolbar */}
       <div className="flex flex-wrap gap-2 mb-4">
-        <label
+        <motion.label
           htmlFor="firmDocFileInput"
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted cursor-pointer transition-colors"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted cursor-pointer transition-colors duration-150"
         >
           <Upload size={15} className="text-primary" />
           Upload Document in Firm
@@ -808,16 +869,18 @@ const App = () => {
             className="hidden"
             onChange={(e) => { handleNewFileChange(e); handleOpenDrawer(); }}
           />
-        </label>
+        </motion.label>
 
-        <button
+        <motion.button
           type="button"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
           onClick={handleNewFolderClick}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors duration-150"
         >
           <FolderPlus size={15} className="text-primary" />
           Create Folder in Firm
-        </button>
+        </motion.button>
       </div>
 
       {/* ADMIN UPLAOD DOC DRAER */}

@@ -1,7 +1,8 @@
 
 
 import React, { useEffect, useState } from "react";
-
+import { motion, AnimatePresence } from "framer-motion";
+import { Skeleton } from "../../components/ui/motion";
 
 
 // const Folder = ({ name, content, onSelectPath, currentPath = "" }) => {
@@ -115,7 +116,12 @@ const handleAction = (action) => {
     const hasAnyPermission = permissions.canView || permissions.canUpdate || permissions.canDownload || permissions.canDelete;
 
     return (
-      <div className="group flex items-center justify-between gap-2 pl-5 pr-2 py-1 rounded-md hover:bg-muted/50 transition-colors">
+      <motion.div
+        initial={{ opacity: 0, x: -6 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+        className="group flex items-center justify-between gap-2 pl-5 pr-2 py-1 rounded-md hover:bg-muted/50 transition-colors duration-150"
+      >
         <div className="flex items-center gap-1.5 min-w-0">
           <FileText size={13} className="shrink-0 text-muted-foreground" />
           <span className="text-[13px] text-foreground truncate">{content.filename}</span>
@@ -129,59 +135,84 @@ const handleAction = (action) => {
             >
               <MoreVertical size={13} />
             </button>
-            {Boolean(anchorEl) && (
-              <div className="absolute right-0 z-50 mt-1 min-w-[130px] rounded-lg border border-border bg-popover shadow-lg p-1">
-                {permissions.canView && (
-                  <button type="button" onClick={() => handleAction("view")}
-                    className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">
-                    View
-                  </button>
-                )}
-                {permissions.canUpdate && (
-                  <button type="button" onClick={() => handleAction("edit")}
-                    className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">
-                    Edit
-                  </button>
-                )}
-                {permissions.canDownload && (
-                  <button type="button" onClick={() => handleAction("download")}
-                    className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">
-                    Download
-                  </button>
-                )}
-                {permissions.canDelete && (
-                  <button type="button" onClick={() => handleAction("delete")}
-                    className="w-full text-left px-3 py-1.5 text-[13px] text-destructive hover:bg-destructive/10 rounded-md transition-colors">
-                    Delete
-                  </button>
-                )}
-              </div>
-            )}
+            <AnimatePresence>
+              {Boolean(anchorEl) && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                  transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
+                  className="absolute right-0 z-50 mt-1 min-w-[130px] rounded-lg border border-border bg-popover shadow-lg p-1 origin-top-right"
+                >
+                  {permissions.canView && (
+                    <button type="button" onClick={() => handleAction("view")}
+                      className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">
+                      View
+                    </button>
+                  )}
+                  {permissions.canUpdate && (
+                    <button type="button" onClick={() => handleAction("edit")}
+                      className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">
+                      Edit
+                    </button>
+                  )}
+                  {permissions.canDownload && (
+                    <button type="button" onClick={() => handleAction("download")}
+                      className="w-full text-left px-3 py-1.5 text-[13px] text-foreground hover:bg-muted rounded-md transition-colors">
+                      Download
+                    </button>
+                  )}
+                  {permissions.canDelete && (
+                    <button type="button" onClick={() => handleAction("delete")}
+                      className="w-full text-left px-3 py-1.5 text-[13px] text-destructive hover:bg-destructive/10 rounded-md transition-colors">
+                      Delete
+                    </button>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         )}
-      </div>
+      </motion.div>
     );
   }
 
   // ========== RENDER FOLDER ==========
   return (
     <div className="pl-4">
-      <div onClick={handleClick} className="flex items-center gap-1.5 py-1 px-2 rounded-md cursor-pointer hover:bg-muted/50 transition-colors">
+      <motion.div
+        initial={{ opacity: 0, x: -6 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+        onClick={handleClick}
+        className="flex items-center gap-1.5 py-1 px-2 rounded-md cursor-pointer hover:bg-muted/50 transition-colors duration-150"
+      >
         {isOpen
           ? <FolderOpenIcon size={14} className="shrink-0 text-primary" />
           : <FolderIcon size={14} className="shrink-0 text-amber-500" />}
         <span className="text-[13px] font-medium text-foreground">{name}</span>
-      </div>
-      {isOpen &&
-        Object.entries(content).map(([childName, childContent]) => (
-          <FolderItem
-            key={childName}
-            name={childName}
-            content={childContent}
-            onSelectPath={onSelectPath}
-            currentPath={fullPath}
-          />
-        ))}
+      </motion.div>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            style={{ overflow: "hidden" }}
+          >
+            {Object.entries(content).map(([childName, childContent]) => (
+              <FolderItem
+                key={childName}
+                name={childName}
+                content={childContent}
+                onSelectPath={onSelectPath}
+                currentPath={fullPath}
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -230,41 +261,70 @@ const buildFileTree = (files, folderStart) => {
 
 
 
-const FileExplorer = ({ onPathSelect,accountId }) => {
+const FileExplorer = ({ onPathSelect, accountId }) => {
   const [files, setFiles] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const folderName = "Firm Docs Shared With Client";
-
-  
 
   const fetchFiles = async () => {
     try {
-      const res = await fetch(
-       `${DOCS_API}/firmDocs/files/${accountId}`
-      );
+      setIsLoading(true);
+      const res = await fetch(`${DOCS_API}/firmDocs/files/${accountId}`);
       const data = await res.json();
       setFiles(data.files || []);
     } catch (err) {
       console.error("Failed to fetch files", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     if (accountId) {
-      fetchFiles(); // Only fetch when drawer is opened
+      fetchFiles();
     }
   }, [accountId]);
+
   const fileTree = buildFileTree(files, folderName);
+  const hasFiles = Object.keys(fileTree).length > 0;
 
   return (
-    <div>
-      {Object.entries(fileTree).map(([name, content]) => (
-        <FolderItem
-          key={name}
-          name={name}
-          content={content}
-          onSelectPath={onPathSelect}
-        />
-      ))}
+    <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+      {/* Card header */}
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-muted/30">
+        <FolderIcon size={15} className="text-primary shrink-0" />
+        <p className="text-[13px] font-semibold text-foreground tracking-tight">Firm Docs Shared With You</p>
+      </div>
+
+      {/* Body */}
+      <div className="p-3">
+        {isLoading ? (
+          <div className="space-y-1">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-2 px-2 py-1.5" style={{ paddingLeft: `${i % 2 === 0 ? 8 : 24}px` }}>
+                <Skeleton className="h-3.5 w-3.5 rounded shrink-0" />
+                <Skeleton className={`h-3 rounded ${i % 2 === 0 ? "w-40" : "w-28"}`} />
+              </div>
+            ))}
+          </div>
+        ) : !hasFiles ? (
+          <div className="flex flex-col items-center justify-center py-10 gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+              <FolderIcon size={18} className="text-muted-foreground" strokeWidth={1.5} />
+            </div>
+            <p className="text-[13px] text-muted-foreground">No shared documents yet.</p>
+          </div>
+        ) : (
+          Object.entries(fileTree).map(([name, content]) => (
+            <FolderItem
+              key={name}
+              name={name}
+              content={content}
+              onSelectPath={onPathSelect}
+            />
+          ))
+        )}
+      </div>
     </div>
   );
 };

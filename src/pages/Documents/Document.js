@@ -368,6 +368,8 @@ import MoveFile from "./MoveFile";
 import FileExplorer from "./FileExplorer";
 import CreateFolder from "./AdminPortal/CreateFolder";
 import UploadDrawer from "./AdminPortal/uploadDocumentWorking";
+import { motion, AnimatePresence } from "framer-motion";
+import { PageTransition, FadeIn, Skeleton } from "../../components/ui/motion";
 import {
   FolderPlus,
   Upload,
@@ -709,12 +711,27 @@ const handleMenuOpen = (event, item) => {
   // };
   const menuRef = useRef(null);
 
+  const treeRowVariants = {
+    hidden: { opacity: 0, x: -6 },
+    show: (i) => ({
+      opacity: 1,
+      x: 0,
+      transition: { duration: 0.18, delay: i * 0.04, ease: [0.16, 1, 0.3, 1] },
+    }),
+  };
+
   const renderTree = (items, depth = 0) => {
-    return items.map((item) => {
+    return items.map((item, i) => {
       if (item.folder) {
         const isRoot = item.folder === "Client Uploaded Documents";
         return (
-          <div key={item.id}>
+          <motion.div
+            key={item.id}
+            custom={i}
+            variants={treeRowVariants}
+            initial="hidden"
+            animate="show"
+          >
             <div
               className={`group flex items-center justify-between rounded-lg px-2 py-1.5 transition-all duration-150 hover:bg-muted/50 ${
                 item.isOpen ? "bg-muted/30" : ""
@@ -755,15 +772,30 @@ const handleMenuOpen = (event, item) => {
                 </div>
               )}
             </div>
-            {item.isOpen && item.contents?.length > 0 && (
-              <div>{renderTree(item.contents, depth + 1)}</div>
-            )}
-          </div>
+            <AnimatePresence initial={false}>
+              {item.isOpen && item.contents?.length > 0 && (
+                <motion.div
+                  key={`children-${item.id}`}
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ overflow: "hidden" }}
+                >
+                  {renderTree(item.contents, depth + 1)}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
         );
       } else {
         return (
-          <div
+          <motion.div
             key={item.id}
+            custom={i}
+            variants={treeRowVariants}
+            initial="hidden"
+            animate="show"
             className="group flex items-center justify-between rounded-lg px-2 py-1.5 transition-all duration-150 hover:bg-muted/50"
             style={{ paddingLeft: `${8 + depth * 16}px` }}
           >
@@ -784,7 +816,7 @@ const handleMenuOpen = (event, item) => {
             >
               <MoreVertical size={13} />
             </button>
-          </div>
+          </motion.div>
         );
       }
     });
@@ -792,10 +824,51 @@ const handleMenuOpen = (event, item) => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-1 h-[90vh] items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 size={28} className="text-primary animate-spin" />
-          <p className="text-[13px] text-muted-foreground">Loading documents…</p>
+      <div className="w-full max-w-[1700px] flex-1 h-[90vh] overflow-auto">
+        <div className="p-4 sm:p-6 flex flex-col gap-5">
+          {/* Header skeleton */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2.5">
+              <Skeleton className="h-8 w-8 rounded-lg" />
+              <Skeleton className="h-6 w-32" />
+            </div>
+            <Skeleton className="h-3 w-52 ml-10" />
+          </div>
+          {/* Buttons skeleton */}
+          <div className="flex gap-2">
+            <Skeleton className="h-9 w-28 rounded-lg" />
+            <Skeleton className="h-9 w-28 rounded-lg" />
+          </div>
+          {/* Folder tree card skeleton */}
+          <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-muted/30">
+              <Skeleton className="h-4 w-4 rounded" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+            <div className="p-3 space-y-1">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-2 px-2 py-1.5" style={{ paddingLeft: `${8 + (i % 3) * 16}px` }}>
+                  <Skeleton className="h-3.5 w-3.5 rounded shrink-0" />
+                  <Skeleton className={`h-3 rounded ${i % 2 === 0 ? "w-36" : "w-28"}`} />
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* FileExplorer skeleton */}
+          <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-muted/30">
+              <Skeleton className="h-4 w-4 rounded" />
+              <Skeleton className="h-3 w-40" />
+            </div>
+            <div className="p-3 space-y-1">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-2 px-2 py-1.5 pl-6">
+                  <Skeleton className="h-3.5 w-3.5 rounded shrink-0" />
+                  <Skeleton className={`h-3 rounded ${i % 2 === 0 ? "w-44" : "w-32"}`} />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -813,92 +886,111 @@ const handleMenuOpen = (event, item) => {
   }
 
   return (
-    <div className="w-full max-w-[1700px] flex-1 h-[90vh] overflow-auto font-sans">
+    <PageTransition className="w-full max-w-[1700px] flex-1 h-[90vh] overflow-auto font-sans">
       <div className="p-4 sm:p-6 flex flex-col gap-5">
 
         {/* ── Page header ── */}
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-              <Files size={16} className="text-primary" strokeWidth={1.8} />
+        <FadeIn>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                <Files size={16} className="text-primary" strokeWidth={1.8} />
+              </div>
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground">Documents</h1>
             </div>
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Documents</h1>
+            <p className="text-[13px] text-muted-foreground pl-10">
+              Manage your folders and uploaded files.
+            </p>
           </div>
-          <p className="text-[13px] text-muted-foreground pl-10">
-            Manage your folders and uploaded files.
-          </p>
-        </div>
+        </FadeIn>
 
         {/* ── Action buttons ── */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* New Folder */}
-          <button
-            type="button"
-            onClick={() => setIsFolderFormOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-[13px] font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-[0.98] transition-all duration-150"
-          >
-            <FolderPlus size={14} strokeWidth={2} />
-            New Folder
-          </button>
+        <FadeIn delay={0.04}>
+          <div className="flex flex-wrap items-center gap-2">
+            {/* New Folder */}
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setIsFolderFormOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-[13px] font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors duration-150"
+            >
+              <FolderPlus size={14} strokeWidth={2} />
+              New Folder
+            </motion.button>
 
-          {/* Upload File */}
-          <label className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-2 text-[13px] font-semibold text-foreground hover:bg-muted active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-sm">
-            <Upload size={14} strokeWidth={2} />
-            Upload File
-            <input
-              type="file"
-              id="fileInput"
-              hidden
-              onChange={(e) => {
-                setFile(e.target.files[0]);
-                setIsDocumentForm(true);
-              }}
-            />
-          </label>
-        </div>
+            {/* Upload File */}
+            <motion.label
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-2 text-[13px] font-semibold text-foreground hover:bg-muted transition-colors duration-150 cursor-pointer shadow-sm"
+            >
+              <Upload size={14} strokeWidth={2} />
+              Upload File
+              <input
+                type="file"
+                id="fileInput"
+                hidden
+                onChange={(e) => {
+                  setFile(e.target.files[0]);
+                  setIsDocumentForm(true);
+                }}
+              />
+            </motion.label>
+          </div>
+        </FadeIn>
 
         {/* ── Folder tree card ── */}
-        {combinedFolderStructure ? (
-          <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-            {/* Card header */}
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-muted/30">
-              <Folder size={15} className="text-amber-500 shrink-0" />
-              <p className="text-[13px] font-semibold text-foreground tracking-tight">Folder Tree</p>
+        <FadeIn delay={0.08}>
+          {combinedFolderStructure ? (
+            <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+              {/* Card header */}
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-muted/30">
+                <Folder size={15} className="text-amber-500 shrink-0" />
+                <p className="text-[13px] font-semibold text-foreground tracking-tight">Folder Tree</p>
+              </div>
+              {/* Tree body */}
+              <div className="p-3">
+                {renderTree(combinedFolderStructure)}
+              </div>
             </div>
-            {/* Tree body */}
-            <div className="p-3">
-              {renderTree(combinedFolderStructure)}
+          ) : (
+            <div className="rounded-xl border border-border bg-card shadow-sm p-12 flex flex-col items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                <Folder size={22} className="text-muted-foreground" strokeWidth={1.5} />
+              </div>
+              <p className="text-sm font-medium text-foreground">No documents found</p>
+              <p className="text-[13px] text-muted-foreground">Create a folder to get started.</p>
             </div>
-          </div>
-        ) : (
-          <div className="rounded-xl border border-border bg-card shadow-sm p-12 flex flex-col items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-              <Folder size={22} className="text-muted-foreground" strokeWidth={1.5} />
-            </div>
-            <p className="text-sm font-medium text-foreground">No documents found</p>
-            <p className="text-[13px] text-muted-foreground">Create a folder to get started.</p>
-          </div>
-        )}
+          )}
+        </FadeIn>
 
         {/* ── File Explorer ── */}
-        <FileExplorer accountId={accId} />
+        <FadeIn delay={0.12}>
+          <FileExplorer accountId={accId} />
+        </FadeIn>
 
       </div>
 
       {/* ── Context menu dropdown ── */}
-      {Boolean(anchorEl) && selectedItem && (
-        <>
-          <div className="fixed inset-0 z-[9998]" onClick={handleMenuClose} />
-          <div
-            ref={menuRef}
-            style={{
-              position: "fixed",
-              top: anchorEl?.getBoundingClientRect().bottom + window.scrollY + 4,
-              left: anchorEl?.getBoundingClientRect().right + window.scrollX - 144,
-              zIndex: 9999,
-            }}
-            className="w-36 rounded-xl border border-border bg-card shadow-xl overflow-hidden animate-in fade-in-0 zoom-in-95 duration-100"
-          >
+      <AnimatePresence>
+        {Boolean(anchorEl) && selectedItem && (
+          <>
+            <div className="fixed inset-0 z-[9998]" onClick={handleMenuClose} />
+            <motion.div
+              ref={menuRef}
+              initial={{ opacity: 0, scale: 0.95, y: -4 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -4 }}
+              transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+              style={{
+                position: "fixed",
+                top: anchorEl?.getBoundingClientRect().bottom + window.scrollY + 4,
+                left: anchorEl?.getBoundingClientRect().right + window.scrollX - 144,
+                zIndex: 9999,
+              }}
+              className="w-36 rounded-xl border border-border bg-card shadow-xl overflow-hidden origin-top-right"
+            >
             {selectedItem?.folder === "Client Uploaded Documents" ? (
               <>
                 <button disabled className="w-full flex items-center gap-2 px-3 py-2.5 text-[13px] text-muted-foreground opacity-40 cursor-not-allowed">
@@ -946,9 +1038,10 @@ const handleMenuOpen = (event, item) => {
                 </button>
               </>
             )}
-          </div>
-        </>
-      )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* ── Drawers ── */}
       <CreateFolder
@@ -983,7 +1076,7 @@ const handleMenuOpen = (event, item) => {
         sourceFile={sourceFile}
         isMoveDocument={isMoveDocument}
       />
-    </div>
+    </PageTransition>
   );
 };
 

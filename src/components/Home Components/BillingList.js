@@ -1,14 +1,9 @@
-import React, { useState,useEffect } from 'react'
-import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
-import { useTheme } from "@mui/material/styles";
-import {  Stack, Typography } from "@mui/material";
-import PaymentIcon from '@mui/icons-material/Payment';
+import React, { useState, useEffect } from 'react';
+import { CreditCard, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 const BillingList = ({ accountId }) => {
-  const INVOICE_API = process.env.REACT_APP_INVOICES_URL
-  const theme = useTheme();
-    const navigate = useNavigate();
+  const INVOICE_API = process.env.REACT_APP_INVOICES_URL;
+  const navigate = useNavigate();
   const [billingInvoices, setBiilingInvoices] = useState([])
    const fetchInvoices = async () => {
       try {
@@ -43,97 +38,37 @@ const handlePayInvoice = (invoice) => {
 };
   return (
     <>
-    {billingInvoices.length > 0 && (
-       <Box>
-          <Stack
-            sx={{
-              p: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexDirection: "row",
-            }}
-          >
-            <Typography
-              component="h2"
-              variant="subtitle2"
-              gutterBottom
-              sx={{ fontWeight: "600" }}
-            >
-              Billing ({billingInvoices.length})
-            </Typography>
-          </Stack>
-          <Box mt={2}>
+      {billingInvoices.length > 0 && (
+        <div className="px-5 py-3">
+          <div className="flex items-center gap-2 mb-2.5">
+            <CreditCard size={13} className="text-emerald-500 shrink-0" />
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Billing</span>
+            <span className="ml-auto text-[11px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+              {billingInvoices.length}
+            </span>
+          </div>
+          <div className="flex flex-col gap-1.5">
             {billingInvoices.map((invoice, index) => (
-              <Stack key={index} mb={1.5}>
-                {" "}
-                <Paper
-          onClick={() => handlePayInvoice(invoice)}
-                  sx={{
-                    p: 2,
-                    borderRadius: 2,
-                    boxShadow: 1,
-                   
-                    transition: "all 0.3s",
-                    cursor: "pointer",
-                    "&:hover .paysign-link": {
-                      opacity: 1,
-                      visibility: "visible",
-                      textDecoration: "none",
-                      cursor: "pointer",
-                    },
-                  }}
-                >
-                  <Box
-                    display="flex" alignItems="center" gap={1}
-                  >
-                  <PaymentIcon fontSize="small" sx={{color: theme.palette.success.main,}}/>
-                  <Typography component="h2" variant="subtitle2" >
-                    Pay Invoice ${invoice.summary.total}
-                  </Typography>
-                  </Box>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "text.secondary", cursor: "pointer" }}
-                      >
-                     # {invoice.invoicenumber}
-                      </Typography>
-                    </Box>
-                    <Typography
-                      className="paysign-link"
-                      color="primary"
-                      variant="subtitle2"
-                      component="p"
-                      fontWeight="600"
-                      sx={{
-                        fontSize: 14,
-                        opacity: 0,
-                        visibility: "hidden",
-                        transition: "all 0.3s",
-                        textDecoration: "none",
-                        cursor: "pointer",
-                      }}
-                    >
-                     Pay
-                    </Typography>
-                  </Box>
-                </Paper>
-              </Stack>
+              <div
+                key={index}
+                onClick={() => handlePayInvoice(invoice)}
+                className="group flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-background px-3.5 py-2.5 cursor-pointer hover:bg-muted/50 hover:border-border transition-all duration-200"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <CreditCard size={11} className="text-emerald-500 shrink-0" />
+                    <p className="text-[12px] font-semibold text-foreground">Pay Invoice ${invoice.summary.total}</p>
+                  </div>
+                  <p className="text-[12px] text-muted-foreground mt-0.5"># {invoice.invoicenumber}</p>
+                </div>
+                <ArrowRight size={13} className="shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
             ))}
-          </Box>
-        </Box>
-    )}
-
+          </div>
+        </div>
+      )}
     </>
-  )
+  );
 }
 
 export default BillingList

@@ -5,6 +5,8 @@ import ProposalPreviewDialog from "../proposals//ProposalPreviewDialog";
 import { data } from "react-router-dom";
 import { toast } from "material-react-toastify";
 import { FileText } from "lucide-react";
+import { motion } from "framer-motion";
+import { PageTransition, TableSkeletonRows } from "../../components/ui/motion";
 const Proposals = () => {
   const PROPOSAL_API = process.env.REACT_APP_PROPOSAL_URL
     const ACCOUNT_API = process.env.REACT_APP_ACCOUNTS_URL;
@@ -14,6 +16,7 @@ const Proposals = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedProposal, setSelectedProposal] = useState(null);
 const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
+const [isLoading, setIsLoading] = useState(true);
  useEffect(() => {
   if (accountId) {
     fetchPrprosalsAllData(accountId);
@@ -22,6 +25,7 @@ const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
 
   const fetchPrprosalsAllData = async (accId) => {
     try {
+      setIsLoading(true);
       const url = `https://www.snptaxes.com/account/proposals/byaccount/${accId}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch proposals");
@@ -30,6 +34,8 @@ const [accountId, setAccountId] = useState(sessionStorage.getItem("accountId"));
       setProposalsList(result.proposallist);
     } catch (error) {
       console.error("Error fetching proposals:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -51,7 +57,7 @@ fetchPrprosalsAllData(accountId);
   };
 
   return (
-    <div className="w-full max-w-[1700px] flex-1 h-[90vh] overflow-auto">
+    <PageTransition className="w-full max-w-[1700px] flex-1 h-[90vh] overflow-auto">
       <div className="p-4 sm:p-6 flex flex-col gap-5">
 
       {/* Page heading */}
@@ -87,7 +93,9 @@ fetchPrprosalsAllData(accountId);
               </tr>
             </thead>
             <tbody className="divide-y divide-border/60">
-              {proposalsList.length === 0 ? (
+              {isLoading ? (
+                <TableSkeletonRows rows={5} cols={3} />
+              ) : proposalsList.length === 0 ? (
                 <tr>
                   <td colSpan={3} className="py-16 text-center">
                     <div className="flex flex-col items-center gap-3">
@@ -100,10 +108,13 @@ fetchPrprosalsAllData(accountId);
                   </td>
                 </tr>
               ) : (
-                proposalsList.map((row) => (
-                  <tr
+                proposalsList.map((row, rowIndex) => (
+                  <motion.tr
                     key={row._id}
-                    className="hover:bg-muted/40 transition-all duration-150 cursor-pointer group"
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.18, delay: rowIndex * 0.04, ease: [0.16, 1, 0.3, 1] }}
+                    className="hover:bg-muted/40 transition-colors duration-150 cursor-pointer group"
                     onClick={() => handleOpenDialog(row)}
                   >
                     <td className="px-4 py-3.5">
@@ -132,7 +143,7 @@ fetchPrprosalsAllData(accountId);
                         year: "numeric",
                       })}
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))
               )}
             </tbody>
@@ -146,7 +157,7 @@ fetchPrprosalsAllData(accountId);
         handleClose={handleCloseDialog}
         proposal={selectedProposal}
       />
-    </div>
+    </PageTransition>
   );
 };
 

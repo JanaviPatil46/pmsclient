@@ -83,6 +83,8 @@ import {
   CreditCard,
   Settings,
 } from "lucide-react";
+import { motion } from "framer-motion";
+import { Skeleton } from "./ui/motion";
 
 export default function MenuContent({ collapsed }) {
   const iconMapping = {
@@ -143,11 +145,42 @@ const SIDEBAR_API = process.env.REACT_APP_SIDEBAR_URL
     );
   };
 
+  const container = {
+    hidden: {},
+    show: {
+      transition: { staggerChildren: 0.055, delayChildren: 0.04 },
+    },
+  };
+  const item = {
+    hidden: { opacity: 0, x: -8 },
+    show: { opacity: 1, x: 0, transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } },
+  };
+
   return (
     <div className="flex flex-col flex-1 px-1 py-2">
-      <nav className="space-y-0.5">
-        {menuItems.map(renderMenuItem)}
-      </nav>
+      {menuItems.length === 0 ? (
+        <div className="space-y-1.5 px-1 pt-1">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 ${collapsed ? "justify-center" : ""}`}>
+              <Skeleton className="h-4 w-4 rounded shrink-0" />
+              {!collapsed && <Skeleton className={`h-3 rounded ${i % 2 === 0 ? "w-20" : "w-16"}`} />}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <motion.nav
+          className="space-y-0.5"
+          variants={container}
+          initial="hidden"
+          animate="show"
+        >
+          {menuItems.map((menuItem) => (
+            <motion.div key={menuItem._id} variants={item}>
+              {renderMenuItem(menuItem)}
+            </motion.div>
+          ))}
+        </motion.nav>
+      )}
     </div>
   );
 }
